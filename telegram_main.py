@@ -910,6 +910,15 @@ class TelegramPOSSystem:
     # KELOLA PRODUK (Product Management)
     # ========================================================================
     
+    async def cmd_cancel_kelola_produk(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Cancel kelola produk operations and return to menu."""
+        await update.message.reply_text(
+            "[CANCELLED] Kembali ke menu Kelola Produk.",
+            parse_mode="Markdown"
+        )
+        logger.info("[>] Kelola produk operation cancelled")
+        return KELOLA_PRODUK_MENU
+    
     async def kelola_produk_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         """Tampilkan menu kelola produk lengkap."""
         # Handle both callback_query dan regular entry
