@@ -1,2 +1,12 @@
+venv/
+.venv/
 __pycache__/
+.pytest_cache/
 .git/
+*.json
+dist/
+build_optimizer/
+.ipc/
+build_console/
+.env
+*.pyc

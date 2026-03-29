@@ -35,11 +35,20 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO,
     handlers=[
-        logging.FileHandler('telegram_pos.log'),
+        logging.FileHandler('telegram_pos.log', encoding='utf-8'),
         logging.StreamHandler()
     ]
 )
 logger = logging.getLogger(__name__)
+
+# Configure StreamHandler to use UTF-8 encoding  
+for handler in logging.root.handlers:
+    if isinstance(handler, logging.StreamHandler):
+        if hasattr(handler.stream, 'reconfigure'):
+            try:
+                handler.stream.reconfigure(encoding='utf-8')
+            except:
+                pass
 
 # ============================================================================
 # CONVERSATION STATES
@@ -93,7 +102,7 @@ class TelegramPOSSystem:
         self.application = Application.builder().token(token).build()
         self._register_handlers()
         
-        logger.info("✅ TelegramPOSSystem initialized")
+        logger.info("[+] TelegramPOSSystem initialized")
     
     # ========================================================================
     # HANDLER REGISTRATION
@@ -134,6 +143,7 @@ class TelegramPOSSystem:
             ],
             per_user=True,
             per_chat=True,
+            per_message=False,
         )
         self.application.add_handler(transaksi_conv)
         
@@ -143,7 +153,7 @@ class TelegramPOSSystem:
         self.application.add_handler(CallbackQueryHandler(self.lihat_laporan, pattern="^lihat_laporan$"))
         self.application.add_handler(CallbackQueryHandler(self.lihat_dashboard, pattern="^lihat_dashboard$"))
         
-        logger.info("✅ All handlers registered")
+        logger.info("[+] All handlers registered")
     
     # ========================================================================
     # AUTHORIZATION & UTILITY
@@ -170,7 +180,7 @@ class TelegramPOSSystem:
         user = update.effective_user
         chat_id = update.effective_chat.id
         
-        logger.info(f"🟢 /start command from user: {user.first_name} (ID: {chat_id})")
+        logger.info(f"[>] /start command from user: {user.first_name} (ID: {chat_id})")
         
         welcome_msg = (
             f"👋 Selamat datang di *TOKO ACCESSORIES G-LIES POS*! 🛍️\n\n"
@@ -193,16 +203,16 @@ class TelegramPOSSystem:
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
-            logger.info(f"✅ Welcome message sent to {user.first_name}")
+            logger.info(f"[+] Welcome message sent to {user.first_name}")
         except Exception as e:
-            logger.error(f"❌ Error in cmd_start: {e}", exc_info=True)
+            logger.error(f"[-] Error in cmd_start: {e}", exc_info=True)
     
     async def cmd_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """
         /menu command - Show main menu.
         """
         chat_id = update.effective_chat.id
-        logger.info(f"🟢 /menu command from chat_id: {chat_id}")
+        logger.info(f"[>] /menu command from chat_id: {chat_id}")
         
         keyboard = await self.get_main_menu_keyboard()
         
@@ -213,7 +223,7 @@ class TelegramPOSSystem:
                 parse_mode="Markdown"
             )
         except Exception as e:
-            logger.error(f"❌ Error in cmd_menu: {e}", exc_info=True)
+            logger.error(f"[-] Error in cmd_menu: {e}", exc_info=True)
     
     async def cmd_help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """
@@ -246,7 +256,7 @@ class TelegramPOSSystem:
         try:
             await update.message.reply_text(help_text, parse_mode="Markdown")
         except Exception as e:
-            logger.error(f"❌ Error in cmd_help: {e}", exc_info=True)
+            logger.error(f"[-] Error in cmd_help: {e}", exc_info=True)
     
     # ========================================================================
     # MAIN MENU KEYBOARD
@@ -276,7 +286,7 @@ class TelegramPOSSystem:
                 parse_mode="Markdown"
             )
         except Exception as e:
-            logger.error(f"❌ Error in callback_main_menu: {e}", exc_info=True)
+            logger.error(f"[-] Error in callback_main_menu: {e}", exc_info=True)
     
     # ========================================================================
     # TRANSACTION HANDLERS
@@ -290,7 +300,7 @@ class TelegramPOSSystem:
         user_id = update.effective_user.id
         chat_id = update.effective_chat.id
         
-        logger.info(f"🟢 Transaksi started for user_id: {user_id}")
+        logger.info(f"[>] Transaksi started for user_id: {user_id}")
         
         # Create/reset transaction untuk user
         trans_handler = self.get_user_transaction(user_id)
@@ -345,7 +355,7 @@ class TelegramPOSSystem:
                 parse_mode="Markdown"
             )
         except Exception as e:
-            logger.error(f"❌ Error in show_transaksi_menu: {e}", exc_info=True)
+            logger.error(f"[-] Error in show_transaksi_menu: {e}", exc_info=True)
     
     async def transaksi_tambah_item(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         """Handle tambah item - minta input kode."""
@@ -362,7 +372,7 @@ class TelegramPOSSystem:
                 parse_mode="Markdown"
             )
         except Exception as e:
-            logger.error(f"❌ Error in transaksi_tambah_item: {e}", exc_info=True)
+            logger.error(f"[-] Error in transaksi_tambah_item: {e}", exc_info=True)
         
         return TAMBAH_ITEM_KODE
     
@@ -466,7 +476,7 @@ class TelegramPOSSystem:
             parse_mode="Markdown"
         )
         
-        logger.info(f"✅ Item added: {product['kode']} qty: {qty} for user_id: {user_id}")
+        logger.info(f"[+] Item added: {product['kode']} qty: {qty} for user_id: {user_id}")
         
         return TRANSAKSI_MENU
     
@@ -502,7 +512,7 @@ class TelegramPOSSystem:
                 parse_mode="Markdown"
             )
         except Exception as e:
-            logger.error(f"❌ Error in transaksi_lihat_item: {e}", exc_info=True)
+            logger.error(f"[-] Error in transaksi_lihat_item: {e}", exc_info=True)
         
         return TRANSAKSI_MENU
     
@@ -541,7 +551,7 @@ class TelegramPOSSystem:
                 parse_mode="Markdown"
             )
         except Exception as e:
-            logger.error(f"❌ Error in transaksi_hapus_item_btn: {e}", exc_info=True)
+            logger.error(f"[-] Error in transaksi_hapus_item_btn: {e}", exc_info=True)
         
         # Register dynamic remove handlers
         for idx in range(len(items)):
@@ -611,7 +621,7 @@ class TelegramPOSSystem:
         try:
             await query.edit_message_text(text=msg, parse_mode="Markdown")
         except Exception as e:
-            logger.error(f"❌ Error in transaksi_checkout: {e}", exc_info=True)
+            logger.error(f"[-] Error in transaksi_checkout: {e}", exc_info=True)
         
         return PEMBAYARAN
     
@@ -674,7 +684,7 @@ class TelegramPOSSystem:
                 parse_mode="Markdown"
             )
             
-            logger.info(f"✅ Transaction completed: ID={trans_id}, user_id={user_id}")
+            logger.info(f"[+] Transaction completed: ID={trans_id}, user_id={user_id}")
             
             # Clear user transaction
             if user_id in self.transaction_handlers:
@@ -705,7 +715,7 @@ class TelegramPOSSystem:
                 reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📋 Menu Utama", callback_data="main_menu")]])
             )
         except Exception as e:
-            logger.error(f"❌ Error in transaksi_cancel: {e}", exc_info=True)
+            logger.error(f"[-] Error in transaksi_cancel: {e}", exc_info=True)
         
         return ConversationHandler.END
     
@@ -757,10 +767,10 @@ class TelegramPOSSystem:
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown"
             )
-            logger.info(f"✅ Stok list shown")
+            logger.info(f"[+] Stok list shown")
             
         except Exception as e:
-            logger.error(f"❌ Error in lihat_stok: {e}", exc_info=True)
+            logger.error(f"[-] Error in lihat_stok: {e}", exc_info=True)
             await query.edit_message_text(f"❌ Error: {e}")
     
     async def lihat_laporan(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -792,10 +802,10 @@ class TelegramPOSSystem:
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown"
             )
-            logger.info(f"✅ Laporan shown")
+            logger.info(f"[+] Laporan shown")
             
         except Exception as e:
-            logger.error(f"❌ Error in lihat_laporan: {e}", exc_info=True)
+            logger.error(f"[-] Error in lihat_laporan: {e}", exc_info=True)
             await query.edit_message_text(f"❌ Error: {e}")
     
     async def lihat_dashboard(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -836,7 +846,7 @@ class TelegramPOSSystem:
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown"
             )
-            logger.info(f"✅ Dashboard shown")
+            logger.info(f"[+] Dashboard shown")
             
         except Exception as e:
             logger.error(f"❌ Error in lihat_dashboard: {e}", exc_info=True)
@@ -846,31 +856,25 @@ class TelegramPOSSystem:
     # RUN BOT
     # ========================================================================
     
-    async def run(self):
-        """Run Telegram bot."""
+    def run(self):
+        """Run Telegram bot (blocking call)."""
         print("\n" + "=" * 70)
-        print("🤖 TELEGRAM POS SYSTEM - MEMULAI".center(70))
+        print("[TELEGRAM POS SYSTEM - STARTING]".center(70))
         print("=" * 70)
         print(f"Bot Token: {self.token[:20]}...")
         print(f"Admin Chat ID: {self.config_manager.config.get('admin_chat_id')}")
         print("=" * 70)
-        print("\n💡 Bot sedang menunggu commands...")
-        print("   Kirim /start atau /menu untuk memulai")
+        print("\n[*] Bot waiting for commands...")
+        print("    Send /start or /menu to begin")
         print("=" * 70 + "\n")
         
         try:
-            import asyncio
-            import sys
-            
-            # Windows event loop fix
-            if sys.platform == 'win32':
-                asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-            
-            await self.application.run_polling(allowed_updates=Update.ALL_TYPES)
+            # Run polling directly - python-telegram-bot handles event loop internally
+            self.application.run_polling(allowed_updates=Update.ALL_TYPES)
         except KeyboardInterrupt:
-            print("\n\n❌ Bot dihentikan oleh user")
+            print("\n\n[!] Bot stopped by user")
         except Exception as e:
-            print(f"\n\n❌ Error: {e}")
+            print(f"\n\n[ERROR] {e}")
             import traceback
             traceback.print_exc()
             logger.error(f"Error running bot: {e}", exc_info=True)
@@ -885,14 +889,12 @@ def main():
     token = config_manager.get_token()
     
     if not token:
-        print("❌ Bot token tidak dikonfigurasi!")
+        print("[ERROR] Bot token tidak dikonfigurasi!")
         print("Edit telegram_config.json atau setup via CLI POS system")
         return
     
     pos_system = TelegramPOSSystem(token)
-    
-    import asyncio
-    asyncio.run(pos_system.run())
+    pos_system.run()  # Blocking call
 
 if __name__ == "__main__":
     main()

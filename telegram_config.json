@@ -1,10 +1,10 @@
 {
   "bot_token": "8048186562:AAHKrCmuj99ahRcAdex45YcV-IZrR_uOFug",
   "allowed_chat_ids": [
-    7521820149
+    1845858179
   ],
   "enabled": true,
-  "admin_chat_id": 7521820149,
+  "admin_chat_id": 1845858179,
   "notify_transaction": true,
   "notify_low_stock": true,
   "low_stock_threshold": 20
