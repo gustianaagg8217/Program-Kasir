@@ -56,6 +56,9 @@ for handler in logging.root.handlers:
 
 MAIN_MENU, TRANSAKSI_MENU, TAMBAH_ITEM_KODE, TAMBAH_ITEM_QTY, PEMBAYARAN = range(5)
 LIHAT_STOK, LIHAT_LAPORAN = range(5, 7)
+KELOLA_PRODUK_MENU, KELOLA_PRODUK_TAMBAH_KODE, KELOLA_PRODUK_TAMBAH_NAMA = range(7, 10)
+KELOLA_PRODUK_TAMBAH_HARGA, KELOLA_PRODUK_TAMBAH_STOK, KELOLA_PRODUK_LIHAT = range(10, 13)
+KELOLA_PRODUK_EDIT, KELOLA_PRODUK_HAPUS = range(13, 15)
 
 # ============================================================================
 # TELEGRAM POS SYSTEM - Main class untuk Telegram-based POS
@@ -146,6 +149,56 @@ class TelegramPOSSystem:
             per_message=False,
         )
         self.application.add_handler(transaksi_conv)
+        
+        # Conversation handler untuk kelola produk
+        kelola_produk_conv = ConversationHandler(
+            entry_points=[CallbackQueryHandler(self.kelola_produk_menu, pattern="^kelola_produk$")],
+            states={
+                KELOLA_PRODUK_MENU: [
+                    CallbackQueryHandler(self.kelola_produk_lihat, pattern="^kp_lihat$"),
+                    CallbackQueryHandler(self.kelola_produk_tambah_start, pattern="^kp_tambah$"),
+                    CallbackQueryHandler(self.kelola_produk_edit_select, pattern="^kp_edit_select$"),
+                    CallbackQueryHandler(self.kelola_produk_hapus_select, pattern="^kp_hapus_select$"),
+                    CallbackQueryHandler(self.kelola_produk_info_stok, pattern="^kp_info_stok$"),
+                    CallbackQueryHandler(self.kelola_produk_menu, pattern="^kembali_kp$"),
+                    CallbackQueryHandler(self.callback_main_menu, pattern="^main_menu$"),
+                ],
+                KELOLA_PRODUK_TAMBAH_KODE: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_kp_kode),
+                ],
+                KELOLA_PRODUK_TAMBAH_NAMA: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_kp_nama),
+                ],
+                KELOLA_PRODUK_TAMBAH_HARGA: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_kp_harga),
+                ],
+                KELOLA_PRODUK_TAMBAH_STOK: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_kp_stok),
+                ],
+                KELOLA_PRODUK_LIHAT: [
+                    CallbackQueryHandler(self.kelola_produk_edit_start, pattern="^kp_edit_\d+$"),
+                    CallbackQueryHandler(self.kelola_produk_hapus_confirm, pattern="^kp_hapus_\d+$"),
+                    CallbackQueryHandler(self.kelola_produk_menu, pattern="^kembali_kp$"),
+                ],
+                KELOLA_PRODUK_EDIT: [
+                    CallbackQueryHandler(self.kelola_produk_edit_field, pattern="^kp_edt_.*"),
+                    CallbackQueryHandler(self.kelola_produk_lihat, pattern="^kp_lihat$"),
+                ],
+                KELOLA_PRODUK_HAPUS: [
+                    CallbackQueryHandler(self.kelola_produk_hapus_confirm_exec, pattern="^kp_hapus_yes_\d+$"),
+                    CallbackQueryHandler(self.kelola_produk_lihat, pattern="^kp_hapus_no$"),
+                ],
+            },
+            fallbacks=[
+                CallbackQueryHandler(self.callback_main_menu, pattern="^main_menu$"),
+                CallbackQueryHandler(self.kelola_produk_menu, pattern="^kembali_kp$"),
+                CommandHandler("cancel", self.cmd_cancel_kelola_produk),
+            ],
+            per_user=True,
+            per_chat=True,
+            per_message=False,
+        )
+        self.application.add_handler(kelola_produk_conv)
         
         # Other callbacks
         self.application.add_handler(CallbackQueryHandler(self.callback_main_menu, pattern="^main_menu$"))
@@ -267,6 +320,7 @@ class TelegramPOSSystem:
         keyboard = [
             [InlineKeyboardButton("🛒 Transaksi Penjualan", callback_data="transaksi")],
             [InlineKeyboardButton("📦 Lihat Stok", callback_data="lihat_stok")],
+            [InlineKeyboardButton("⚙️  Kelola Produk", callback_data="kelola_produk")],
             [InlineKeyboardButton("📊 Laporan Harian", callback_data="lihat_laporan")],
             [InlineKeyboardButton("📈 Dashboard", callback_data="lihat_dashboard")],
         ]
@@ -731,36 +785,36 @@ class TelegramPOSSystem:
     async def lihat_stok(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Lihat daftar stok produk."""
         query = update.callback_query
-        await query.answer("⏳ Mengambil data stok...")
+        await query.answer("Mengambil data stok...")
         
         try:
-            stok_list = self.db.get_all_stok()
+            stok_list = self.db.get_all_products()
             
             if not stok_list:
-                msg = "📦 Belum ada produk di database."
+                msg = "Belum ada produk di database."
             else:
-                msg = "📦 *DAFTAR PRODUK & STOK*\n\n"
+                msg = "*DAFTAR PRODUK & STOK*\n\n"
                 
                 ok_count = sum(1 for s in stok_list if s['stok'] > 20)
                 low_count = sum(1 for s in stok_list if 0 < s['stok'] <= 20)
                 empty_count = sum(1 for s in stok_list if s['stok'] == 0)
                 
-                msg += f"🟢 OK: {ok_count} | 🟡 MINIM: {low_count} | 🔴 KOSONG: {empty_count}\n\n"
+                msg += f"[OK]: {ok_count} | [MINIM]: {low_count} | [KOSONG]: {empty_count}\n\n"
                 
                 for prod in stok_list:
                     if prod['stok'] > 20:
-                        icon = "🟢"
+                        icon = "[OK]"
                     elif prod['stok'] > 0:
-                        icon = "🟡"
+                        icon = "[LOW]"
                     else:
-                        icon = "🔴"
+                        icon = "[EMPTY]"
                     
                     msg += f"{icon} {prod['kode']}: {prod['nama']}\n"
                     msg += f"   Stok: {prod['stok']} pcs | Harga: {format_rp(prod['harga'])}\n"
                 
                 msg = msg[:3500]  # Telegram limit
             
-            keyboard = [[InlineKeyboardButton("⬅️  Kembali", callback_data="main_menu")]]
+            keyboard = [[InlineKeyboardButton("Kembali", callback_data="main_menu")]]
             
             await query.edit_message_text(
                 text=msg,
@@ -771,7 +825,7 @@ class TelegramPOSSystem:
             
         except Exception as e:
             logger.error(f"[-] Error in lihat_stok: {e}", exc_info=True)
-            await query.edit_message_text(f"❌ Error: {e}")
+            await query.edit_message_text(f"Error: {e}")
     
     async def lihat_laporan(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Lihat laporan penjualan harian."""
@@ -811,35 +865,35 @@ class TelegramPOSSystem:
     async def lihat_dashboard(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Lihat dashboard ringkasan."""
         query = update.callback_query
-        await query.answer("⏳ Mengambil dashboard...")
+        await query.answer("Mengambil dashboard...")
         
         try:
             laporan = self.report_generator.get_laporan_harian()
-            stok_list = self.db.get_all_stok()
+            stok_list = self.db.get_all_products()
             
             total_stok = sum(s['stok'] for s in stok_list) if stok_list else 0
             low_stok = sum(1 for s in stok_list if 0 < s['stok'] <= 20) if stok_list else 0
             empty_stok = sum(1 for s in stok_list if s['stok'] == 0) if stok_list else 0
             
             msg = (
-                f"📈 *DASHBOARD RINGKASAN*\n\n"
-                f"💰 *PENJUALAN HARI INI*\n"
+                f"*DASHBOARD RINGKASAN*\n\n"
+                f"*PENJUALAN HARI INI*\n"
                 f"  Total: {format_rp(laporan['total_penjualan'])}\n"
                 f"  Transaksi: {laporan['total_transaksi']}\n"
                 f"  Item Terjual: {laporan['total_item']}\n\n"
-                f"📦 *INVENTORY*\n"
+                f"*INVENTORY*\n"
                 f"  Total Produk: {len(stok_list)}\n"
                 f"  Total Stok: {total_stok} pcs\n"
-                f"  Stok Minim: {low_stok} produk 🟡\n"
-                f"  Stok Kosong: {empty_stok} produk 🔴\n\n"
-                f"🏆 *PRODUK TERLARIS*\n"
+                f"  Stok Minim: {low_stok} produk [LOW]\n"
+                f"  Stok Kosong: {empty_stok} produk [EMPTY]\n\n"
+                f"*PRODUK TERLARIS*\n"
             )
             
             if laporan['produk_laris']:
                 for i, prod in enumerate(laporan['produk_laris'][:3], 1):
-                    msg += f"{i}. {prod['nama']} ({prod['total_qty']} qty)\n"
+                    msg += f"{i}. {prod['nama']} ({prod['total_qty']} pcs)\n"
             
-            keyboard = [[InlineKeyboardButton("⬅️  Kembali", callback_data="main_menu")]]
+            keyboard = [[InlineKeyboardButton("Kembali", callback_data="main_menu")]]
             
             await query.edit_message_text(
                 text=msg,
@@ -849,8 +903,587 @@ class TelegramPOSSystem:
             logger.info(f"[+] Dashboard shown")
             
         except Exception as e:
-            logger.error(f"❌ Error in lihat_dashboard: {e}", exc_info=True)
-            await query.edit_message_text(f"❌ Error: {e}")
+            logger.error(f"[-] Error in lihat_dashboard: {e}", exc_info=True)
+            await query.edit_message_text(f"Error: {e}")
+    
+    # ========================================================================
+    # KELOLA PRODUK (Product Management)
+    # ========================================================================
+    
+    async def kelola_produk_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Tampilkan menu kelola produk lengkap."""
+        # Handle both callback_query dan regular entry
+        if update.callback_query:
+            query = update.callback_query
+            await query.answer()
+        
+        msg = (
+            "*KELOLA PRODUK TOKO ACCESSORIES G-LIES*\n\n"
+            "Pilih menu untuk mengelola produk di database:\n\n"
+            "[1] *Tambah Produk* - Menambahkan produk baru\n"
+            "[2] *Lihat Daftar* - Melihat semua produk\n"
+            "[3] *Edit Produk* - Mengubah data produk\n"
+            "[4] *Hapus Produk* - Menghapus produk\n"
+            "[5] *Info Stok* - Ringkasan stok produk\n"
+            "[0] *Kembali* - Kembali ke menu utama"
+        )
+        
+        keyboard = [
+            [
+                InlineKeyboardButton("[1] Tambah", callback_data="kp_tambah"),
+                InlineKeyboardButton("[2] Lihat", callback_data="kp_lihat"),
+            ],
+            [
+                InlineKeyboardButton("[3] Edit", callback_data="kp_edit_select"),
+                InlineKeyboardButton("[4] Hapus", callback_data="kp_hapus_select"),
+            ],
+            [InlineKeyboardButton("[5] Info Stok", callback_data="kp_info_stok")],
+            [InlineKeyboardButton("[0] Kembali", callback_data="main_menu")],
+        ]
+        
+        try:
+            if update.callback_query:
+                await query.edit_message_text(
+                    text=msg,
+                    reply_markup=InlineKeyboardMarkup(keyboard),
+                    parse_mode="Markdown"
+                )
+            else:
+                await update.message.reply_text(
+                    msg,
+                    reply_markup=InlineKeyboardMarkup(keyboard),
+                    parse_mode="Markdown"
+                )
+            logger.info(f"[+] Product management menu shown")
+        except Exception as e:
+            logger.error(f"[-] Error in kelola_produk_menu: {e}", exc_info=True)
+        
+        return KELOLA_PRODUK_MENU
+    
+    async def kelola_produk_edit_select(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Tampilkan daftar produk untuk dipilih untuk diedit."""
+        query = update.callback_query
+        await query.answer("Memilih produk untuk diedit...")
+        
+        try:
+            products = self.db.get_all_products()
+            
+            if not products:
+                keyboard = [[InlineKeyboardButton("Kembali", callback_data="kembali_kp")]]
+                await query.edit_message_text(
+                    text="[INFO] Belum ada produk di database.",
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+                return KELOLA_PRODUK_MENU
+            
+            msg = "*PILIH PRODUK UNTUK DIEDIT*\n\n"
+            msg += f"Total: {len(products)} produk\n\n"
+            msg += "Klik tombol produk yang akan diedit:\n\n"
+            
+            keyboard = []
+            for idx, prod in enumerate(products):
+                stock_status = "[OK]" if prod['stok'] > 20 else "[LOW]" if prod['stok'] > 0 else "[EMPTY]"
+                button_text = f"{prod['kode']} - {prod['nama']} ({stock_status})"
+                keyboard.append([InlineKeyboardButton(button_text, callback_data=f"kp_edit_{idx}")])
+            
+            keyboard.append([InlineKeyboardButton("Kembali ke Menu", callback_data="kembali_kp")])
+            
+            context.user_data['products_list'] = products
+            
+            await query.edit_message_text(
+                text=msg,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
+            logger.info(f"[+] Edit product selection shown")
+            
+        except Exception as e:
+            logger.error(f"[-] Error in kelola_produk_edit_select: {e}", exc_info=True)
+            await query.edit_message_text(f"Error: {e}")
+        
+        return KELOLA_PRODUK_LIHAT
+    
+    async def kelola_produk_hapus_select(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Tampilkan daftar produk untuk dipilih untuk dihapus."""
+        query = update.callback_query
+        await query.answer("Memilih produk untuk dihapus...")
+        
+        try:
+            products = self.db.get_all_products()
+            
+            if not products:
+                keyboard = [[InlineKeyboardButton("Kembali", callback_data="kembali_kp")]]
+                await query.edit_message_text(
+                    text="[INFO] Belum ada produk di database.",
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+                return KELOLA_PRODUK_MENU
+            
+            msg = "*PILIH PRODUK UNTUK DIHAPUS*\n\n"
+            msg += f"Total: {len(products)} produk\n\n"
+            msg += "[PERINGATAN] Tindakan ini TIDAK dapat dibatalkan!\n\n"
+            msg += "Klik tombol produk yang akan dihapus:\n\n"
+            
+            keyboard = []
+            for idx, prod in enumerate(products):
+                stock_status = "[OK]" if prod['stok'] > 20 else "[LOW]" if prod['stok'] > 0 else "[EMPTY]"
+                button_text = f"{prod['kode']} - {prod['nama']} ({stock_status})"
+                keyboard.append([InlineKeyboardButton(button_text, callback_data=f"kp_hapus_{idx}")])
+            
+            keyboard.append([InlineKeyboardButton("Kembali ke Menu", callback_data="kembali_kp")])
+            
+            context.user_data['products_list'] = products
+            
+            await query.edit_message_text(
+                text=msg,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
+            logger.info(f"[+] Delete product selection shown")
+            
+        except Exception as e:
+            logger.error(f"[-] Error in kelola_produk_hapus_select: {e}", exc_info=True)
+            await query.edit_message_text(f"Error: {e}")
+        
+        return KELOLA_PRODUK_LIHAT
+    
+    async def kelola_produk_info_stok(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Tampilkan info stok ringkasan."""
+        query = update.callback_query
+        await query.answer("Mengambil info stok...")
+        
+        try:
+            products = self.db.get_all_products()
+            
+            if not products:
+                keyboard = [[InlineKeyboardButton("Kembali", callback_data="kembali_kp")]]
+                await query.edit_message_text(
+                    text="[INFO] Belum ada produk di database.",
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+                return KELOLA_PRODUK_MENU
+            
+            # Calculate stock statistics
+            total_produk = len(products)
+            total_stok = sum(p['stok'] for p in products)
+            ok_count = sum(1 for p in products if p['stok'] > 20)
+            low_count = sum(1 for p in products if 0 < p['stok'] <= 20)
+            empty_count = sum(1 for p in products if p['stok'] == 0)
+            
+            # Calculate stock value
+            total_nilai = sum(p['stok'] * p['harga'] for p in products)
+            
+            msg = (
+                "*INFO STOK TOKO ACCESSORIES G-LIES*\n\n"
+                "*RINGKASAN UMUM*\n"
+                f"Total Produk: {total_produk} item\n"
+                f"Total Stok: {total_stok} pcs\n"
+                f"Total Nilai Stok: {format_rp(total_nilai)}\n\n"
+                f"*STATUS STOK*\n"
+                f"OK (>20): {ok_count} produk\n"
+                f"LOW (1-20): {low_count} produk\n"
+                f"EMPTY (0): {empty_count} produk\n\n"
+            )
+            
+            # Show top 5 best selling products by stock (highest quantity)
+            sorted_products = sorted(products, key=lambda x: x['stok'], reverse=True)[:5]
+            
+            if sorted_products:
+                msg += "*PRODUK STOK TERBANYAK*\n"
+                for idx, prod in enumerate(sorted_products, 1):
+                    msg += f"{idx}. {prod['nama']}\n"
+                    msg += f"   Stok: {prod['stok']} pcs | Nilai: {format_rp(prod['stok'] * prod['harga'])}\n"
+            
+            keyboard = [
+                [InlineKeyboardButton("Lihat Detail", callback_data="kp_lihat")],
+                [InlineKeyboardButton("Kembali ke Menu", callback_data="kembali_kp")],
+            ]
+            
+            await query.edit_message_text(
+                text=msg,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
+            logger.info(f"[+] Stock info shown")
+            
+        except Exception as e:
+            logger.error(f"[-] Error in kelola_produk_info_stok: {e}", exc_info=True)
+            await query.edit_message_text(f"Error: {e}")
+        
+        return KELOLA_PRODUK_MENU
+    
+    async def kelola_produk_lihat(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Lihat semua produk dengan opsi edit/hapus."""
+        query = update.callback_query
+        await query.answer("Mengambil daftar produk...")
+        
+        try:
+            products = self.db.get_all_products()
+            
+            if not products:
+                keyboard = [[InlineKeyboardButton("[KEMBALI]", callback_data="kembali_kp")]]
+                await query.edit_message_text(
+                    text="[INFO] Belum ada produk di database.",
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+                return KELOLA_PRODUK_LIHAT
+            
+            # Build product list message
+            msg = "*DAFTAR PRODUK*\n\n"
+            msg += f"Total: {len(products)} produk\n\n"
+            
+            # Show first 5 products in message, rest handled by buttons
+            for prod in products[:5]:
+                stock_status = "[OK]" if prod['stok'] > 20 else "[LOW]" if prod['stok'] > 0 else "[EMPTY]"
+                msg += f"[PROD] *{prod['kode']}* - {prod['nama']}\n"
+                msg += f"   Harga: {format_rp(prod['harga'])} | Stok: {prod['stok']} {stock_status}\n"
+            
+            if len(products) > 5:
+                msg += f"\n... dan {len(products) - 5} produk lainnya\n\n"
+            
+            msg += "\nPilih produk untuk diedit atau dihapus:"
+            
+            # Build buttons for each product
+            keyboard = []
+            for idx, prod in enumerate(products):
+                keyboard.append([
+                    InlineKeyboardButton(f"EDIT: {prod['kode']}", callback_data=f"kp_edit_{idx}"),
+                    InlineKeyboardButton(f"HAPUS: {prod['nama']}", callback_data=f"kp_hapus_{idx}"),
+                ])
+            
+            keyboard.append([InlineKeyboardButton("Kembali ke Menu", callback_data="kembali_kp")])
+            
+            # Store products in context for later use
+            context.user_data['products_list'] = products
+            
+            await query.edit_message_text(
+                text=msg,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
+            logger.info(f"[+] Product list shown with {len(products)} items")
+            
+        except Exception as e:
+            logger.error(f"[-] Error in kelola_produk_lihat: {e}", exc_info=True)
+            await query.edit_message_text(f"Error: {e}")
+        
+        return KELOLA_PRODUK_LIHAT
+    
+    async def kelola_produk_tambah_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Mulai proses tambah produk - minta kode."""
+        query = update.callback_query
+        await query.answer()
+        
+        try:
+            await query.edit_message_text(
+                text=(
+                    "*TAMBAH PRODUK BARU*\n\n"
+                    "Step 1/4: Masukkan *Kode Produk*\n\n"
+                    "Contoh: COFFEE, TEA, ACC001\n\n"
+                    "Kirim /cancel untuk batalkan."
+                ),
+                parse_mode="Markdown"
+            )
+            
+            # Reset product data
+            context.user_data['new_product'] = {}
+            
+            logger.info(f"[+] Product add started")
+        except Exception as e:
+            logger.error(f"[-] Error in kelola_produk_tambah_start: {e}", exc_info=True)
+        
+        return KELOLA_PRODUK_TAMBAH_KODE
+    
+    async def handle_kp_kode(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Handle kode produk input."""
+        kode = update.message.text.strip().upper()
+        
+        # Check if kode already exists
+        existing = self.db.get_product_by_kode(kode)
+        if existing:
+            await update.message.reply_text(
+                f"[WARNING] Kode *{kode}* sudah terdaftar!\n"
+                f"Gunakan kode lain atau gunakan fitur Edit.",
+                parse_mode="Markdown"
+            )
+            return KELOLA_PRODUK_TAMBAH_KODE
+        
+        context.user_data['new_product']['kode'] = kode
+        
+        # Ask for nama
+        await update.message.reply_text(
+            text=(
+                "*TAMBAH PRODUK BARU*\n\n"
+                f"Step 2/4: Masukkan *Nama Produk*\n\n"
+                f"Kode: {kode}\n\n"
+                "Kirim /cancel untuk batalkan."
+            ),
+            parse_mode="Markdown"
+        )
+        
+        return KELOLA_PRODUK_TAMBAH_NAMA
+    
+    async def handle_kp_nama(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Handle nama produk input."""
+        nama = update.message.text.strip()
+        
+        context.user_data['new_product']['nama'] = nama
+        
+        # Ask for harga
+        await update.message.reply_text(
+            text=(
+                "*TAMBAH PRODUK BARU*\n\n"
+                f"Step 3/4: Masukkan *Harga Produk* (angka saja)\n\n"
+                f"Kode: {context.user_data['new_product']['kode']}\n"
+                f"Nama: {nama}\n\n"
+                "Contoh: 50000, 100000\n"
+                "Kirim /cancel untuk batalkan."
+            ),
+            parse_mode="Markdown"
+        )
+        
+        return KELOLA_PRODUK_TAMBAH_HARGA
+    
+    async def handle_kp_harga(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Handle harga produk input."""
+        try:
+            harga = int(update.message.text.strip())
+            if harga < 0:
+                raise ValueError()
+        except ValueError:
+            await update.message.reply_text(
+                "[ERROR] Masukkan harga dalam angka yang valid (minimal 0)!",
+                parse_mode="Markdown"
+            )
+            return KELOLA_PRODUK_TAMBAH_HARGA
+        
+        context.user_data['new_product']['harga'] = harga
+        
+        # Ask for stok
+        await update.message.reply_text(
+            text=(
+                "*TAMBAH PRODUK BARU*\n\n"
+                f"Step 4/4: Masukkan *Stok Awal* (angka saja)\n\n"
+                f"Kode: {context.user_data['new_product']['kode']}\n"
+                f"Nama: {context.user_data['new_product']['nama']}\n"
+                f"Harga: {format_rp(harga)}\n\n"
+                "Kirim /cancel untuk batalkan."
+            ),
+            parse_mode="Markdown"
+        )
+        
+        return KELOLA_PRODUK_TAMBAH_STOK
+    
+    async def handle_kp_stok(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Handle stok input dan simpan produk."""
+        try:
+            stok = int(update.message.text.strip())
+            if stok < 0:
+                raise ValueError()
+        except ValueError:
+            await update.message.reply_text(
+                "[ERROR] Masukkan stok dalam angka yang valid (minimal 0)!",
+                parse_mode="Markdown"
+            )
+            return KELOLA_PRODUK_TAMBAH_STOK
+        
+        # Tambah produk ke database
+        try:
+            prod_data = context.user_data['new_product']
+            prod_data['stok'] = stok
+            
+            self.db.add_product(
+                kode=prod_data['kode'],
+                nama=prod_data['nama'],
+                harga=prod_data['harga'],
+                stok=stok
+            )
+            
+            msg = (
+                f"[+] *PRODUK BERHASIL DITAMBAHKAN!*\n\n"
+                f"KODE: {prod_data['kode']}\n"
+                f"NAMA: {prod_data['nama']}\n"
+                f"HARGA: {format_rp(prod_data['harga'])}\n"
+                f"STOK: {stok} pcs\n\n"
+                f"Data produk tersimpan di database."
+            )
+            
+            keyboard = [
+                [InlineKeyboardButton("[+] Tambah Lagi", callback_data="kp_tambah")],
+                [InlineKeyboardButton("[LIST] Lihat Semua", callback_data="kp_lihat")],
+                [InlineKeyboardButton("[KEMBALI]", callback_data="kembali_kp")],
+            ]
+            
+            await update.message.reply_text(
+                msg,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
+            
+            logger.info(f"[+] Product added: {prod_data['kode']} - {prod_data['nama']}")
+            
+        except Exception as e:
+            logger.error(f"[-] Error saving product: {e}", exc_info=True)
+            await update.message.reply_text(f"[ERROR] Gagal menyimpan: {e}")
+        
+        return KELOLA_PRODUK_MENU
+    
+    async def kelola_produk_edit_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Mulai edit produk - tampilkan opsi field."""
+        query = update.callback_query
+        await query.answer()
+        
+        try:
+            # Get product index from callback
+            prod_idx = int(query.data.split("_")[-1])
+            products = context.user_data.get('products_list', [])
+            
+            if prod_idx >= len(products):
+                await query.answer("[ERROR] Produk tidak ditemukan!")
+                return KELOLA_PRODUK_LIHAT
+            
+            product = products[prod_idx]
+            context.user_data['editing_product'] = product
+            context.user_data['editing_index'] = prod_idx
+            
+            msg = (
+                f"*EDIT PRODUK*\n\n"
+                f"Kode: {product['kode']}\n"
+                f"Nama: {product['nama']}\n"
+                f"Harga: {format_rp(product['harga'])}\n"
+                f"Stok: {product['stok']} pcs\n\n"
+                f"Pilih field yang akan diubah:"
+            )
+            
+            keyboard = [
+                [InlineKeyboardButton("[EDIT] Nama", callback_data="kp_edt_nama")],
+                [InlineKeyboardButton("[EDIT] Harga", callback_data="kp_edt_harga")],
+                [InlineKeyboardButton("[EDIT] Stok", callback_data="kp_edt_stok")],
+                [InlineKeyboardButton("[BATAL]", callback_data="kp_lihat")],
+            ]
+            
+            await query.edit_message_text(
+                text=msg,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
+            
+            logger.info(f"[+] Edit mode for product: {product['kode']}")
+            
+        except Exception as e:
+            logger.error(f"[-] Error in kelola_produk_edit_start: {e}", exc_info=True)
+        
+        return KELOLA_PRODUK_EDIT
+    
+    async def kelola_produk_edit_field(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Handle edit field selection."""
+        query = update.callback_query
+        await query.answer()
+        
+        field = query.data.split("_")[-1]  # nama, harga, or stok
+        context.user_data['editing_field'] = field
+        
+        product = context.user_data.get('editing_product', {})
+        
+        if field == "nama":
+            prompt = f"Masukkan *Nama* baru (saat ini: {product['nama']}):"
+        elif field == "harga":
+            prompt = f"Masukkan *Harga* baru (saat ini: {format_rp(product['harga'])}):"
+        else:  # stok
+            prompt = f"Masukkan *Stok* baru (saat ini: {product['stok']} pcs):"
+        
+        try:
+            await query.edit_message_text(
+                text=prompt,
+                parse_mode="Markdown"
+            )
+        except:
+            pass
+        
+        # Change to a state that accepts text input
+        return KELOLA_PRODUK_TAMBAH_NAMA if field == "nama" else KELOLA_PRODUK_TAMBAH_HARGA if field == "harga" else KELOLA_PRODUK_TAMBAH_STOK
+    
+    async def kelola_produk_hapus_confirm(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Konfirmasi penghapusan produk."""
+        query = update.callback_query
+        await query.answer()
+        
+        try:
+            prod_idx = int(query.data.split("_")[-1])
+            products = context.user_data.get('products_list', [])
+            
+            if prod_idx >= len(products):
+                await query.answer("[ERROR] Produk tidak ditemukan!")
+                return KELOLA_PRODUK_LIHAT
+            
+            product = products[prod_idx]
+            context.user_data['deleting_product'] = product
+            context.user_data['deleting_index'] = prod_idx
+            
+            msg = (
+                f"*KONFIRMASI PENGHAPUSAN*\n\n"
+                f"[PERINGATAN] Anda yakin ingin menghapus produk ini?\n\n"
+                f"KODE: {product['kode']}\n"
+                f"NAMA: {product['nama']}\n"
+                f"HARGA: {format_rp(product['harga'])}\n"
+                f"STOK: {product['stok']} pcs\n\n"
+                f"Tindakan ini TIDAK dapat dibatalkan!"
+            )
+            
+            keyboard = [
+                [
+                    InlineKeyboardButton("[YA] Hapus", callback_data=f"kp_hapus_yes_{prod_idx}"),
+                    InlineKeyboardButton("[TIDAK] Batal", callback_data="kp_hapus_no"),
+                ]
+            ]
+            
+            await query.edit_message_text(
+                text=msg,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
+            
+        except Exception as e:
+            logger.error(f"[-] Error in kelola_produk_hapus_confirm: {e}", exc_info=True)
+        
+        return KELOLA_PRODUK_HAPUS
+    
+    async def kelola_produk_hapus_confirm_exec(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Execute penghapusan produk."""
+        query = update.callback_query
+        await query.answer()
+        
+        try:
+            product = context.user_data.get('deleting_product', {})
+            
+            # Hapus dari database
+            self.db.delete_product(product['kode'])
+            
+            msg = (
+                f"[+] *PRODUK BERHASIL DIHAPUS*\n\n"
+                f"KODE: {product['kode']}\n"
+                f"NAMA: {product['nama']}\n\n"
+                f"Produk telah dihapus dari database."
+            )
+            
+            keyboard = [
+                [InlineKeyboardButton("[LIST] Lihat Semua", callback_data="kp_lihat")],
+                [InlineKeyboardButton("[KEMBALI]", callback_data="kembali_kp")],
+            ]
+            
+            await query.edit_message_text(
+                text=msg,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
+            
+            logger.info(f"[+] Product deleted: {product['kode']}")
+            
+        except Exception as e:
+            logger.error(f"[-] Error deleting product: {e}", exc_info=True)
+            await query.edit_message_text(f"[ERROR] Gagal menghapus: {e}")
+        
+        return KELOLA_PRODUK_MENU
     
     # ========================================================================
     # RUN BOT
