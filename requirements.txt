@@ -1,0 +1,23 @@
+# Point of Sale (POS) System - Requirements & Dependencies
+
+# Core Python (built-in, tidak perlu install):
+# - sqlite3 (database)
+# - os, sys (system)
+# - datetime (time management)
+# - csv (export ke CSV)
+# - dataclasses (untuk @dataclass decorator)
+# - contextlib (untuk context manager)
+# - json (untuk config management)
+# - logging (untuk bot logging)
+
+# OPTIONAL DEPENDENCIES:
+
+# Telegram Bot (untuk Telegram integration)
+python-telegram-bot>=20.0  # Telegram bot API wrapper
+requests>=2.28  # HTTP library untuk Telegram
+
+# Untuk Enhancement di Masa Depan:
+# pandas==2.x  # Untuk analisis data lebih advanced
+# openpyxl==3.x  # Untuk export ke Excel
+# gunicorn  # WSGI server untuk web deployment
+# flask  # Web framework untuk REST API
