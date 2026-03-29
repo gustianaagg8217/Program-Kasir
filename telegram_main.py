@@ -10,6 +10,7 @@ import json
 import logging
 from datetime import datetime
 from typing import Dict, List, Optional
+import time
 
 from telegram import (
     Update, Bot, InlineKeyboardButton, InlineKeyboardMarkup, 
@@ -100,6 +101,11 @@ class TelegramPOSSystem:
         
         # Per-user transaction handlers
         self.transaction_handlers: Dict[int, TransactionHandler] = {}
+        
+        # Cache untuk optimasi - cache products dengan TTL
+        self._products_cache = None
+        self._cache_timestamp = 0
+        self._cache_ttl = 10  # Cache timeout 10 seconds untuk product list
         
         # Setup application
         self.application = Application.builder().token(token).build()
@@ -200,6 +206,10 @@ class TelegramPOSSystem:
         )
         self.application.add_handler(kelola_produk_conv)
         
+        # Handler untuk hapus item (remove dari transaksi)
+        # Pattern: remove_item_{idx} where idx is any digit sequence
+        self.application.add_handler(CallbackQueryHandler(self.transaksi_remove_item, pattern=r"^remove_item_\d+$"))
+        
         # Other callbacks
         self.application.add_handler(CallbackQueryHandler(self.callback_main_menu, pattern="^main_menu$"))
         self.application.add_handler(CallbackQueryHandler(self.lihat_stok, pattern="^lihat_stok$"))
@@ -221,6 +231,30 @@ class TelegramPOSSystem:
         if user_id not in self.transaction_handlers:
             self.transaction_handlers[user_id] = TransactionHandler(self.db)
         return self.transaction_handlers[user_id]
+    
+    def get_products_cached(self) -> List[Dict]:
+        """
+        Get all products with caching. Cache expired setelah 10 detik.
+        Mengurangi database queries yang berlebihan.
+        """
+        current_time = time.time()
+        
+        # Return cache jika masih valid
+        if self._products_cache is not None and (current_time - self._cache_timestamp) < self._cache_ttl:
+            return self._products_cache
+        
+        # Fetch dari database dan cache hasilnya
+        self._products_cache = self.db.get_all_products()
+        self._cache_timestamp = current_time
+        
+        logger.debug(f"[*] Product cache refreshed - {len(self._products_cache)} items")
+        return self._products_cache
+    
+    def invalidate_products_cache(self):
+        """Invalidate product cache saat ada perubahan produk."""
+        self._products_cache = None
+        self._cache_timestamp = 0
+        logger.debug("[*] Product cache invalidated")
     
     # ========================================================================
     # MAIN MENU & START
@@ -607,15 +641,6 @@ class TelegramPOSSystem:
         except Exception as e:
             logger.error(f"[-] Error in transaksi_hapus_item_btn: {e}", exc_info=True)
         
-        # Register dynamic remove handlers
-        for idx in range(len(items)):
-            self.application.add_handler(
-                CallbackQueryHandler(
-                    self.transaksi_remove_item,
-                    pattern=f"^remove_item_{idx}$"
-                )
-            )
-        
         return TRANSAKSI_MENU
     
     async def transaksi_remove_item(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -788,7 +813,7 @@ class TelegramPOSSystem:
         await query.answer("Mengambil data stok...")
         
         try:
-            stok_list = self.db.get_all_products()
+            stok_list = self.get_products_cached()
             
             if not stok_list:
                 msg = "Belum ada produk di database."
@@ -869,7 +894,7 @@ class TelegramPOSSystem:
         
         try:
             laporan = self.report_generator.get_laporan_harian()
-            stok_list = self.db.get_all_products()
+            stok_list = self.get_products_cached()
             
             total_stok = sum(s['stok'] for s in stok_list) if stok_list else 0
             low_stok = sum(1 for s in stok_list if 0 < s['stok'] <= 20) if stok_list else 0
@@ -975,7 +1000,7 @@ class TelegramPOSSystem:
         await query.answer("Memilih produk untuk diedit...")
         
         try:
-            products = self.db.get_all_products()
+            products = self.get_products_cached()
             
             if not products:
                 keyboard = [[InlineKeyboardButton("Kembali", callback_data="kembali_kp")]]
@@ -1018,7 +1043,7 @@ class TelegramPOSSystem:
         await query.answer("Memilih produk untuk dihapus...")
         
         try:
-            products = self.db.get_all_products()
+            products = self.get_products_cached()
             
             if not products:
                 keyboard = [[InlineKeyboardButton("Kembali", callback_data="kembali_kp")]]
@@ -1062,7 +1087,7 @@ class TelegramPOSSystem:
         await query.answer("Mengambil info stok...")
         
         try:
-            products = self.db.get_all_products()
+            products = self.get_products_cached()
             
             if not products:
                 keyboard = [[InlineKeyboardButton("Kembali", callback_data="kembali_kp")]]
@@ -1127,7 +1152,7 @@ class TelegramPOSSystem:
         await query.answer("Mengambil daftar produk...")
         
         try:
-            products = self.db.get_all_products()
+            products = self.get_products_cached()
             
             if not products:
                 keyboard = [[InlineKeyboardButton("[KEMBALI]", callback_data="kembali_kp")]]
@@ -1308,6 +1333,8 @@ class TelegramPOSSystem:
                 stok=stok
             )
             
+            # Invalidate cache setelah menambah produk
+            self.invalidate_products_cache()
             msg = (
                 f"[+] *PRODUK BERHASIL DITAMBAHKAN!*\n\n"
                 f"KODE: {prod_data['kode']}\n"
@@ -1468,6 +1495,8 @@ class TelegramPOSSystem:
             # Hapus dari database
             self.db.delete_product(product['kode'])
             
+            # Invalidate cache setelah menghapus produk
+            self.invalidate_products_cache()
             msg = (
                 f"[+] *PRODUK BERHASIL DIHAPUS*\n\n"
                 f"KODE: {product['kode']}\n"
