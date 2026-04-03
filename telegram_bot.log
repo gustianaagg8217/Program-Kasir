@@ -1266,3 +1266,11 @@ telegram.error.Conflict: Conflict: terminated by other getUpdates request; make 
 2026-03-29 13:49:18,082 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot8048186562:AAHKrCmuj99ahRcAdex45YcV-IZrR_uOFug/getUpdates "HTTP/1.1 200 OK"
 2026-03-29 13:49:28,282 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot8048186562:AAHKrCmuj99ahRcAdex45YcV-IZrR_uOFug/getUpdates "HTTP/1.1 200 OK"
 2026-03-29 13:49:38,484 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot8048186562:AAHKrCmuj99ahRcAdex45YcV-IZrR_uOFug/getUpdates "HTTP/1.1 200 OK"
+2026-04-03 08:24:32,785 - telegram_bot - INFO - [OK] All command handlers registered
+2026-04-03 08:24:32,785 - telegram_bot - INFO - [OK] Telegram Bot initialized successfully
+2026-04-03 08:26:08,480 - telegram_bot - INFO - [OK] All command handlers registered
+2026-04-03 08:26:08,480 - telegram_bot - INFO - [OK] Telegram Bot initialized successfully
+2026-04-03 08:28:28,392 - telegram_bot - INFO - [OK] All command handlers registered
+2026-04-03 08:28:28,392 - telegram_bot - INFO - [OK] Telegram Bot initialized successfully
+2026-04-03 08:32:08,166 - telegram_bot - INFO - [OK] All command handlers registered
+2026-04-03 08:32:08,166 - telegram_bot - INFO - [OK] Telegram Bot initialized successfully

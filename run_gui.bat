@@ -10,6 +10,9 @@ echo   Toko Accessories G-LIES
 echo ======================================================================
 echo.
 
+REM Set UTF-8 encoding untuk Windows terminal
+chcp 65001 >nul 2>&1
+
 REM Check if Python is installed
 python --version >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (

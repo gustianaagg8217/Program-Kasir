@@ -641,15 +641,11 @@ class TransactionHandler:
             return None
         
         items = []
-        db = DatabaseManager()  # For product lookups
         for item in trans.items:
-            # Get product details untuk nama
-            product = db.get_product_by_kode(item.product_id)
-            product_name = product['nama'] if product else item.product_id
-            
+            # product_id adalah ID database, product_name sudah tersimpan
             items.append({
-                'kode': item.product_id,
-                'nama': product_name,  # ✅ Include product name
+                'kode': str(item.product_id),  # Convert ID ke string untuk compatibility
+                'nama': item.product_name,  # Gunakan product_name yang sudah tersimpan
                 'qty': item.qty,
                 'harga_satuan': item.harga_satuan,
                 'subtotal': item.subtotal

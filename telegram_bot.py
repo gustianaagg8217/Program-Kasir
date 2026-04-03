@@ -221,7 +221,7 @@ class POSTelegramBot:
         self._register_handlers()
         
         self.available = True
-        logger.info("✅ Telegram Bot initialized successfully")
+        logger.info("[OK] Telegram Bot initialized successfully")
     
     def _register_handlers(self):
         """Register semua command handlers."""
@@ -234,7 +234,7 @@ class POSTelegramBot:
         self.application.add_handler(CommandHandler("help", self.cmd_help))
         self.application.add_handler(CommandHandler("ping", self.cmd_ping))
         
-        logger.info("✅ All command handlers registered")
+        logger.info("[OK] All command handlers registered")
     
     # ========================================================================
     # AUTHORIZATION CHECK

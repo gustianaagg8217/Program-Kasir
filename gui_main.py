@@ -213,9 +213,9 @@ class POSGUIApplication(tk.Tk):
         # Create stat cards
         cards_data = [
             ("📦 Total Produk", str(stats['total_products']), COLORS['info']),
-            ("💰 Penjualan Hari Ini", format_rp(dashboard_data.get('today_revenue', 0)), COLORS['success']),
-            ("🔢 Transaksi Hari Ini", str(dashboard_data.get('today_transactions', 0)), COLORS['warning']),
-            ("📈 Rata-rata Transaksi", format_rp(dashboard_data.get('avg_transaction', 0)), COLORS['secondary']),
+            ("💰 Penjualan Hari Ini", format_rp(dashboard_data['hari_ini']['total_penjualan']), COLORS['success']),
+            ("🔢 Transaksi Hari Ini", str(dashboard_data['hari_ini']['total_transaksi']), COLORS['warning']),
+            ("📈 Rata-rata Transaksi", format_rp(int(dashboard_data['hari_ini']['rata_rata'])), COLORS['secondary']),
         ]
         
         for title, value, color in cards_data:
@@ -300,27 +300,156 @@ class POSGUIApplication(tk.Tk):
             return
         
         # Create treeview
-        columns = ('No', 'ID', 'Waktu', 'Total', 'Jumlah Item')
+        columns = ('No', 'ID', 'Waktu', 'Total', 'Kembalian')
         tree = ttk.Treeview(section_frame, columns=columns, height=8, show='headings')
         
         # Define column headings and widths
-        widths = [30, 60, 100, 100, 80]
+        widths = [30, 60, 150, 100, 100]
         for col, width in zip(columns, widths):
             tree.heading(col, text=col)
             tree.column(col, width=width)
         
-        # Add data
+        # Add data (store transaction_ids in a mapping)
         trans_list = recent_trans.get('transactions', [])
+        self._trans_id_map = {}  # Store mapping for click handler
         for i, trans in enumerate(trans_list[-10:], 1):
-            tree.insert('', 'end', values=(
+            item_id = tree.insert('', 'end', values=(
                 str(i),
                 trans['id'],
-                trans['timestamp'],
+                trans['tanggal'],
                 format_rp(trans['total']),
-                str(trans['item_count'])
+                format_rp(trans['kembalian'])
             ))
+            self._trans_id_map[item_id] = trans['id']  # Map tree item to transaction ID
+        
+        # Add click handler
+        tree.bind('<Double-1>', lambda e: self._show_transaction_detail(tree, e))
+        
+        # Add hint label
+        hint_label = tk.Label(
+            section_frame,
+            text="💡 Double-click untuk melihat detail transaksi",
+            font=FONTS['small'],
+            bg=COLORS['bg_card'],
+            fg=COLORS['text_secondary']
+        )
+        hint_label.pack(anchor='w', padx=15, pady=5)
         
         tree.pack(fill='both', expand=True, padx=15, pady=10)
+    
+    def _show_transaction_detail(self, tree, event):
+        """Show transaction detail dialog when double-clicked."""
+        selection = tree.selection()
+        if not selection:
+            return
+        
+        item_id = selection[0]
+        transaction_id = self._trans_id_map.get(item_id)
+        
+        if not transaction_id:
+            return
+        
+        # Get transaction details from database
+        trans_detail = self.db.get_transaction(transaction_id)
+        
+        if not trans_detail:
+            messagebox.showerror("Error", "Transaksi tidak ditemukan")
+            return
+        
+        trans = trans_detail['transaction']
+        items = trans_detail['items']
+        
+        # Create detail dialog
+        dialog = tk.Toplevel(self)
+        dialog.title(f"📝 Detail Transaksi - ID {transaction_id}")
+        dialog.geometry("600x500")
+        dialog.configure(bg=COLORS['bg_main'])
+        
+        # Header
+        header = tk.Label(
+            dialog,
+            text=f"Transaksi ID: {transaction_id}",
+            font=FONTS['heading'],
+            bg=COLORS['bg_main'],
+            fg=COLORS['primary']
+        )
+        header.pack(pady=10)
+        
+        # Info section
+        info_frame = tk.Frame(dialog, bg=COLORS['bg_card'], relief='flat', bd=1)
+        info_frame.pack(fill='x', padx=10, pady=5)
+        
+        info_text = f"""
+Tanggal/Waktu   : {trans['tanggal']}
+        """
+        
+        info_label = tk.Label(
+            info_frame,
+            text=info_text,
+            font=FONTS['small'],
+            bg=COLORS['bg_card'],
+            justify='left'
+        )
+        info_label.pack(anchor='w', padx=10, pady=10)
+        
+        # Items section
+        items_frame = ttk.LabelFrame(dialog, text="📦 Item Transaksi", padding=10)
+        items_frame.pack(fill='both', expand=True, padx=10, pady=5)
+        
+        # Create treeview untuk items detail
+        columns = ('No', 'Produk', 'Qty', 'Harga', 'Subtotal')
+        items_tree = ttk.Treeview(items_frame, columns=columns, height=10, show='headings')
+        
+        items_tree.heading('No', text='No')
+        items_tree.heading('Produk', text='Produk')
+        items_tree.heading('Qty', text='Qty')
+        items_tree.heading('Harga', text='Harga Satuan')
+        items_tree.heading('Subtotal', text='Subtotal')
+        
+        items_tree.column('No', width=30)
+        items_tree.column('Produk', width=150)
+        items_tree.column('Qty', width=50)
+        items_tree.column('Harga', width=100)
+        items_tree.column('Subtotal', width=100)
+        
+        # Add items
+        for idx, item in enumerate(items, 1):
+            items_tree.insert('', 'end', values=(
+                str(idx),
+                item.get('nama', 'N/A'),
+                str(item.get('qty', 0)),
+                format_rp(item.get('harga_satuan', 0)),
+                format_rp(item.get('subtotal', 0))
+            ))
+        
+        scrollbar = ttk.Scrollbar(items_frame, orient='vertical', command=items_tree.yview)
+        items_tree.configure(yscroll=scrollbar.set)
+        scrollbar.pack(side='right', fill='y')
+        items_tree.pack(fill='both', expand=True)
+        
+        # Summary section
+        summary_frame = tk.Frame(dialog, bg=COLORS['bg_card'], relief='flat', bd=1)
+        summary_frame.pack(fill='x', padx=10, pady=5)
+        
+        summary_text = f"""
+Total Belanja    : {format_rp(trans['total'])}
+Pembayaran       : {format_rp(trans['bayar'])}
+Kembalian        : {format_rp(trans['kembalian'])}
+        """
+        
+        summary_label = tk.Label(
+            summary_frame,
+            text=summary_text,
+            font=FONTS['mono'],
+            bg=COLORS['bg_card'],
+            justify='left'
+        )
+        summary_label.pack(anchor='w', padx=10, pady=10)
+        
+        # Close button
+        close_btn = ttk.Button(dialog, text="Tutup", command=dialog.destroy)
+        close_btn.pack(pady=10)
+    
     
     # ========================================================================
     # PRODUCTS PAGE
@@ -774,14 +903,13 @@ class POSGUIApplication(tk.Tk):
         
         if summary and summary['items_count'] > 0:
             items = self.transaction_handler.get_items()
-            for i, item in enumerate(items, 1):
-                product = self.db.get_product(item['kode'])
-                if product:
+            if items:  # Check if items is not None
+                for i, item in enumerate(items, 1):
                     self.cart_tree.insert('', 'end', values=(
                         str(i),
-                        product.nama,
+                        item['nama'],  # Sudah tersimpan dengan benar
                         str(item['qty']),
-                        format_rp(product.harga),
+                        format_rp(item['harga_satuan']),
                         format_rp(item['subtotal'])
                     ))
             
@@ -880,10 +1008,10 @@ class POSGUIApplication(tk.Tk):
         summary_frame.pack(fill='x', padx=10, pady=10)
         
         info_text = f"""
-Total Penjualan     : {format_rp(laporan.get('total_revenue', 0))}
-Total Transaksi     : {laporan.get('total_transactions', 0)}
-Rata-rata Transaksi : {format_rp(laporan.get('avg_transaction', 0))}
-Transaksi Tertinggi : {format_rp(laporan.get('max_transaction', 0))}
+Total Penjualan     : {format_rp(laporan.get('total_penjualan', 0))}
+Total Transaksi     : {laporan.get('total_transaksi', 0)}
+Rata-rata Transaksi : {format_rp(int(laporan.get('rata_rata_transaksi', 0)))}
+Total Item          : {laporan.get('total_item', 0)}
         """
         
         info_label = tk.Label(
@@ -899,28 +1027,28 @@ Transaksi Tertinggi : {format_rp(laporan.get('max_transaction', 0))}
         trans_frame = ttk.LabelFrame(parent, text="📋 Daftar Transaksi", padding=10)
         trans_frame.pack(fill='both', expand=True, padx=10, pady=10)
         
-        columns = ('No', 'ID', 'Waktu', 'Total', 'Items')
+        columns = ('No', 'ID', 'Total', 'Pembayaran', 'Kembalian')
         tree = ttk.Treeview(trans_frame, columns=columns, height=15, show='headings')
         
         tree.heading('No', text='No')
-        tree.heading('ID', text='Transaksi ID')
-        tree.heading('Waktu', text='Waktu')
+        tree.heading('ID', text='ID')
         tree.heading('Total', text='Total')
-        tree.heading('Items', text='Items')
+        tree.heading('Pembayaran', text='Pembayaran')
+        tree.heading('Kembalian', text='Kembalian')
         
         tree.column('No', width=30)
-        tree.column('ID', width=80)
-        tree.column('Waktu', width=120)
+        tree.column('ID', width=60)
         tree.column('Total', width=120)
-        tree.column('Items', width=60)
+        tree.column('Pembayaran', width=120)
+        tree.column('Kembalian', width=120)
         
         for i, trans in enumerate(laporan.get('transactions', []), 1):
             tree.insert('', 'end', values=(
                 str(i),
                 trans['id'],
-                trans['timestamp'],
                 format_rp(trans['total']),
-                str(trans['item_count'])
+                format_rp(trans['bayar']),
+                format_rp(trans['kembalian'])
             ))
         
         scrollbar = ttk.Scrollbar(trans_frame, orient='vertical', command=tree.yview)

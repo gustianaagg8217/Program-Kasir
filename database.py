@@ -141,7 +141,7 @@ class DatabaseManager:
             """)
             
             conn.commit()
-            print("✅ Database tabel berhasil diinisialisasi")
+            print("[OK] Database tabel berhasil diinisialisasi")
     
     # ========================================================================
     # PRODUCT OPERATIONS - CRUD operasi untuk tabel products
