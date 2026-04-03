@@ -7,10 +7,17 @@
 
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
-from datetime import datetime
+from datetime import datetime, timedelta
 from tkcalendar import DateEntry
 import os
 import sys
+
+# Matplotlib integration
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 
 # Import semua modules dari sistem POS
 from database import DatabaseManager
@@ -18,6 +25,9 @@ from models import ProductManager, ValidationError, format_rp
 from transaction import TransactionService, TransactionHandler, ReceiptManager
 from laporan import ReportGenerator, ReportFormatter, CSVExporter
 from telegram_bot import POSTelegramBot, TelegramConfigManager, TELEGRAM_AVAILABLE
+from logger_config import get_logger, log_user_login, log_user_logout, log_product_added, log_product_updated, log_product_deleted, log_transaction_completed
+
+logger = get_logger(__name__)
 
 # ============================================================================
 # COLOR SCHEME & STYLING
@@ -47,17 +57,152 @@ FONTS = {
 }
 
 # ============================================================================
+# LOGIN WINDOW - Form login dengan role-based access
+# ============================================================================
+
+class LoginWindow(tk.Toplevel):
+    """
+    Window login untuk autentikasi user.
+    Mendukung 2 role: admin dan cashier.
+    """
+    
+    def __init__(self, parent, db):
+        """
+        Inisialisasi login window.
+        
+        Args:
+            parent: Parent window (biasanya root)
+            db: DatabaseManager instance
+        """
+        super().__init__(parent)
+        self.db = db
+        self.result = None
+        
+        # Window settings
+        self.title("🔐 Login - Sistem POS")
+        self.geometry("400x300")
+        self.transient(parent)
+        self.grab_set()
+        self.resizable(False, False)
+        
+        # Center window on screen (not on parent, since parent is withdrawn)
+        self.update_idletasks()
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        x = (screen_width // 2) - 200
+        y = (screen_height // 2) - 150
+        self.geometry(f"+{x}+{y}")
+        
+        # Create UI
+        self._create_ui()
+        
+    def _create_ui(self):
+        """Create login form UI."""
+        # Header
+        header = ttk.Label(
+            self,
+            text="Login Aplikasi POS",
+            font=FONTS['title'],
+            foreground=COLORS['primary']
+        )
+        header.pack(pady=20)
+        
+        # Form frame
+        form_frame = ttk.Frame(self, padding=20)
+        form_frame.pack(fill='both', expand=True)
+        
+        # Username
+        ttk.Label(form_frame, text="Username:", font=FONTS['normal']).pack(anchor='w', pady=(0, 5))
+        self.username_var = tk.StringVar()
+        username_entry = ttk.Entry(form_frame, textvariable=self.username_var, width=30)
+        username_entry.pack(fill='x', pady=(0, 15))
+        username_entry.focus()
+        
+        # Password
+        ttk.Label(form_frame, text="Password:", font=FONTS['normal']).pack(anchor='w', pady=(0, 5))
+        self.password_var = tk.StringVar()
+        password_entry = ttk.Entry(form_frame, textvariable=self.password_var, show="*", width=30)
+        password_entry.pack(fill='x', pady=(0, 20))
+        
+        # Bind Enter key
+        password_entry.bind('<Return>', lambda e: self._login())
+        
+        # Button frame
+        btn_frame = ttk.Frame(form_frame)
+        btn_frame.pack(fill='x')
+        
+        login_btn = ttk.Button(
+            btn_frame,
+            text="✅ Login",
+            command=self._login
+        )
+        login_btn.pack(side='left', padx=5)
+        
+        exit_btn = ttk.Button(
+            btn_frame,
+            text="❌ Keluar",
+            command=self.quit
+        )
+        exit_btn.pack(side='left', padx=5)
+        
+        # Info message
+        info_label = ttk.Label(
+            self,
+            text="Demo: username='admin' password='admin123'\n"
+                 "      atau username='cashier' password='cashier123'",
+            font=FONTS['small'],
+            foreground=COLORS['text_secondary'],
+            justify='center'
+        )
+        info_label.pack(pady=10)
+    
+    def _login(self):
+        """Process login."""
+        username = self.username_var.get().strip()
+        password = self.password_var.get()
+        
+        if not username or not password:
+            messagebox.showwarning("Peringatan", "Username dan password harus diisi!")
+            logger.warning(f"Login attempt with empty credentials")
+            return
+        
+        # Verify login
+        user = self.db.verify_user_login(username, password)
+        
+        if user:
+            self.result = user
+            logger.info(f"User login successful: {username} ({user['role']})")
+            self.destroy()
+        else:
+            messagebox.showerror("Login Gagal", "Username atau password salah!")
+            logger.warning(f"Failed login attempt for user: {username}")
+            self.password_var.set("")
+    
+    def get_user(self):
+        """Get logged-in user data."""
+        return self.result
+
+
+# ============================================================================
 # MAIN GUI APPLICATION
 # ============================================================================
 
 class POSGUIApplication(tk.Tk):
     """Main GUI Application untuk sistem POS."""
     
-    def __init__(self):
-        """Inisialisasi aplikasi GUI."""
+    def __init__(self, user=None):
+        """
+        Inisialisasi aplikasi GUI.
+        
+        Args:
+            user (dict): Data user yang login {id, username, role}
+        """
         super().__init__()
         
-        self.title("🛒 Sistem POS - Toko Accessories G-LIES")
+        # Store user info
+        self.current_user = user or {'username': 'Guest', 'role': 'guest'}
+        
+        self.title(f"🛒 Sistem POS - {self.current_user['username']} ({self.current_user['role'].upper()})")
         self.geometry("1200x700")
         self.configure(bg=COLORS['bg_main'])
         
@@ -73,6 +218,7 @@ class POSGUIApplication(tk.Tk):
         # Setup UI
         self._setup_styles()
         self._create_widgets()
+        self._setup_keyboard_shortcuts()
         
         # Center window on screen
         self.update_idletasks()
@@ -80,20 +226,26 @@ class POSGUIApplication(tk.Tk):
     def _init_backend(self):
         """Inisialisasi backend POS System."""
         try:
-            self.db = DatabaseManager()
-            self.product_manager = ProductManager(self.db)
-            self.transaction_handler = TransactionHandler(self.db)
-            self.report_generator = ReportGenerator(self.db)
-            self.report_formatter = ReportFormatter()
-            self.csv_exporter = CSVExporter()
-            
-            # Initialize Telegram Bot
+            # Initialize Telegram Bot FIRST (sebelum DatabaseManager)
             self.telegram_bot = None
             if TELEGRAM_AVAILABLE:
                 try:
                     self.telegram_bot = POSTelegramBot()
                 except Exception as e:
                     print(f"⚠️ Telegram bot init failed: {e}")
+            
+            # Initialize DatabaseManager dengan telegram_bot untuk low stock alerts
+            self.db = DatabaseManager(telegram_bot=self.telegram_bot)
+            
+            # Create automatic backup on startup
+            if self.db.backup_database():
+                logger.info("Daily backup created successfully")
+            
+            self.product_manager = ProductManager(self.db)
+            self.transaction_handler = TransactionHandler(self.db)
+            self.report_generator = ReportGenerator(self.db)
+            self.report_formatter = ReportFormatter()
+            self.csv_exporter = CSVExporter()
             
             self.current_transaction = None
         except Exception as e:
@@ -124,6 +276,45 @@ class POSGUIApplication(tk.Tk):
                        foreground=COLORS['text_primary'],
                        background=COLORS['bg_main'])
     
+    def _setup_keyboard_shortcuts(self):
+        """Setup keyboard shortcuts for faster operation."""
+        # Enter → Add item to transaction
+        self.bind('<Return>', self._on_enter_pressed)
+        
+        # F1 → New transaction (show transaction page)
+        self.bind('<F1>', lambda e: self.show_transaction())
+        
+        # F2 → Process payment
+        self.bind('<F2>', lambda e: self._process_payment())
+        
+        # Escape → Cancel transaction
+        self.bind('<Escape>', lambda e: self._clear_transaction())
+        
+        logger.info("Keyboard shortcuts registered:")
+        logger.info("  Enter → Add item")
+        logger.info("  F1 → New transaction")
+        logger.info("  F2 → Process payment")
+        logger.info("  Escape → Cancel transaction")
+    
+    def _on_enter_pressed(self, event):
+        """Handle Enter key press - add item to transaction."""
+        # Only process if transaction page is active and search field has focus or is empty
+        try:
+            # Check if product_listbox exists (means we're on transaction page)
+            if hasattr(self, 'product_listbox'):
+                # Check if any product is selected in listbox
+                selection = self.product_listbox.curselection()
+                if selection:
+                    # If listbox has selection, select from list
+                    self._select_from_list()
+                    self._add_transaction_item()
+                elif hasattr(self, 'product_search_var'):
+                    # If product_search field has value, add the item
+                    if self.product_search_var.get().strip():
+                        self._add_transaction_item()
+        except Exception as e:
+            logger.debug(f"Enter key handler: {e}")
+    
     def _create_widgets(self):
         """Create main widgets."""
         # Main container
@@ -142,7 +333,7 @@ class POSGUIApplication(tk.Tk):
         self.show_dashboard()
     
     def _create_sidebar(self, parent):
-        """Create navigation sidebar."""
+        """Create navigation sidebar dengan role-based access."""
         sidebar = ttk.Frame(parent, width=200)
         sidebar.pack(side='left', fill='y', ipady=20)
         
@@ -155,30 +346,60 @@ class POSGUIApplication(tk.Tk):
         )
         logo_label.pack(pady=20)
         
+        # User info
+        user_info = ttk.Frame(sidebar)
+        user_info.pack(fill='x', padx=10, pady=10)
+        
+        ttk.Label(
+            user_info,
+            text=f"User: {self.current_user['username']}",
+            font=FONTS['small'],
+            foreground=COLORS['text_secondary']
+        ).pack(anchor='w')
+        
+        role_color = COLORS['success'] if self.current_user['role'] == 'admin' else COLORS['info']
+        ttk.Label(
+            user_info,
+            text=f"Role: {self.current_user['role'].upper()}",
+            font=FONTS['small'],
+            foreground=role_color
+        ).pack(anchor='w')
+        
         separator = ttk.Separator(sidebar, orient='horizontal')
         separator.pack(fill='x', padx=10)
         
         # Menu buttons
         menu_items = [
-            ("🏠 Dashboard", self.show_dashboard),
-            ("📦 Produk", self.show_products),
-            ("🛒 Transaksi", self.show_transaction),
-            ("📊 Laporan", self.show_reports),
-            ("🤖 Telegram Bot", self.show_telegram),
-            ("⚙️ Settings", self.show_settings),
-            ("❌ Keluar", self.quit),
+            ("🏠 Dashboard", self.show_dashboard, True),  # visible for all
+            ("📦 Produk", self.show_products, True),
+            ("🛒 Transaksi", self.show_transaction, True),
+            ("📊 Laporan", self.show_reports, True),
+            ("🤖 Telegram Bot", self.show_telegram, True),
         ]
         
-        for label, command in menu_items:
-            btn = ttk.Button(
-                sidebar,
-                text=label,
-                command=command,
-                width=20
-            )
-            btn.pack(pady=5, padx=10, fill='x')
+        # Add Settings only for admin
+        if self.current_user['role'] == 'admin':
+            menu_items.append(("⚙️ Settings", self.show_settings, True))
+        
+        menu_items.append(("🚪 Logout", self._logout, True))
+        
+        for label, command, visible in menu_items:
+            if visible:
+                btn = ttk.Button(
+                    sidebar,
+                    text=label,
+                    command=command,
+                    width=20
+                )
+                btn.pack(pady=5, padx=10, fill='x')
         
         return sidebar
+    
+    def _logout(self):
+        """Logout user dan kembali ke login screen."""
+        if messagebox.askyesno("Logout", f"Keluar dari akun {self.current_user['username']}?"):
+            self.quit()  # Close aplikasi
+            # Note: main() akan show login window lagi
     
     def _clear_content(self):
         """Clear content area."""
@@ -220,6 +441,12 @@ class POSGUIApplication(tk.Tk):
         
         for title, value, color in cards_data:
             self._create_stat_card(stats_frame, title, value, color)
+        
+        # Daily sales chart (last 7 days)
+        chart_frame = ttk.Frame(self.content_area)
+        chart_frame.pack(fill='both', expand=True, pady=10)
+        
+        self._create_daily_sales_chart(chart_frame)
         
         # Recent transactions section
         self._create_recent_transactions_section()
@@ -461,123 +688,213 @@ Kembalian        : {format_rp(trans['kembalian'])}
         close_btn.pack(side='left', padx=5)
     
     def _generate_receipt_text(self, trans, items):
-        """Generate receipt text format."""
+        """Generate receipt text format with discount and tax."""
         receipt = []
-        receipt.append("=" * 40)
-        receipt.append("TOKO ACCESSORIES G-LIES".center(40))
-        receipt.append("Jl. Majalaya, Solokanjeruk, Bandung".center(40))
-        receipt.append("=" * 40)
-        receipt.append("")
-        receipt.append(f"Transaksi ID  : {trans['id']}")
-        receipt.append(f"Tanggal/Waktu : {trans['tanggal']}")
-        receipt.append("-" * 40)
-        receipt.append("Daftar Item:")
-        receipt.append("-" * 40)
         
+        # Load store config
+        store_config = self._load_store_config()
+        store_name = store_config.get('store', {}).get('name', 'TOKO ACCESSORIES G-LIES')
+        store_address = store_config.get('store', {}).get('address', 'Jl. Majalaya, Solokanjeruk, Bandung')
+        store_phone = store_config.get('store', {}).get('phone', '')
+        receipt_width = store_config.get('receipt', {}).get('width', 40)
+        show_phone = store_config.get('receipt', {}).get('show_phone', True)
+        
+        # Header
+        receipt.append("=" * receipt_width)
+        receipt.append(store_name.center(receipt_width))
+        receipt.append(store_address.center(receipt_width))
+        if show_phone and store_phone:
+            receipt.append(store_phone.center(receipt_width))
+        receipt.append("=" * receipt_width)
+        receipt.append("")
+        
+        # Transaction info
+        receipt.append(f"Transaksi ID  : {trans['id']}")
+        
+        # Format datetime nicely
+        try:
+            trans_datetime = datetime.strptime(trans['tanggal'], '%Y-%m-%d %H:%M:%S')
+            formatted_date = trans_datetime.strftime('%d/%m/%Y %H:%M:%S')
+        except:
+            formatted_date = trans['tanggal']
+        
+        receipt.append(f"Tanggal/Waktu : {formatted_date}")
+        receipt.append("-" * receipt_width)
+        receipt.append("Daftar Item:")
+        receipt.append("-" * receipt_width)
+        
+        subtotal = 0
         for i, item in enumerate(items, 1):
-            product_name = item.get('nama', 'N/A')[:25]  # Truncate long names
+            product_name = item.get('nama', 'N/A')[:receipt_width - 10]  # Leave room for number
             qty = item.get('qty', 0)
             harga = item.get('harga_satuan', 0)
-            subtotal = item.get('subtotal', 0)
+            subtotal_item = item.get('subtotal', 0)
+            subtotal += subtotal_item
             
-            # Format: "Produk      Qty x Harga = Subtotal"
+            # Format: "Produk | Qty x Harga = Subtotal"
             receipt.append(f"{i}. {product_name}")
-            receipt.append(f"   {qty}x {format_rp(harga)} = {format_rp(subtotal)}")
+            qty_text = f"{qty}x {format_rp(harga)}"
+            total_text = format_rp(subtotal_item)
+            # Right-align the totals
+            line = f"   {qty_text} = {total_text}"
+            receipt.append(line)
         
-        receipt.append("-" * 40)
-        receipt.append(f"Total Belanja  : {format_rp(trans['total'])}")
-        receipt.append(f"Pembayaran     : {format_rp(trans['bayar'])}")
-        receipt.append(f"Kembalian      : {format_rp(trans['kembalian'])}")
-        receipt.append("=" * 40)
-        receipt.append("Terima Kasih".center(40))
-        receipt.append("=" * 40)
+        receipt.append("-" * receipt_width)
+        
+        # Summary with proper alignment
+        receipt.append(self._format_receipt_line("Subtotal", format_rp(subtotal), receipt_width))
+        
+        # Add discount if applicable
+        discount = trans.get('discount_amount', 0)
+        if discount > 0:
+            discount_pct = trans.get('discount_percent', 0)
+            discount_line = f"Diskon ({discount_pct}%)"
+            receipt.append(self._format_receipt_line(discount_line, f"-{format_rp(discount)}", receipt_width))
+        
+        # Add tax if applicable
+        tax = trans.get('tax_amount', 0)
+        if tax > 0:
+            tax_pct = trans.get('tax_percent', 0)
+            tax_line = f"Pajak ({tax_pct}%)"
+            receipt.append(self._format_receipt_line(tax_line, f"+{format_rp(tax)}", receipt_width))
+        
+        receipt.append("-" * receipt_width)
+        receipt.append(self._format_receipt_line("Total Belanja", format_rp(trans['total']), receipt_width, bold=True))
+        receipt.append(self._format_receipt_line("Pembayaran", format_rp(trans['bayar']), receipt_width))
+        receipt.append(self._format_receipt_line("Kembalian", format_rp(trans['kembalian']), receipt_width))
+        receipt.append("=" * receipt_width)
+        
+        # Thank you message
+        receipt.append("Terima Kasih".center(receipt_width))
+        
+        # Footer message
+        footer_msg = "Barang yang sudah dibeli\ntidak dapat dikembalikan"
+        for line in footer_msg.split('\n'):
+            receipt.append(line.center(receipt_width))
+        
+        receipt.append("=" * receipt_width)
         
         return "\n".join(receipt)
     
-    def _print_transaction_receipt(self, trans, items):
-        """Print transaction receipt."""
-        receipt_text = self._generate_receipt_text(trans, items)
+    def _format_receipt_line(self, label, value, width=40, bold=False):
+        """Format a receipt line with label on left and value right-aligned."""
+        # Calculate spacing
+        label_len = len(label)
+        value_len = len(value)
+        spacing = width - label_len - value_len
         
+        if spacing < 1:
+            spacing = 1
+        
+        line = label + (" " * spacing) + value
+        return line[:width]  # Ensure max width
+    
+    def _load_store_config(self):
+        """Load store configuration from JSON file."""
+        try:
+            import json
+            config_path = os.path.join(os.path.dirname(__file__), 'store_config.json')
+            if os.path.exists(config_path):
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+        except Exception as e:
+            logger.warning(f"Failed to load store config: {e}")
+        
+        # Return default config
+        return {
+            'store': {
+                'name': 'TOKO ACCESSORIES G-LIES',
+                'address': 'Jl. Majalaya, Solokanjeruk, Bandung',
+                'phone': ''
+            },
+            'receipt': {
+                'width': 40,
+                'show_phone': True
+            }
+        }
+    
+    def _print_report_dialog(self, report_content, filename_prefix):
+        """Generic print dialog untuk semua jenis laporan/dokumen."""
         # Create print preview dialog
         preview_dialog = tk.Toplevel(self)
-        preview_dialog.title("🖨️ Preview Resi")
-        preview_dialog.geometry("500x600")
+        preview_dialog.title(f"🖨️ Preview - {filename_prefix}")
+        preview_dialog.geometry("600x600")
         preview_dialog.configure(bg=COLORS['bg_main'])
         
         # Header
         header = tk.Label(
             preview_dialog,
-            text="Preview Resi",
+            text="Preview Dokumen",
             font=FONTS['heading'],
             bg=COLORS['bg_main'],
             fg=COLORS['primary']
         )
         header.pack(pady=10)
         
-        # Receipt text display
+        # Report text display
         text_frame = ttk.Frame(preview_dialog)
         text_frame.pack(fill='both', expand=True, padx=10, pady=10)
         
-        receipt_display = tk.Text(text_frame, font=FONTS['mono'], height=25, width=50)
-        receipt_display.insert('1.0', receipt_text)
-        receipt_display.config(state='disabled')  # Read-only
+        report_display = tk.Text(text_frame, font=FONTS['mono'], height=30, width=70)
+        report_display.insert('1.0', report_content)
+        report_display.config(state='disabled')  # Read-only
         
-        scrollbar = ttk.Scrollbar(text_frame, orient='vertical', command=receipt_display.yview)
-        receipt_display.config(yscroll=scrollbar.set)
+        scrollbar = ttk.Scrollbar(text_frame, orient='vertical', command=report_display.yview)
+        report_display.config(yscroll=scrollbar.set)
         scrollbar.pack(side='right', fill='y')
-        receipt_display.pack(fill='both', expand=True)
+        report_display.pack(fill='both', expand=True)
         
         # Buttons
         btn_frame = ttk.Frame(preview_dialog)
         btn_frame.pack(fill='x', padx=10, pady=10)
         
-        def print_receipt():
-            """Print resi ke printer."""
+        def print_document():
+            """Print dokumen ke printer."""
             try:
                 # Save to temporary file
                 import tempfile
                 import subprocess
                 
                 with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt', encoding='utf-8') as f:
-                    f.write(receipt_text)
+                    f.write(report_content)
                     temp_file = f.name
                 
                 # Print the file (Windows)
                 subprocess.run(['notepad', '/p', temp_file], check=True)
-                messagebox.showinfo("Sukses", "Resi sedang dicetak...")
+                messagebox.showinfo("Sukses", "Dokumen sedang dicetak...")
                 preview_dialog.destroy()
             except Exception as e:
                 messagebox.showerror("Error", f"Gagal mencetak: {e}")
         
-        def save_receipt():
-            """Save resi ke file."""
+        def save_document():
+            """Save dokumen ke file."""
             try:
                 from tkinter import filedialog
                 
                 file_path = filedialog.asksaveasfilename(
                     defaultextension=".txt",
                     filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
-                    initialfile=f"resi_{trans['id']}.txt"
+                    initialfile=f"{filename_prefix}.txt"
                 )
                 
                 if file_path:
                     with open(file_path, 'w', encoding='utf-8') as f:
-                        f.write(receipt_text)
-                    messagebox.showinfo("Sukses", f"Resi disimpan ke:\n{file_path}")
+                        f.write(report_content)
+                    messagebox.showinfo("Sukses", f"Dokumen disimpan ke:\n{file_path}")
             except Exception as e:
                 messagebox.showerror("Error", f"Gagal menyimpan: {e}")
         
-        print_resi_btn = ttk.Button(
+        print_btn = ttk.Button(
             btn_frame,
             text="🖨️ Cetak",
-            command=print_receipt
+            command=print_document
         )
-        print_resi_btn.pack(side='left', padx=5)
+        print_btn.pack(side='left', padx=5)
         
         save_btn = ttk.Button(
             btn_frame,
             text="💾 Simpan",
-            command=save_receipt
+            command=save_document
         )
         save_btn.pack(side='left', padx=5)
         
@@ -587,6 +904,102 @@ Kembalian        : {format_rp(trans['kembalian'])}
             command=preview_dialog.destroy
         )
         close_btn.pack(side='left', padx=5)
+    
+    def _print_transaction_receipt(self, trans, items):
+        """Print transaction receipt."""
+        receipt_text = self._generate_receipt_text(trans, items)
+        self._print_report_dialog(receipt_text, f"resi_{trans['id']}")
+    
+    def _create_daily_sales_chart(self, parent):
+        """Create daily sales chart for the last 7 days."""
+        try:
+            # Calculate date range (last 7 days)
+            today = datetime.now().date()
+            start_date = (today - timedelta(days=6)).strftime('%Y-%m-%d')
+            end_date = today.strftime('%Y-%m-%d')
+            
+            # Get daily sales data
+            report_data = self.report_generator.get_laporan_periode(start_date, end_date)
+            
+            if not report_data or not report_data.get('harian_breakdown'):
+                # No data, show empty message
+                empty_label = tk.Label(
+                    parent,
+                    text="📈 Belum ada data penjualan (7 hari terakhir)",
+                    font=FONTS['small'],
+                    fg=COLORS['text_secondary']
+                )
+                empty_label.pack(pady=20)
+                return
+            
+            # Extract daily data
+            daily_data = report_data['harian_breakdown']
+            
+            # Fill missing days with zero values
+            all_days = []
+            current = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end = datetime.strptime(end_date, '%Y-%m-%d').date()
+            
+            day_totals = {d['tanggal']: d['total'] for d in daily_data}
+            
+            while current <= end:
+                date_str = current.strftime('%Y-%m-%d')
+                all_days.append(date_str)
+                current += timedelta(days=1)
+            
+            # Prepare data for chart
+            dates = []
+            sales_values = []
+            
+            for date_str in all_days:
+                # Format date as "Mon 1" style (day abbreviation + date number)
+                date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+                day_abbr = date_obj.strftime('%a')
+                day_num = date_obj.strftime('%d').lstrip('0')
+                dates.append(f"{day_abbr}\n{day_num}")
+                sales_values.append(day_totals.get(date_str, 0))
+            
+            # Create matplotlib figure
+            fig = Figure(figsize=(10, 4), dpi=100)
+            ax = fig.add_subplot(111)
+            
+            # Create bar chart
+            colors = [COLORS['success'] if val > 0 else COLORS['text_secondary'] for val in sales_values]
+            bars = ax.bar(dates, sales_values, color=colors, edgecolor='black', linewidth=0.5)
+            
+            # Add value labels on top of bars
+            for bar in bars:
+                height = bar.get_height()
+                if height > 0:
+                    ax.text(bar.get_x() + bar.get_width()/2., height,
+                            f'Rp {int(height):,}',
+                            ha='center', va='bottom', fontsize=8, rotation=0)
+            
+            # Styling
+            ax.set_title('📈 Penjualan 7 Hari Terakhir', fontsize=12, fontweight='bold', pad=15)
+            ax.set_ylabel('Total Penjualan (Rp)', fontsize=10)
+            ax.set_xlabel('Tanggal', fontsize=10)
+            ax.grid(axis='y', alpha=0.3, linestyle='--')
+            
+            # Format y-axis labels as currency
+            ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'Rp {int(x/1000)}K'))
+            
+            fig.tight_layout()
+            
+            # Embed in Tkinter
+            canvas = FigureCanvasTkAgg(fig, master=parent)
+            canvas.draw()
+            canvas.get_tk_widget().pack(fill='both', expand=True)
+            
+        except Exception as e:
+            logger.error(f"Error creating daily sales chart: {e}", exc_info=True)
+            error_label = tk.Label(
+                parent,
+                text=f"⚠️ Gagal membuat chart: {str(e)}",
+                font=FONTS['small'],
+                fg=COLORS['danger']
+            )
+            error_label.pack(pady=20)
     
     
     
@@ -896,21 +1309,49 @@ Kembalian        : {format_rp(trans['kembalian'])}
         left_frame = ttk.LabelFrame(main_frame, text="📦 Tambah Item", padding=10)
         left_frame.pack(side='left', fill='both', expand=True, padx=5)
         
-        ttk.Label(left_frame, text="Cari Produk:", font=FONTS['normal']).pack(anchor='w', pady=5)
+        ttk.Label(left_frame, text="Cari Produk (Kode/Nama):", font=FONTS['normal']).pack(anchor='w', pady=5)
         
         self.product_search_var = tk.StringVar()
-        search_entry = ttk.Combobox(
+        search_entry = ttk.Entry(
             left_frame,
             textvariable=self.product_search_var,
-            width=30,
-            state='normal'
+            width=30
         )
         search_entry.pack(fill='x', pady=5)
+        search_entry.focus()
         
-        # Populate combobox with products
-        products = self.product_manager.list_products()
-        product_options = [f"{p.kode} - {p.nama}" for p in products]
-        search_entry['values'] = product_options
+        # Bind KeyRelease event for dynamic filtering
+        search_entry.bind('<KeyRelease>', lambda e: self._filter_product_list())
+        search_entry.bind('<Down>', lambda e: self._focus_product_list())
+        search_entry.bind('<Return>', lambda e: self._select_from_list())
+        
+        # Create frame for product suggestions
+        suggestion_frame = ttk.Frame(left_frame)
+        suggestion_frame.pack(fill='both', expand=True, pady=5)
+        
+        # Scrollbar for listbox
+        scrollbar = ttk.Scrollbar(suggestion_frame)
+        scrollbar.pack(side='right', fill='y')
+        
+        # Product suggestions listbox
+        self.product_listbox = tk.Listbox(
+            suggestion_frame,
+            height=8,
+            yscrollcommand=scrollbar.set,
+            font=FONTS['small']
+        )
+        self.product_listbox.pack(fill='both', expand=True, side='left')
+        scrollbar.config(command=self.product_listbox.yview)
+        
+        # Bind selection events
+        self.product_listbox.bind('<Button-1>', lambda e: self._select_from_list())
+        self.product_listbox.bind('<Return>', lambda e: self._select_from_list())
+        
+        # Store all products for filtering
+        self.all_products = self.product_manager.list_products()
+        
+        # Initial population
+        self._filter_product_list()
         
         ttk.Label(left_frame, text="Jumlah (qty):", font=FONTS['normal']).pack(anchor='w', pady=5)
         self.qty_var = tk.StringVar(value="1")
@@ -954,7 +1395,34 @@ Kembalian        : {format_rp(trans['kembalian'])}
         summary_frame = ttk.Frame(right_frame)
         summary_frame.pack(fill='x', pady=10)
         
-        ttk.Label(summary_frame, text="Total:", font=FONTS['subheading']).pack(anchor='w')
+        ttk.Label(summary_frame, text="Subtotal:", font=FONTS['normal']).pack(anchor='w')
+        self.subtotal_label = ttk.Label(
+            summary_frame,
+            text="Rp 0",
+            font=FONTS['normal'],
+            foreground=COLORS['text_secondary']
+        )
+        self.subtotal_label.pack(anchor='w')
+        
+        ttk.Label(summary_frame, text="Diskon:", font=FONTS['normal']).pack(anchor='w', pady=(10, 0))
+        self.discount_label = ttk.Label(
+            summary_frame,
+            text="Rp 0",
+            font=FONTS['normal'],
+            foreground=COLORS['danger']
+        )
+        self.discount_label.pack(anchor='w')
+        
+        ttk.Label(summary_frame, text="Pajak:", font=FONTS['normal']).pack(anchor='w', pady=(10, 0))
+        self.tax_label = ttk.Label(
+            summary_frame,
+            text="Rp 0",
+            font=FONTS['normal'],
+            foreground=COLORS['info']
+        )
+        self.tax_label.pack(anchor='w')
+        
+        ttk.Label(summary_frame, text="Total:", font=FONTS['subheading']).pack(anchor='w', pady=(10, 0))
         self.total_label = ttk.Label(
             summary_frame,
             text="Rp 0",
@@ -962,6 +1430,30 @@ Kembalian        : {format_rp(trans['kembalian'])}
             foreground=COLORS['success']
         )
         self.total_label.pack(anchor='w')
+        
+        # Discount & Tax section
+        discount_tax_frame = ttk.LabelFrame(self.content_area, text="💰 Diskon & Pajak", padding=10)
+        discount_tax_frame.pack(fill='x', padx=5, pady=10)
+        
+        # Discount section
+        discount_inner = ttk.Frame(discount_tax_frame)
+        discount_inner.pack(side='left', padx=20)
+        
+        ttk.Label(discount_inner, text="Diskon (%):", font=FONTS['normal']).pack(side='left', padx=5)
+        self.discount_var = tk.StringVar(value="0")
+        discount_entry = ttk.Entry(discount_inner, textvariable=self.discount_var, width=10)
+        discount_entry.pack(side='left', padx=5)
+        discount_entry.bind('<KeyRelease>', lambda e: self._update_discount())
+        
+        # Tax section
+        tax_inner = ttk.Frame(discount_tax_frame)
+        tax_inner.pack(side='left', padx=20)
+        
+        ttk.Label(tax_inner, text="Pajak - PPN (%):", font=FONTS['normal']).pack(side='left', padx=5)
+        self.tax_var = tk.StringVar(value="0")
+        tax_entry = ttk.Entry(tax_inner, textvariable=self.tax_var, width=10)
+        tax_entry.pack(side='left', padx=5)
+        tax_entry.bind('<KeyRelease>', lambda e: self._update_tax())
         
         # Payment section
         payment_frame = ttk.LabelFrame(self.content_area, text="💳 Pembayaran", padding=10)
@@ -1003,7 +1495,8 @@ Kembalian        : {format_rp(trans['kembalian'])}
             return
         
         try:
-            kode = search_text.split(' - ')[0]
+            # Extract kode from search text (format: "KODE - Nama Produk")
+            kode = search_text.split(' - ')[0].strip() if ' - ' in search_text else search_text
             product = self.product_manager.get_product(kode)
             
             if not product:
@@ -1031,31 +1524,134 @@ Kembalian        : {format_rp(trans['kembalian'])}
         except Exception as e:
             messagebox.showerror("Error", f"Error: {e}")
     
+    def _filter_product_list(self):
+        """Filter product list based on search keyword (kode or nama)."""
+        keyword = self.product_search_var.get().strip().lower()
+        
+        # Clear listbox
+        self.product_listbox.delete(0, tk.END)
+        
+        # If no keyword, show all products
+        if not keyword:
+            for product in self.all_products:
+                display_text = f"{product.kode} - {product.nama}"
+                self.product_listbox.insert(tk.END, display_text)
+            return
+        
+        # Filter products by kode or nama
+        filtered = []
+        for product in self.all_products:
+            kode_match = keyword in product.kode.lower()
+            nama_match = keyword in product.nama.lower()
+            
+            if kode_match or nama_match:
+                filtered.append(product)
+        
+        # Display filtered products with highlighting
+        for product in filtered:
+            display_text = f"{product.kode} - {product.nama}"
+            self.product_listbox.insert(tk.END, display_text)
+        
+        # If only one match, select it automatically
+        if len(filtered) == 1:
+            self.product_listbox.selection_set(0)
+            self.product_listbox.see(0)
+        
+        # Log filtering action
+        if filtered:
+            logger.info(f"Product search: '{keyword}' - Found {len(filtered)} products")
+    
+    def _focus_product_list(self):
+        """Move focus to product listbox when Down arrow is pressed."""
+        if self.product_listbox.size() > 0:
+            self.product_listbox.selection_set(0)
+            self.product_listbox.activate(0)
+            self.product_listbox.focus()
+    
+    def _select_from_list(self):
+        """Select product from listbox."""
+        try:
+            selection = self.product_listbox.curselection()
+            if selection:
+                selected_item = self.product_listbox.get(selection[0])
+                self.product_search_var.set(selected_item)
+                logger.info(f"Product selected: {selected_item}")
+        except:
+            pass
+    
     def _update_cart_display(self):
-        """Update cart display."""
+        """Update cart display with discount and tax calculations."""
         # Clear existing items
         for item in self.cart_tree.get_children():
             self.cart_tree.delete(item)
         
-        # Get transaction summary
-        summary = self.transaction_handler.get_transaction_summary()
+        # Get transaction
+        trans = self.transaction_handler.transaction_service.get_current_transaction()
         
-        if summary and summary['items_count'] > 0:
+        if trans and trans.get_item_count() > 0:
             items = self.transaction_handler.get_items()
             if items:  # Check if items is not None
                 for i, item in enumerate(items, 1):
                     self.cart_tree.insert('', 'end', values=(
                         str(i),
-                        item['nama'],  # Sudah tersimpan dengan benar
+                        item['nama'],
                         str(item['qty']),
                         format_rp(item['harga_satuan']),
                         format_rp(item['subtotal'])
                     ))
             
-            # Update total
-            self.total_label.config(text=format_rp(summary['total']))
+            # Update subtotal, discount, tax, and total
+            self.subtotal_label.config(text=format_rp(trans.subtotal))
+            self.discount_label.config(text=f"-Rp {trans.discount_amount:,}")
+            self.tax_label.config(text=f"+Rp {trans.tax_amount:,}")
+            self.total_label.config(text=format_rp(trans.total))
         else:
+            self.subtotal_label.config(text="Rp 0")
+            self.discount_label.config(text="Rp 0")
+            self.tax_label.config(text="Rp 0")
             self.total_label.config(text="Rp 0")
+    
+    def _update_discount(self):
+        """Update discount and recalculate total."""
+        try:
+            discount_percent = float(self.discount_var.get() or "0")
+            
+            # Validasi
+            if discount_percent < 0 or discount_percent > 100:
+                messagebox.showwarning("Peringatan", "Diskon harus antara 0-100%")
+                self.discount_var.set("0")
+                return
+            
+            # Set discount di transaction
+            trans = self.transaction_handler.transaction_service.get_current_transaction()
+            if trans:
+                trans.set_discount(discount_percent)
+                self._update_cart_display()
+                logger.info(f"Discount updated: {discount_percent}%")
+        except ValueError:
+            messagebox.showwarning("Peringatan", "Diskon harus berupa angka!")
+            self.discount_var.set("0")
+    
+    def _update_tax(self):
+        """Update tax and recalculate total."""
+        try:
+            tax_percent = float(self.tax_var.get() or "0")
+            
+            # Validasi
+            if tax_percent < 0 or tax_percent > 100:
+                messagebox.showwarning("Peringatan", "Pajak harus antara 0-100%")
+                self.tax_var.set("0")
+                return
+            
+            # Set tax di transaction
+            trans = self.transaction_handler.transaction_service.get_current_transaction()
+            if trans:
+                trans.set_tax(tax_percent)
+                self._update_cart_display()
+                logger.info(f"Tax updated: {tax_percent}%")
+        except ValueError:
+            messagebox.showwarning("Peringatan", "Pajak harus berupa angka!")
+            self.tax_var.set("0")
     
     def _process_payment(self):
         """Process payment."""
@@ -1081,11 +1677,25 @@ Kembalian        : {format_rp(trans['kembalian'])}
             
             if trans_id:
                 kembalian = bayar - summary['total']
-                messagebox.showinfo(
+                
+                # Ask to print receipt
+                print_resi = messagebox.askyesno(
                     "Transaksi Selesai",
-                    f"✅ Transaksi berhasil!\n\nID: {trans_id}\nTotal: {format_rp(summary['total'])}\nKembalian: {format_rp(kembalian)}"
+                    f"✅ Transaksi berhasil!\n\nID: {trans_id}\nTotal: {format_rp(summary['total'])}\nKembalian: {format_rp(kembalian)}\n\n🖨️ Cetak resi?"
                 )
-                self.show_transaction()
+                
+                if print_resi:
+                    # Get transaction detail for printing
+                    transaction = self.db.get_transaction(trans_id)
+                    if transaction:
+                        items = transaction.get('items', [])
+                        receipt_text = self._generate_receipt_text(transaction, items)
+                        self._print_report_dialog(receipt_text, f"resi_{trans_id}")
+                        messagebox.showinfo("Resi Dicetak", "✅ Resi berhasil dicetak!")
+                    self.show_transaction()
+                else:
+                    messagebox.showinfo("Resi Tidak Dicetak", "⚠️ Resi tidak dicetak.\nResi dapat diakses dari Dashboard atau Laporan.")
+                    self.show_transaction()
             else:
                 messagebox.showerror("Error", "Gagal memproses transaksi!")
         except ValueError:
@@ -1194,6 +1804,41 @@ Total Item          : {laporan.get('total_item', 0)}
         tree.configure(yscroll=scrollbar.set)
         scrollbar.pack(side='right', fill='y')
         tree.pack(fill='both', expand=True)
+        
+        # Print button
+        btn_frame = ttk.Frame(parent)
+        btn_frame.pack(fill='x', padx=10, pady=10)
+        
+        def print_daily_report():
+            """Print laporan harian."""
+            report_text = f"""
+{'='*70}
+LAPORAN PENJUALAN HARIAN
+{'='*70}
+Tanggal: {laporan.get('tanggal', 'N/A')}
+
+RINGKASAN:
+├─ Total Penjualan      : {format_rp(laporan.get('total_penjualan', 0))}
+├─ Total Transaksi      : {laporan.get('total_transaksi', 0)}
+├─ Rata-rata Transaksi  : {format_rp(int(laporan.get('rata_rata_transaksi', 0)))}
+└─ Total Item           : {laporan.get('total_item', 0)}
+
+DAFTAR TRANSAKSI:
+{'─'*70}
+"""
+            for i, trans in enumerate(laporan.get('transactions', []), 1):
+                report_text += f"""
+{i}. Transaksi ID: {trans['id']}
+   Total      : {format_rp(trans['total'])}
+   Pembayaran : {format_rp(trans['bayar'])}
+   Kembalian  : {format_rp(trans['kembalian'])}
+"""
+            
+            report_text += f"\n{'='*70}\n"
+            self._print_report_dialog(report_text, f"Laporan_Harian_{laporan.get('tanggal', 'today')}")
+        
+        print_btn = ttk.Button(btn_frame, text="🖨️ Cetak Laporan", command=print_daily_report)
+        print_btn.pack(side='left', padx=5)
     
     def _create_period_report_tab(self, parent):
         """Create period report tab."""
@@ -1232,12 +1877,31 @@ Total Item          : {laporan.get('total_item', 0)}
             except Exception as e:
                 messagebox.showerror("Error", f"Error: {str(e)}")
         
+        def print_report():
+            """Print laporan ke file."""
+            try:
+                if result_text.get(1.0, 'end').strip() == '':
+                    messagebox.showwarning("Peringatan", "Tampilkan laporan terlebih dahulu!")
+                    return
+                
+                report_content = result_text.get(1.0, 'end')
+                self._print_report_dialog(report_content, f"Laporan_Periode_{start_date.get_date().strftime('%Y%m%d')}_{end_date.get_date().strftime('%Y%m%d')}")
+            except Exception as e:
+                messagebox.showerror("Error", f"Error: {str(e)}")
+        
         show_btn = ttk.Button(selector_frame, text="📊 Tampilkan Laporan", command=show_report)
         show_btn.pack(side='left', padx=5)
+        
+        print_btn = ttk.Button(selector_frame, text="🖨️ Cetak Laporan", command=print_report)
+        print_btn.pack(side='left', padx=5)
     
     def _create_bestselling_tab(self, parent):
         """Create best selling products tab."""
         produk_laris = self.report_generator.get_produk_terlaris(limit=20)
+        
+        # Header frame with print button
+        header_frame = ttk.Frame(parent)
+        header_frame.pack(fill='x', padx=10, pady=10)
         
         columns = ('No', 'Produk', 'Terjual', 'Total Penjualan')
         tree = ttk.Treeview(parent, columns=columns, height=20, show='headings')
@@ -1256,9 +1920,38 @@ Total Item          : {laporan.get('total_item', 0)}
             tree.insert('', 'end', values=(
                 str(i),
                 item['nama'],
-                str(item['qty_terjual']),
-                format_rp(item['total_penjualan'])
+                str(item['total_qty']),
+                format_rp(item['total_revenue'])
             ))
+        
+        def print_bestselling():
+            """Print laporan produk terlaris."""
+            report_text = f"""
+{'='*70}
+LAPORAN PRODUK TERLARIS
+{'='*70}
+Tanggal: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+{'─'*70}
+"""
+            total_revenue = 0
+            for i, item in enumerate(produk_laris, 1):
+                total_revenue += item['total_revenue']
+                report_text += f"""
+{i}. {item['nama']}
+   Qty Terjual    : {item['total_qty']} pcs
+   Total Penjualan: {format_rp(item['total_revenue'])}
+"""
+            
+            report_text += f"""
+{'─'*70}
+TOTAL PENJUALAN: {format_rp(total_revenue)}
+{'='*70}
+"""
+            self._print_report_dialog(report_text, f"Laporan_Produk_Terlaris_{datetime.now().strftime('%Y%m%d')}")
+        
+        print_btn = ttk.Button(header_frame, text="🖨️ Cetak Laporan", command=print_bestselling)
+        print_btn.pack(side='left', padx=5)
         
         scrollbar = ttk.Scrollbar(parent, orient='vertical', command=tree.yview)
         tree.configure(yscroll=scrollbar.set)
@@ -1268,6 +1961,10 @@ Total Item          : {laporan.get('total_item', 0)}
     def _create_stock_info_tab(self, parent):
         """Create stock info tab."""
         stok_list = self.report_generator.get_stok_summary()
+        
+        # Header frame with print button
+        header_frame = ttk.Frame(parent)
+        header_frame.pack(fill='x', padx=10, pady=10)
         
         columns = ('No', 'Kode', 'Produk', 'Stok', 'Status')
         tree = ttk.Treeview(parent, columns=columns, height=20, show='headings')
@@ -1293,6 +1990,55 @@ Total Item          : {laporan.get('total_item', 0)}
                 str(item['stok']),
                 status
             ))
+        
+        def print_stock_info():
+            """Print laporan informasi stok."""
+            report_text = f"""
+{'='*70}
+LAPORAN INFORMASI STOK PRODUK
+{'='*70}
+Tanggal: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+{'─'*70}
+"""
+            habis_count = 0
+            minim_count = 0
+            normal_count = 0
+            total_stok = 0
+            
+            for i, item in enumerate(stok_list, 1):
+                stok = item['stok']
+                total_stok += stok
+                
+                if stok == 0:
+                    habis_count += 1
+                    status = "⚠️ HABIS"
+                elif stok < 5:
+                    minim_count += 1
+                    status = "⚡ MINIM"
+                else:
+                    normal_count += 1
+                    status = "✅ NORMAL"
+                
+                report_text += f"""
+{i}. [{item['kode']}] {item['nama']}
+   Stok: {stok} pcs | Status: {status}
+"""
+            
+            report_text += f"""
+{'─'*70}
+RINGKASAN:
+├─ Total Produk      : {len(stok_list)}
+├─ Status Normal     : {normal_count}
+├─ Status Minim      : {minim_count}
+├─ Status Habis      : {habis_count}
+└─ Total Stok        : {total_stok} pcs
+{'='*70}
+"""
+            self._print_report_dialog(report_text, f"Laporan_Stok_{datetime.now().strftime('%Y%m%d')}")
+        
+        print_btn = ttk.Button(header_frame, text="🖨️ Cetak Laporan", command=print_stock_info)
+        print_btn.pack(side='left', padx=5)
         
         scrollbar = ttk.Scrollbar(parent, orient='vertical', command=tree.yview)
         tree.configure(yscroll=scrollbar.set)
@@ -1389,7 +2135,12 @@ Total Item          : {laporan.get('total_item', 0)}
     # ========================================================================
     
     def show_settings(self):
-        """Show settings page."""
+        """Show settings page (admin only)."""
+        # Check role
+        if self.current_user['role'] != 'admin':
+            messagebox.showerror("Akses Ditolak", "Hanya admin yang dapat mengakses Settings!")
+            return
+        
         self._clear_content()
         
         # Header
@@ -1400,6 +2151,72 @@ Total Item          : {laporan.get('total_item', 0)}
             foreground=COLORS['primary']
         )
         header.pack(pady=10)
+        
+        # Store Info Section
+        store_frame = ttk.LabelFrame(self.content_area, text="🏪 Informasi Toko", padding=15)
+        store_frame.pack(fill='x', padx=10, pady=10)
+        
+        store_config = self._load_store_config()
+        store_info = store_config.get('store', {})
+        
+        # Store name
+        ttk.Label(store_frame, text="Nama Toko:", font=FONTS['normal']).grid(row=0, column=0, sticky='w', pady=5, padx=5)
+        store_name_entry = ttk.Entry(store_frame, width=50)
+        store_name_entry.insert(0, store_info.get('name', ''))
+        store_name_entry.grid(row=0, column=1, sticky='ew', pady=5, padx=5)
+        
+        # Store address
+        ttk.Label(store_frame, text="Alamat Toko:", font=FONTS['normal']).grid(row=1, column=0, sticky='w', pady=5, padx=5)
+        store_addr_entry = ttk.Entry(store_frame, width=50)
+        store_addr_entry.insert(0, store_info.get('address', ''))
+        store_addr_entry.grid(row=1, column=1, sticky='ew', pady=5, padx=5)
+        
+        # Store phone
+        ttk.Label(store_frame, text="Nomor Telepon:", font=FONTS['normal']).grid(row=2, column=0, sticky='w', pady=5, padx=5)
+        store_phone_entry = ttk.Entry(store_frame, width=50)
+        store_phone_entry.insert(0, store_info.get('phone', ''))
+        store_phone_entry.grid(row=2, column=1, sticky='ew', pady=5, padx=5)
+        
+        # Receipt width setting
+        ttk.Label(store_frame, text="Lebar Receipt (karakter):", font=FONTS['normal']).grid(row=3, column=0, sticky='w', pady=5, padx=5)
+        receipt_width_var = tk.IntVar(value=store_config.get('receipt', {}).get('width', 40))
+        receipt_width_spinbox = ttk.Spinbox(store_frame, from_=30, to=80, textvariable=receipt_width_var, width=10)
+        receipt_width_spinbox.grid(row=3, column=1, sticky='w', pady=5, padx=5)
+        
+        # Save store settings button
+        def save_store_settings():
+            """Save store configuration."""
+            import json
+            config = {
+                'store': {
+                    'name': store_name_entry.get(),
+                    'address': store_addr_entry.get(),
+                    'phone': store_phone_entry.get(),
+                    'owner': store_info.get('owner', 'PT. G-LIES')
+                },
+                'receipt': {
+                    'width': receipt_width_var.get(),
+                    'show_phone': True,
+                    'show_timestamp': True
+                }
+            }
+            
+            try:
+                config_path = os.path.join(os.path.dirname(__file__), 'store_config.json')
+                with open(config_path, 'w', encoding='utf-8') as f:
+                    json.dump(config, f, indent=2, ensure_ascii=False)
+                messagebox.showinfo("Sukses", "Pengaturan toko berhasil disimpan!")
+                logger.info("Store settings updated")
+            except Exception as e:
+                messagebox.showerror("Error", f"Gagal menyimpan pengaturan: {e}")
+                logger.error(f"Failed to save store settings: {e}")
+        
+        store_save_btn = ttk.Button(
+            store_frame,
+            text="💾 Simpan Pengaturan Toko",
+            command=save_store_settings
+        )
+        store_save_btn.grid(row=4, column=0, columnspan=2, sticky='ew', pady=15, padx=5)
         
         # Database stats
         stats_frame = ttk.LabelFrame(self.content_area, text="📊 Database Info", padding=10)
@@ -1462,14 +2279,170 @@ Dikembangkan dengan Python & Tkinter
         danger_btn.pack(fill='x', pady=10)
     
     def _reset_database(self):
-        """Reset database with confirmation."""
-        if messagebox.askyesno(
-            "⚠️ PERHATIAN",
-            "Ini akan MENGHAPUS SEMUA data di database!\n\nLanjutkan?"
-        ):
-            self.db.clear_database()
-            messagebox.showinfo("Sukses", "Database berhasil direset!")
-            self.show_settings()
+        """Reset database with enhanced safety (admin only)."""
+        # Check role
+        if self.current_user['role'] != 'admin':
+            messagebox.showerror("Akses Ditolak", "Hanya admin yang dapat mereset database!")
+            return
+        
+        # First warning dialog
+        warning_result = messagebox.showwarning(
+            "⚠️ PERINGATAN BERBAHAYA",
+            "ANDA AKAN MENGHAPUS SEMUA DATA DATABASE!\n\n"
+            "Ini akan menghapus:\n"
+            "  • Semua produk\n"
+            "  • Semua transaksi\n"
+            "  • Semua riwayat penjualan\n"
+            "  • TIDAK DAPAT DIPULIHKAN\n\n"
+            "Lanjutkan ke langkah konfirmasi?"
+        )
+        
+        # If user clicks "No" or closes dialog, return
+        if warning_result == 'cancel':
+            messagebox.showinfo("Dibatalkan", "Reset database dibatalkan.")
+            return
+        
+        # Second confirmation: ask user to type "RESET"
+        confirm_dialog = tk.Toplevel(self)
+        confirm_dialog.title("🔐 Konfirmasi Final - Ketik RESET")
+        confirm_dialog.geometry("500x250")
+        confirm_dialog.resizable(False, False)
+        confirm_dialog.configure(bg=COLORS['bg_main'])
+        
+        # Make dialog modal
+        confirm_dialog.transient(self)
+        confirm_dialog.grab_set()
+        
+        # Warning label
+        warning_label = tk.Label(
+            confirm_dialog,
+            text="⚠️ KONFIRMASI FINAL",
+            font=FONTS['heading'],
+            bg=COLORS['danger'],
+            fg='white',
+            padx=15,
+            pady=10
+        )
+        warning_label.pack(fill='x')
+        
+        # Instructions
+        instructions = tk.Label(
+            confirm_dialog,
+            text="Ketik 'RESET' di bawah untuk mengonfirmasi penghapusan database.\n\nTindakan ini TIDAK DAPAT DIBATALKAN!",
+            font=FONTS['normal'],
+            bg=COLORS['bg_main'],
+            fg=COLORS['text_primary'],
+            justify='center',
+            padx=15,
+            pady=15
+        )
+        instructions.pack(fill='x')
+        
+        # Entry field
+        entry_frame = tk.Frame(confirm_dialog, bg=COLORS['bg_main'])
+        entry_frame.pack(fill='x', padx=20, pady=10)
+        
+        entry_label = tk.Label(
+            entry_frame,
+            text="Ketik konfirmasi:",
+            font=FONTS['normal'],
+            bg=COLORS['bg_main'],
+            fg=COLORS['text_primary']
+        )
+        entry_label.pack(anchor='w', pady=(0, 5))
+        
+        confirm_entry = tk.Entry(
+            entry_frame,
+            font=FONTS['mono'],
+            width=30,
+            show='*'  # Show dots instead of text for security
+        )
+        confirm_entry.pack(fill='x')
+        confirm_entry.focus()
+        
+        # Status label
+        status_label = tk.Label(
+            confirm_dialog,
+            text="",
+            font=FONTS['small'],
+            bg=COLORS['bg_main'],
+            fg=COLORS['danger']
+        )
+        status_label.pack()
+        
+        # Buttons
+        button_frame = tk.Frame(confirm_dialog, bg=COLORS['bg_main'])
+        button_frame.pack(fill='x', padx=15, pady=15)
+        
+        def on_confirm():
+            """Process confirmation."""
+            input_text = confirm_entry.get()
+            
+            if input_text != "RESET":
+                status_label.config(
+                    text=f"❌ Input salah! Anda mengetik: '{input_text}' (harus 'RESET')",
+                    fg=COLORS['danger']
+                )
+                confirm_entry.delete(0, 'end')
+                confirm_entry.focus()
+                return
+            
+            # Create backup before reset
+            try:
+                logger.info("Creating backup before database reset...")
+                if self.db.backup_database():
+                    logger.info("Backup created successfully before reset")
+                    backup_msg = "✓ Backup database dibuat sebelum reset"
+                else:
+                    backup_msg = "⚠️ Backup tidak dibuat (kemungkinan sudah ada backup hari ini)"
+            except Exception as e:
+                backup_msg = f"⚠️ Gagal membuat backup: {e}"
+                logger.warning(f"Backup creation failed: {e}")
+            
+            # Clear the database
+            try:
+                self.db.clear_database()
+                logger.info("Database cleared successfully")
+                
+                confirm_dialog.destroy()
+                messagebox.showinfo(
+                    "✓ Sukses",
+                    f"Database berhasil direset!\n\n{backup_msg}\n\n"
+                    f"Pemulihan: Gunakan backup dari folder 'backup/' jika diperlukan"
+                )
+                self.show_settings()
+            except Exception as e:
+                logger.error(f"Database reset failed: {e}")
+                messagebox.showerror("Error", f"Gagal mereset database: {e}")
+                confirm_dialog.destroy()
+        
+        def on_cancel():
+            """Cancel the reset."""
+            confirm_dialog.destroy()
+            messagebox.showinfo("Dibatalkan", "Reset database dibatalkan.")
+        
+        confirm_btn = ttk.Button(
+            button_frame,
+            text="🚨 RESET SEKARANG",
+            command=on_confirm
+        )
+        confirm_btn.pack(side='left', padx=5)
+        
+        cancel_btn = ttk.Button(
+            button_frame,
+            text="❌ Batal",
+            command=on_cancel
+        )
+        cancel_btn.pack(side='left', padx=5)
+        
+        # Allow Enter key to submit
+        confirm_entry.bind('<Return>', lambda e: on_confirm())
+        
+        # Center dialog on window
+        confirm_dialog.update_idletasks()
+        x = self.winfo_x() + (self.winfo_width() - 500) // 2
+        y = self.winfo_y() + (self.winfo_height() - 250) // 2
+        confirm_dialog.geometry(f"+{x}+{y}")
 
 
 # ============================================================================
@@ -1477,9 +2450,48 @@ Dikembangkan dengan Python & Tkinter
 # ============================================================================
 
 def main():
-    """Main entry point."""
-    app = POSGUIApplication()
+    """Main entry point with login system."""
+    logger.info("Application initialization started")
+    
+    # Create root window for login
+    root = tk.Tk()
+    root.withdraw()  # Hide root window temporarily
+    
+    # Initialize database
+    db = DatabaseManager()
+    logger.info("Database initialized")
+    
+    # Create default admin user if no users exist
+    if not db.user_exists():
+        logger.info("Creating default users on first run")
+        db.create_user("admin", "admin123", "admin")
+        db.create_user("cashier", "cashier123", "cashier")
+        logger.info("Default users created: admin and cashier")
+    
+    logger.info("Showing login window")
+    
+    # Show login window
+    login_window = LoginWindow(root, db)
+    root.wait_window(login_window)
+    
+    # Get logged-in user
+    user = login_window.get_user()
+    
+    # If login failed or user clicked exit
+    if not user:
+        logger.warning("User cancelled login, exiting application")
+        root.destroy()
+        return
+    
+    # Destroy temporary root
+    root.destroy()
+    
+    # Create main application with logged-in user
+    logger.info(f"Launching main application for user {user['username']}")
+    app = POSGUIApplication(user=user)
     app.mainloop()
+    
+    logger.info(f"User {user['username']} logged out")
 
 
 if __name__ == "__main__":

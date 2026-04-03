@@ -10,3 +10,4 @@ build_optimizer/
 build_console/
 .env
 *.pyc
+__pycache__/

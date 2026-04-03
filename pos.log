@@ -1,0 +1,232 @@
+2026-04-03 09:06:58 - INFO     - logger_config - ======================================================================
+2026-04-03 09:06:58 - INFO     - logger_config - SISTEM POS - Application Started
+2026-04-03 09:06:58 - INFO     - logger_config - ======================================================================
+2026-04-03 09:06:58 - INFO     - logger_config - Log file: D:\Program_Kasir\pos.log
+2026-04-03 09:06:58 - INFO     - logger_config - Log level: INFO
+2026-04-03 09:06:58 - INFO     - logger_config - Logging initialized at 2026-04-03 09:06:58
+2026-04-03 09:07:33 - INFO     - logger_config - ======================================================================
+2026-04-03 09:07:33 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 09:07:33 - INFO     - logger_config - ======================================================================
+2026-04-03 09:07:33 - INFO     - logger_config - Logging initialized at 2026-04-03 09:07:33
+2026-04-03 09:07:33 - INFO     - database - Database tables initialized successfully
+2026-04-03 09:08:14 - INFO     - logger_config - ======================================================================
+2026-04-03 09:08:14 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 09:08:14 - INFO     - logger_config - ======================================================================
+2026-04-03 09:08:14 - INFO     - logger_config - Logging initialized at 2026-04-03 09:08:14
+2026-04-03 09:08:14 - INFO     - __main__ - === TESTING LOGGING FUNCTIONALITY ===
+2026-04-03 09:08:14 - INFO     - database - Database tables initialized successfully
+2026-04-03 09:08:14 - INFO     - __main__ - Database initialized successfully
+2026-04-03 09:08:14 - INFO     - __main__ - Users exist in database: True
+2026-04-03 09:08:14 - INFO     - __main__ - Testing product operations...
+2026-04-03 09:08:14 - INFO     - database - Product added: TEST001 = Test Product
+2026-04-03 09:08:14 - INFO     - __main__ - Product addition result: True
+2026-04-03 09:08:14 - INFO     - __main__ - Retrieved product: Test Product - Rp50,000
+2026-04-03 09:08:14 - INFO     - database - Product updated: TEST001
+2026-04-03 09:08:14 - INFO     - __main__ - Product stock updated: True
+2026-04-03 09:08:14 - INFO     - __main__ - Testing transaction creation...
+2026-04-03 09:08:14 - INFO     - database - Transaction created: ID=7, total=Rp50,000
+2026-04-03 09:08:14 - INFO     - __main__ - Transaction created with ID: 7
+2026-04-03 09:08:14 - INFO     - __main__ - Transaction item added: True
+2026-04-03 09:08:14 - INFO     - database - Stock reduced: product_id=1, qty=5
+2026-04-03 09:08:14 - INFO     - __main__ - Stock reduced: True
+2026-04-03 09:08:14 - INFO     - __main__ - === LOGGING TESTS COMPLETED ===
+2026-04-03 09:09:35 - INFO     - logger_config - ======================================================================
+2026-04-03 09:09:35 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 09:09:35 - INFO     - logger_config - ======================================================================
+2026-04-03 09:09:35 - INFO     - logger_config - Logging initialized at 2026-04-03 09:09:35
+2026-04-03 09:09:35 - INFO     - __main__ - Application initialization started
+2026-04-03 09:09:35 - INFO     - database - Database tables initialized successfully
+2026-04-03 09:09:35 - INFO     - __main__ - Database initialized
+2026-04-03 09:09:35 - INFO     - __main__ - Showing login window
+2026-04-03 09:16:07 - INFO     - logger_config - ======================================================================
+2026-04-03 09:16:07 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 09:16:07 - INFO     - logger_config - ======================================================================
+2026-04-03 09:16:07 - INFO     - logger_config - Logging initialized at 2026-04-03 09:16:07
+2026-04-03 09:16:07 - INFO     - models - Discount set: 10% (amount: Rp20,000)
+2026-04-03 09:16:07 - INFO     - models - Tax set: 10% (amount: Rp18,000)
+2026-04-03 09:16:07 - WARNING  - models - Invalid discount: 150%
+2026-04-03 09:16:07 - WARNING  - models - Invalid tax: -5%
+2026-04-03 09:16:07 - INFO     - models - Discount set: 15% (amount: Rp45,000)
+2026-04-03 09:16:07 - INFO     - models - Tax set: 5% (amount: Rp12,750)
+2026-04-03 09:16:59 - INFO     - logger_config - ======================================================================
+2026-04-03 09:16:59 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 09:16:59 - INFO     - logger_config - ======================================================================
+2026-04-03 09:16:59 - INFO     - logger_config - Logging initialized at 2026-04-03 09:16:59
+2026-04-03 09:16:59 - INFO     - __main__ - Application initialization started
+2026-04-03 09:16:59 - INFO     - database - Transaction table migration completed
+2026-04-03 09:16:59 - INFO     - database - Database tables initialized successfully
+2026-04-03 09:16:59 - INFO     - __main__ - Database initialized
+2026-04-03 09:16:59 - INFO     - __main__ - Showing login window
+2026-04-03 09:19:25 - INFO     - logger_config - ======================================================================
+2026-04-03 09:19:25 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 09:19:25 - INFO     - logger_config - ======================================================================
+2026-04-03 09:19:25 - INFO     - logger_config - Logging initialized at 2026-04-03 09:19:25
+2026-04-03 09:19:26 - INFO     - __main__ - Application initialization started
+2026-04-03 09:19:26 - INFO     - database - Transaction table migration completed
+2026-04-03 09:19:26 - INFO     - database - Database tables initialized successfully
+2026-04-03 09:19:26 - INFO     - __main__ - Database initialized
+2026-04-03 09:19:26 - INFO     - __main__ - Showing login window
+2026-04-03 09:20:05 - INFO     - logger_config - ======================================================================
+2026-04-03 09:20:05 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 09:20:05 - INFO     - logger_config - ======================================================================
+2026-04-03 09:20:05 - INFO     - logger_config - Logging initialized at 2026-04-03 09:20:05
+2026-04-03 09:20:06 - INFO     - __main__ - Application initialization started
+2026-04-03 09:20:06 - INFO     - database - Transaction table migration completed
+2026-04-03 09:20:06 - INFO     - database - Database tables initialized successfully
+2026-04-03 09:20:06 - INFO     - __main__ - Database initialized
+2026-04-03 09:20:06 - INFO     - __main__ - Showing login window
+2026-04-03 09:21:22 - INFO     - logger_config - ======================================================================
+2026-04-03 09:21:22 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 09:21:22 - INFO     - logger_config - ======================================================================
+2026-04-03 09:21:22 - INFO     - logger_config - Logging initialized at 2026-04-03 09:21:22
+2026-04-03 09:21:22 - INFO     - __main__ - Initializing product search test...
+2026-04-03 09:21:22 - INFO     - database - Transaction table migration completed
+2026-04-03 09:21:22 - INFO     - database - Database tables initialized successfully
+2026-04-03 09:21:22 - INFO     - __main__ - Total products in database: 4
+2026-04-03 09:21:22 - INFO     - __main__ - Search 'P' - Found 2 products
+2026-04-03 09:21:22 - INFO     - __main__ - Search 'susu' - Found 0 products
+2026-04-03 09:21:22 - INFO     - __main__ - Search 'oat' - Found 0 products
+2026-04-03 09:21:22 - INFO     - __main__ - Search '123' - Found 0 products
+2026-04-03 09:21:22 - INFO     - __main__ - Search 'x' - Found 0 products
+2026-04-03 09:40:26 - INFO     - logger_config - ======================================================================
+2026-04-03 09:40:26 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 09:40:26 - INFO     - logger_config - ======================================================================
+2026-04-03 09:40:26 - INFO     - logger_config - Logging initialized at 2026-04-03 09:40:26
+2026-04-03 09:40:26 - INFO     - backup_manager - Backup folder ready: test_backup
+2026-04-03 09:40:26 - INFO     - backup_manager - BackupManager initialized: folder=test_backup, max_backups=3
+2026-04-03 09:40:26 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 09:40:26 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 09:40:26 - INFO     - database - Transaction table migration completed
+2026-04-03 09:40:26 - INFO     - database - Database tables initialized successfully
+2026-04-03 09:40:26 - INFO     - backup_manager - Database backup created: backup_20260403.db
+2026-04-03 09:40:26 - INFO     - backup_manager - Backup already exists for today: backup_20260403.db
+2026-04-03 09:40:26 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 09:40:26 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 09:40:26 - INFO     - database - Transaction table migration completed
+2026-04-03 09:40:26 - INFO     - database - Database tables initialized successfully
+2026-04-03 09:40:26 - INFO     - backup_manager - Database backup created: backup_20260403.db
+2026-04-03 10:01:18 - INFO     - logger_config - ======================================================================
+2026-04-03 10:01:18 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 10:01:18 - INFO     - logger_config - ======================================================================
+2026-04-03 10:01:18 - INFO     - logger_config - Logging initialized at 2026-04-03 10:01:18
+2026-04-03 10:01:19 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 10:01:19 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 10:01:19 - INFO     - database - Transaction table migration completed
+2026-04-03 10:01:19 - INFO     - database - Database tables initialized successfully
+2026-04-03 10:01:19 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 10:01:19 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 10:01:19 - INFO     - database - Transaction table migration completed
+2026-04-03 10:01:19 - INFO     - database - Database tables initialized successfully
+2026-04-03 10:01:19 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 10:01:19 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 10:01:19 - INFO     - database - Transaction table migration completed
+2026-04-03 10:01:19 - INFO     - database - Database tables initialized successfully
+2026-04-03 10:01:19 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 10:01:19 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 10:01:19 - INFO     - database - Transaction table migration completed
+2026-04-03 10:01:19 - INFO     - database - Database tables initialized successfully
+2026-04-03 10:02:31 - INFO     - logger_config - ======================================================================
+2026-04-03 10:02:31 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 10:02:31 - INFO     - logger_config - ======================================================================
+2026-04-03 10:02:31 - INFO     - logger_config - Logging initialized at 2026-04-03 10:02:31
+2026-04-03 10:02:31 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 10:02:31 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 10:02:31 - INFO     - database - Transaction table migration completed
+2026-04-03 10:02:31 - INFO     - database - Database tables initialized successfully
+2026-04-03 10:02:31 - INFO     - database - Product added: TEST001 = Test Coffee
+2026-04-03 10:02:31 - ERROR    - __main__ - TEST 1 FAILED: 'DatabaseManager' object has no attribute 'get_products'
+Traceback (most recent call last):
+  File "D:\Program_Kasir\test_low_stock_alert.py", line 66, in test_low_stock_alert_threshold
+    products = db.get_products()
+               ^^^^^^^^^^^^^^^
+AttributeError: 'DatabaseManager' object has no attribute 'get_products'
+2026-04-03 10:02:31 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 10:02:31 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 10:02:31 - INFO     - database - Transaction table migration completed
+2026-04-03 10:02:31 - INFO     - database - Database tables initialized successfully
+2026-04-03 10:02:31 - INFO     - database - Product added: TEST002 = Test Product
+2026-04-03 10:02:31 - ERROR    - __main__ - TEST 2 FAILED: 'DatabaseManager' object has no attribute 'get_products'
+Traceback (most recent call last):
+  File "D:\Program_Kasir\test_low_stock_alert.py", line 114, in test_no_alert_when_telegram_disabled
+    products = db.get_products()
+               ^^^^^^^^^^^^^^^
+AttributeError: 'DatabaseManager' object has no attribute 'get_products'
+2026-04-03 10:02:31 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 10:02:31 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 10:02:31 - INFO     - database - Transaction table migration completed
+2026-04-03 10:02:31 - INFO     - database - Database tables initialized successfully
+2026-04-03 10:02:31 - INFO     - database - Product added: TEST003 = Test Product High Stock
+2026-04-03 10:02:31 - ERROR    - __main__ - TEST 3 FAILED: 'DatabaseManager' object has no attribute 'get_products'
+Traceback (most recent call last):
+  File "D:\Program_Kasir\test_low_stock_alert.py", line 157, in test_no_alert_when_stock_above_threshold
+    products = db.get_products()
+               ^^^^^^^^^^^^^^^
+AttributeError: 'DatabaseManager' object has no attribute 'get_products'
+2026-04-03 10:02:31 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 10:02:31 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 10:02:31 - INFO     - database - Transaction table migration completed
+2026-04-03 10:02:31 - INFO     - database - Database tables initialized successfully
+2026-04-03 10:02:31 - INFO     - database - Product added: PROD001 = Coffee Beans
+2026-04-03 10:02:31 - INFO     - database - Product added: PROD002 = Tea Leaves
+2026-04-03 10:02:31 - INFO     - database - Product added: PROD003 = Sugar
+2026-04-03 10:02:31 - ERROR    - __main__ - TEST 4 FAILED: 'DatabaseManager' object has no attribute 'get_products'
+Traceback (most recent call last):
+  File "D:\Program_Kasir\test_low_stock_alert.py", line 212, in test_multiple_products_reduce_below_threshold
+    products = db.get_products()
+               ^^^^^^^^^^^^^^^
+AttributeError: 'DatabaseManager' object has no attribute 'get_products'
+2026-04-03 10:03:20 - INFO     - logger_config - ======================================================================
+2026-04-03 10:03:20 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 10:03:20 - INFO     - logger_config - ======================================================================
+2026-04-03 10:03:20 - INFO     - logger_config - Logging initialized at 2026-04-03 10:03:20
+2026-04-03 10:03:20 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 10:03:20 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 10:03:20 - INFO     - database - Transaction table migration completed
+2026-04-03 10:03:20 - INFO     - database - Database tables initialized successfully
+2026-04-03 10:03:20 - INFO     - database - Product added: TEST001 = Test Coffee
+2026-04-03 10:03:20 - INFO     - __main__ - Created test product: Test Coffee with stock=7
+2026-04-03 10:03:20 - INFO     - __main__ - Reducing stock from 7 to 2 units (should TRIGGER alert)
+2026-04-03 10:03:20 - INFO     - database - Stock reduced: product_id=1, qty=5, remaining=2
+2026-04-03 10:03:20 - INFO     - __main__ -    - Product: Test Coffee
+2026-04-03 10:03:20 - INFO     - __main__ -    - Stock: 2
+2026-04-03 10:03:20 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 10:03:20 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 10:03:20 - INFO     - database - Transaction table migration completed
+2026-04-03 10:03:20 - INFO     - database - Database tables initialized successfully
+2026-04-03 10:03:20 - INFO     - database - Product added: TEST002 = Test Product
+2026-04-03 10:03:20 - INFO     - __main__ - Created test product with stock=7
+2026-04-03 10:03:20 - INFO     - __main__ - Reducing stock to 2 units (telegram_bot=None)
+2026-04-03 10:03:20 - INFO     - database - Stock reduced: product_id=1, qty=5, remaining=2
+2026-04-03 10:03:20 - INFO     - __main__ - Stock reduced successfully (no alert sent because telegram_bot=None)
+2026-04-03 10:03:20 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 10:03:20 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 10:03:20 - INFO     - database - Transaction table migration completed
+2026-04-03 10:03:20 - INFO     - database - Database tables initialized successfully
+2026-04-03 10:03:20 - INFO     - database - Product added: TEST003 = Test Product High Stock
+2026-04-03 10:03:20 - INFO     - __main__ - Created test product with stock=10
+2026-04-03 10:03:20 - INFO     - __main__ - Reducing stock from 10 to 7 units
+2026-04-03 10:03:20 - INFO     - database - Stock reduced: product_id=1, qty=3, remaining=7
+2026-04-03 10:03:20 - INFO     - __main__ - No alert sent (stock=7 is >= 5)
+2026-04-03 10:03:20 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 10:03:20 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 10:03:20 - INFO     - database - Transaction table migration completed
+2026-04-03 10:03:20 - INFO     - database - Database tables initialized successfully
+2026-04-03 10:03:20 - INFO     - database - Product added: PROD001 = Coffee Beans
+2026-04-03 10:03:20 - INFO     - database - Product added: PROD002 = Tea Leaves
+2026-04-03 10:03:20 - INFO     - database - Product added: PROD003 = Sugar
+2026-04-03 10:03:20 - INFO     - __main__ - Reducing multiple products below threshold...
+2026-04-03 10:03:20 - INFO     - __main__ -   - Reducing Coffee Beans by 8
+2026-04-03 10:03:20 - INFO     - database - Stock reduced: product_id=1, qty=8, remaining=2
+2026-04-03 10:03:20 - INFO     - __main__ -   - Reducing Tea Leaves by 13
+2026-04-03 10:03:20 - INFO     - database - Stock reduced: product_id=2, qty=13, remaining=2
+2026-04-03 10:03:20 - INFO     - __main__ -   - Reducing Sugar by 6
+2026-04-03 10:03:20 - INFO     - database - Stock reduced: product_id=3, qty=6, remaining=2
+2026-04-03 10:03:20 - INFO     - __main__ - All 3 alerts sent:
+2026-04-03 10:07:54 - INFO     - logger_config - ======================================================================
+2026-04-03 10:07:54 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 10:07:54 - INFO     - logger_config - ======================================================================
+2026-04-03 10:07:54 - INFO     - logger_config - Logging initialized at 2026-04-03 10:07:54
+2026-04-03 10:07:54 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 10:07:54 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 10:07:54 - INFO     - database - Transaction table migration completed
+2026-04-03 10:07:54 - INFO     - database - Database tables initialized successfully

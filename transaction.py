@@ -14,6 +14,9 @@ from models import (
     Product, Transaction, TransactionItem, ProductManager,
     ValidationError, format_rp
 )
+from logger_config import get_logger, log_transaction_completed
+
+logger = get_logger(__name__)
 
 # ============================================================================
 # TRANSACTION SERVICE - Main transaction processing logic
@@ -279,16 +282,20 @@ class TransactionService:
                     print("❌ Gagal update stok, transaksi dibatalkan")
                     return None
             
-            # 2. Simpan transaction header
-            print("💾 Saving transaction to database...")
+            # 2. Simpan transaction header dengan discount dan tax
+            logger.info("Saving transaction to database...")
             trans_id = self.db.add_transaction(
                 total=self.current_transaction.total,
                 bayar=self.current_transaction.bayar,
-                kembalian=self.current_transaction.kembalian
+                kembalian=self.current_transaction.kembalian,
+                discount_percent=self.current_transaction.discount_percent,
+                discount_amount=self.current_transaction.discount_amount,
+                tax_percent=self.current_transaction.tax_percent,
+                tax_amount=self.current_transaction.tax_amount
             )
             
             if trans_id is None:
-                print("❌ Gagal menyimpan transaksi")
+                logger.error("Failed to save transaction to database")
                 return None
             
             # 3. Simpan transaction items
@@ -585,23 +592,36 @@ class TransactionHandler:
             int: Transaction ID jika berhasil
             None: Jika gagal
         """
-        # Set payment
-        if not self.transaction_service.set_payment(bayar):
+        try:
+            # Set payment
+            if not self.transaction_service.set_payment(bayar):
+                logger.error("Failed to set payment for transaction")
+                return None
+            
+            # Save to database
+            trans_id = self.transaction_service.save_transaction()
+            if trans_id is None:
+                logger.error("Failed to save transaction to database")
+                return None
+            
+            # Get transaction details for logging
+            transaction = self.transaction_service.get_current_transaction()
+            total = transaction.total if transaction else 0
+            items_count = transaction.get_item_count() if transaction else 0
+            
+            # Log transaction completion
+            logger.info(f"Transaction completed: ID={trans_id}, total=Rp{total:,}, items={items_count}, payment=Rp{bayar:,}")
+            
+            # Display receipt
+            self.receipt_manager.display_receipt(transaction, store_name, store_address)
+            
+            # Save receipt to file
+            self.receipt_manager.save_receipt(transaction, store_name, store_address)
+            
+            return trans_id
+        except Exception as e:
+            logger.error(f"Error completing transaction: {e}", exc_info=True)
             return None
-        
-        # Save to database
-        trans_id = self.transaction_service.save_transaction()
-        if trans_id is None:
-            return None
-        
-        # Display receipt
-        transaction = self.transaction_service.get_current_transaction()
-        self.receipt_manager.display_receipt(transaction, store_name, store_address)
-        
-        # Save receipt to file
-        self.receipt_manager.save_receipt(transaction, store_name, store_address)
-        
-        return trans_id
     
     def cancel_transaction(self):
         """Cancel transaksi aktif."""

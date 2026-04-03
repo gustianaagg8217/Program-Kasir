@@ -9,6 +9,9 @@ from dataclasses import dataclass
 from typing import List, Optional
 from datetime import datetime
 from database import DatabaseManager
+from logger_config import get_logger
+
+logger = get_logger(__name__)
 
 # ============================================================================
 # VALIDASI UTILITY - Helper untuk validasi input
@@ -359,7 +362,12 @@ class Transaction:
     Attributes:
         id (int): ID transaksi (auto-generated)
         items (List[TransactionItem]): Daftar item yang dibeli
-        total (int): Total belanja (sum of subtotal items)
+        subtotal (int): Subtotal belanja (sum of subtotal items) sebelum discount/tax
+        discount_percent (float): Diskon dalam persen (0-100)
+        discount_amount (int): Diskon dalam rupiah (auto-calculated)
+        tax_percent (float): Pajak (PPN) dalam persen (0-100)
+        tax_amount (int): Pajak dalam rupiah (auto-calculated)
+        total (int): Total belanja (subtotal - discount + tax)
         bayar (int): Jumlah uang pembeli
         kembalian (int): Kembalian = bayar - total
         tanggal (datetime): Waktu transaksi
@@ -367,15 +375,21 @@ class Transaction:
     Methods:
         add_item(): Tambah item ke transaksi
         remove_item(): Hapus item dari transaksi
-        calculate_total(): Hitung total belanja
+        calculate_total(): Hitung total belanja dengan discount/tax
+        set_discount(): Set diskon
+        set_tax(): Set pajak
         calculate_kembalian(): Hitung kembalian
         is_valid(): Cek apakah transaksi valid
-        display(): Format display struk
     """
     
     id: Optional[int] = None
     items: List[TransactionItem] = None
-    total: int = 0
+    subtotal: int = 0  # Sebelum discount/tax
+    discount_percent: float = 0.0  # Dalam persen
+    discount_amount: int = 0  # Dalam rupiah
+    tax_percent: float = 0.0  # Dalam persen
+    tax_amount: int = 0  # Dalam rupiah
+    total: int = 0  # Setelah discount/tax
     bayar: int = 0
     kembalian: int = 0
     tanggal: datetime = None
@@ -438,13 +452,80 @@ class Transaction:
     
     def calculate_total(self) -> int:
         """
-        Hitung total belanja dari semua item.
+        Hitung total belanja dari semua item dengan discount dan tax.
+        
+        Formula:
+        1. Hitung subtotal dari semua item
+        2. Hitung diskon: discount_amount = subtotal * (discount_percent / 100)
+        3. Hitung pajak: tax_amount = (subtotal - discount_amount) * (tax_percent / 100)
+        4. Total = subtotal - discount_amount + tax_amount
         
         Returns:
             int: Total dalam Rupiah
         """
-        self.total = sum(item.subtotal for item in self.items)
+        # Step 1: Subtotal (sebelum discount/tax)
+        self.subtotal = sum(item.subtotal for item in self.items)
+        
+        # Step 2: Hitung discount
+        if self.discount_percent > 0:
+            self.discount_amount = int(self.subtotal * (self.discount_percent / 100))
+        else:
+            self.discount_amount = 0
+        
+        # Step 3: Hitung pajak dari (subtotal - discount)
+        base_for_tax = self.subtotal - self.discount_amount
+        if self.tax_percent > 0:
+            self.tax_amount = int(base_for_tax * (self.tax_percent / 100))
+        else:
+            self.tax_amount = 0
+        
+        # Step 4: Total akhir
+        self.total = self.subtotal - self.discount_amount + self.tax_amount
         return self.total
+    
+    def set_discount(self, discount_percent: float) -> bool:
+        """
+        Set diskon dalam persen.
+        
+        Args:
+            discount_percent (float): Diskon dalam persen (0-100)
+            
+        Returns:
+            bool: True jika berhasil
+            
+        Raises:
+            ValidationError: Jika diskon invalid
+        """
+        if discount_percent < 0 or discount_percent > 100:
+            logger.warning(f"Invalid discount: {discount_percent}%")
+            raise ValidationError("Diskon harus antara 0-100%")
+        
+        self.discount_percent = discount_percent
+        self.calculate_total()
+        logger.info(f"Discount set: {discount_percent}% (amount: Rp{self.discount_amount:,})")
+        return True
+    
+    def set_tax(self, tax_percent: float) -> bool:
+        """
+        Set pajak (PPN) dalam persen.
+        
+        Args:
+            tax_percent (float): Pajak dalam persen (>= 0)
+            
+        Returns:
+            bool: True jika berhasil
+            
+        Raises:
+            ValidationError: Jika pajak invalid
+        """
+        if tax_percent < 0 or tax_percent > 100:
+            logger.warning(f"Invalid tax: {tax_percent}%")
+            raise ValidationError("Pajak harus antara 0-100%")
+        
+        self.tax_percent = tax_percent
+        self.calculate_total()
+        logger.info(f"Tax set: {tax_percent}% (amount: Rp{self.tax_amount:,})")
+        return True
     
     def set_bayar(self, bayar: int):
         """
@@ -625,9 +706,12 @@ class ProductManager:
             product = Product(kode=kode, nama=nama, harga=harga, stok=stok)
             
             # Simpan ke database
-            return self.db.add_product(product.kode, product.nama, product.harga, product.stok)
+            result = self.db.add_product(product.kode, product.nama, product.harga, product.stok)
+            if result:
+                logger.info(f"Product added via ProductManager: {kode} = {nama}")
+            return result
         except ValidationError as e:
-            print(f"❌ Validasi error: {e}")
+            logger.error(f"Product validation error: {e}")
             return False
     
     def get_product(self, kode: str) -> Optional[Product]:

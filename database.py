@@ -8,8 +8,13 @@
 
 import sqlite3
 import os
+import hashlib
 from datetime import datetime
 from contextlib import contextmanager
+from logger_config import get_logger
+from backup_manager import BackupManager
+
+logger = get_logger(__name__)
 
 class DatabaseManager:
     """
@@ -26,15 +31,20 @@ class DatabaseManager:
         connection: SQLite connection object
     """
     
-    def __init__(self, db_name: str = "kasir_pos.db"):
+    def __init__(self, db_name: str = "kasir_pos.db", telegram_bot=None):
         """
         Inisialisasi DatabaseManager dan buat database jika belum ada.
         
         Args:
             db_name (str): Nama file database (default: kasir_pos.db)
+            telegram_bot: Instance POSTelegramBot untuk mengirim notifikasi (optional)
         """
         # Tentukan path database di folder yang sama dengan script
         self.db_path = db_name
+        self.telegram_bot = telegram_bot
+        
+        # Initialize backup manager
+        self.backup_manager = BackupManager(backup_folder="backup", max_backups=7)
         
         # Buat database dan tabel jika belum ada
         self._init_database()
@@ -71,12 +81,43 @@ class DatabaseManager:
             # Rollback jika ada error
             if connection:
                 connection.rollback()
-            print(f"❌ Database Error: {e}")
+            logger.error(f"Database error: {e}", exc_info=True)
             raise
         finally:
             # Tutup koneksi
             if connection:
                 connection.close()
+    
+    # ========================================================================
+    # PASSWORD HASHING - Secure password management dengan hashlib
+    # ========================================================================
+    
+    @staticmethod
+    def hash_password(password: str) -> str:
+        """
+        Hash password menggunakan SHA256.
+        
+        Args:
+            password (str): Password plain text
+            
+        Returns:
+            str: Hashed password
+        """
+        return hashlib.sha256(password.encode()).hexdigest()
+    
+    @staticmethod
+    def verify_password(password: str, hashed_password: str) -> bool:
+        """
+        Verifikasi password dengan hash.
+        
+        Args:
+            password (str): Password plain text
+            hashed_password (str): Password yang di-hash
+            
+        Returns:
+            bool: True jika cocok, False jika tidak
+        """
+        return DatabaseManager.hash_password(password) == hashed_password
     
     # ========================================================================
     # INIT DATABASE - Buat struktur tabel jika belum ada
@@ -111,7 +152,7 @@ class DatabaseManager:
             """)
             
             # ================================================================
-            # TABEL 2: TRANSACTIONS - Header transaksi penjualan
+            # TABEL 2: TRANSACTIONS - Header transaksi penjualan dengan discount/tax
             # ================================================================
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS transactions (
@@ -119,9 +160,33 @@ class DatabaseManager:
                     tanggal DATETIME DEFAULT CURRENT_TIMESTAMP,
                     total INTEGER NOT NULL,
                     bayar INTEGER NOT NULL,
-                    kembalian INTEGER NOT NULL
+                    kembalian INTEGER NOT NULL,
+                    discount_percent REAL DEFAULT 0,
+                    discount_amount INTEGER DEFAULT 0,
+                    tax_percent REAL DEFAULT 0,
+                    tax_amount INTEGER DEFAULT 0
                 )
             """)
+            
+            # ================================================================
+            # MIGRATION: Add discount/tax columns jika belum ada
+            # ================================================================
+            try:
+                cursor.execute("PRAGMA table_info(transactions)")
+                columns = [col[1] for col in cursor.fetchall()]
+                
+                if 'discount_percent' not in columns:
+                    cursor.execute("ALTER TABLE transactions ADD COLUMN discount_percent REAL DEFAULT 0")
+                if 'discount_amount' not in columns:
+                    cursor.execute("ALTER TABLE transactions ADD COLUMN discount_amount INTEGER DEFAULT 0")
+                if 'tax_percent' not in columns:
+                    cursor.execute("ALTER TABLE transactions ADD COLUMN tax_percent REAL DEFAULT 0")
+                if 'tax_amount' not in columns:
+                    cursor.execute("ALTER TABLE transactions ADD COLUMN tax_amount INTEGER DEFAULT 0")
+                conn.commit()
+                logger.info("Transaction table migration completed")
+            except Exception as e:
+                logger.warning(f"Migration warning: {e}")
             
             # ================================================================
             # TABEL 3: TRANSACTION_ITEMS - Detail item per transaksi
@@ -140,8 +205,66 @@ class DatabaseManager:
                 )
             """)
             
+            # ================================================================
+            # TABEL 4: USERS - User login dengan role-based access
+            # ================================================================
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    hashed_password TEXT NOT NULL,
+                    role TEXT NOT NULL DEFAULT 'cashier',
+                    is_active BOOLEAN DEFAULT 1,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
             conn.commit()
-            print("[OK] Database tabel berhasil diinisialisasi")
+            logger.info("Database tables initialized successfully")
+    
+    # ========================================================================
+    # BACKUP OPERATIONS - Automatic backup management
+    # ========================================================================
+    
+    def backup_database(self) -> bool:
+        """
+        Create automatic backup dari database file.
+        
+        Backup hanya dibuat jika belum ada backup untuk hari ini.
+        Automatically cleanup old backups (keep hanya 7 backups).
+        
+        Returns:
+            bool: True jika backup dibuat, False jika sudah ada untuk hari ini
+        """
+        try:
+            return self.backup_manager.backup_database(self.db_path)
+        except Exception as e:
+            logger.error(f"Failed to create backup: {e}", exc_info=True)
+            return False
+    
+    def get_backup_list(self) -> list:
+        """Get list of all available backups."""
+        try:
+            return self.backup_manager.get_backup_list()
+        except Exception as e:
+            logger.error(f"Failed to get backup list: {e}", exc_info=True)
+            return []
+    
+    def restore_backup(self, backup_filename: str) -> bool:
+        """Restore database from backup file."""
+        try:
+            return self.backup_manager.restore_backup(backup_filename, self.db_path)
+        except Exception as e:
+            logger.error(f"Failed to restore backup: {e}", exc_info=True)
+            return False
+    
+    def get_backup_statistics(self) -> dict:
+        """Get backup statistics."""
+        try:
+            return self.backup_manager.get_backup_statistics()
+        except Exception as e:
+            logger.error(f"Failed to get backup statistics: {e}", exc_info=True)
+            return {}
     
     # ========================================================================
     # PRODUCT OPERATIONS - CRUD operasi untuk tabel products
@@ -171,13 +294,13 @@ class DatabaseManager:
                     VALUES (?, ?, ?, ?)
                 """, (kode, nama, harga, stok))
                 conn.commit()
-                print(f"✅ Produk '{nama}' berhasil ditambahkan")
+                logger.info(f"Product added: {kode} = {nama}")
                 return True
         except sqlite3.IntegrityError:
-            print(f"❌ Kode produk '{kode}' sudah ada. Gunakan kode yang berbeda.")
+            logger.warning(f"Product code '{kode}' already exists")
             return False
         except Exception as e:
-            print(f"❌ Error saat menambah produk: {e}")
+            logger.error(f"Error adding product: {e}", exc_info=True)
             return False
     
     def get_product_by_kode(self, kode: str) -> dict or None:
@@ -262,7 +385,7 @@ class DatabaseManager:
                     values.append(stok)
                 
                 if not fields:
-                    print("⚠️ Tidak ada field yang diupdate")
+                    logger.warning("No fields to update in product")
                     return False
                 
                 update_query = f"UPDATE products SET {', '.join(fields)} WHERE kode = ?"
@@ -270,14 +393,14 @@ class DatabaseManager:
                 
                 cursor.execute(update_query, values)
                 if cursor.rowcount == 0:
-                    print(f"❌ Produk dengan kode '{kode}' tidak ditemukan")
+                    logger.warning(f"Product with code '{kode}' not found for update")
                     return False
                 
                 conn.commit()
-                print(f"✅ Produk '{kode}' berhasil diupdate")
+                logger.info(f"Product updated: {kode}")
                 return True
         except Exception as e:
-            print(f"❌ Error saat update produk: {e}")
+            logger.error(f"Error updating product: {e}", exc_info=True)
             return False
     
     def delete_product(self, kode: str) -> bool:
@@ -295,19 +418,20 @@ class DatabaseManager:
                 cursor = conn.cursor()
                 cursor.execute("DELETE FROM products WHERE kode = ?", (kode,))
                 if cursor.rowcount == 0:
-                    print(f"❌ Produk '{kode}' tidak ditemukan")
+                    logger.warning(f"Product with code '{kode}' not found for deletion")
                     return False
                 conn.commit()
-                print(f"✅ Produk '{kode}' berhasil dihapus")
+                logger.warning(f"Product deleted: {kode}")
                 return True
         except Exception as e:
-            print(f"❌ Error saat hapus produk: {e}")
+            logger.error(f"Error deleting product: {e}", exc_info=True)
             return False
     
     def reduce_stock(self, product_id: int, qty: int) -> bool:
         """
         Kurangi stok produk saat transaksi.
         Sangat penting untuk menjaga akurasi stok.
+        Jika stok turun di bawah 5 unit, kirim notifikasi ke Telegram.
         
         Args:
             product_id (int): ID produk
@@ -320,11 +444,11 @@ class DatabaseManager:
             # Cek stok saat ini
             product = self.get_product_by_id(product_id)
             if not product:
-                print(f"❌ Produk ID {product_id} tidak ditemukan")
+                logger.error(f"Product ID {product_id} not found for stock reduction")
                 return False
             
             if product['stok'] < qty:
-                print(f"❌ Stok tidak cukup (stok: {product['stok']}, diminta: {qty})")
+                logger.warning(f"Insufficient stock for product {product_id}: available={product['stok']}, requested={qty}")
                 return False
             
             # Update stok
@@ -337,23 +461,40 @@ class DatabaseManager:
                 """, (qty, product_id))
                 conn.commit()
             
+            remaining_stok = product['stok'] - qty
+            logger.info(f"Stock reduced: product_id={product_id}, qty={qty}, remaining={remaining_stok}")
+            
+            # Kirim notifikasi Telegram jika stok < 5
+            if remaining_stok < 5 and self.telegram_bot:
+                try:
+                    product_name = product.get('nama', 'Unknown Product')
+                    self.telegram_bot.send_low_stock_alert_sync(product_name, remaining_stok)
+                except Exception as e:
+                    logger.warning(f"Failed to send low stock alert: {e}")
+            
             return True
         except Exception as e:
-            print(f"❌ Error saat update stok: {e}")
+            logger.error(f"Error updating stock: {e}", exc_info=True)
             return False
     
     # ========================================================================
     # TRANSACTION OPERATIONS - CRUD operasi untuk transaksi
     # ========================================================================
     
-    def add_transaction(self, total: int, bayar: int, kembalian: int) -> int or None:
+    def add_transaction(self, total: int, bayar: int, kembalian: int, 
+                       discount_percent: float = 0, discount_amount: int = 0,
+                       tax_percent: float = 0, tax_amount: int = 0) -> int or None:
         """
-        Tambah transaksi baru.
+        Tambah transaksi baru dengan discount dan tax support.
         
         Args:
-            total (int): Total belanja
+            total (int): Total belanja (setelah discount/tax)
             bayar (int): Jumlah pembayaran
             kembalian (int): Kembalian
+            discount_percent (float): Diskon dalam persen (default: 0)
+            discount_amount (int): Diskon dalam rupiah (default: 0)
+            tax_percent (float): Pajak dalam persen (default: 0)
+            tax_amount (int): Pajak dalam rupiah (default: 0)
             
         Returns:
             int: ID transaksi jika berhasil
@@ -363,14 +504,16 @@ class DatabaseManager:
             with self.get_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute("""
-                    INSERT INTO transactions (total, bayar, kembalian)
-                    VALUES (?, ?, ?)
-                """, (total, bayar, kembalian))
+                    INSERT INTO transactions 
+                    (total, bayar, kembalian, discount_percent, discount_amount, tax_percent, tax_amount)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, (total, bayar, kembalian, discount_percent, discount_amount, tax_percent, tax_amount))
                 transaction_id = cursor.lastrowid
                 conn.commit()
+                logger.info(f"Transaction created: ID={transaction_id}, total=Rp{total:,}, discount={discount_percent}% (Rp{discount_amount:,}), tax={tax_percent}% (Rp{tax_amount:,})")
                 return transaction_id
         except Exception as e:
-            print(f"❌ Error saat menambah transaksi: {e}")
+            logger.error(f"Error creating transaction: {e}", exc_info=True)
             return None
     
     def add_transaction_item(self, transaction_id: int, product_id: int, 
@@ -397,9 +540,10 @@ class DatabaseManager:
                     VALUES (?, ?, ?, ?, ?)
                 """, (transaction_id, product_id, qty, harga_satuan, subtotal))
                 conn.commit()
+                logger.debug(f"Transaction item added: trans_id={transaction_id}, product_id={product_id}, qty={qty}")
                 return True
         except Exception as e:
-            print(f"❌ Error saat menambah item transaksi: {e}")
+            logger.error(f"Error adding transaction item: {e}", exc_info=True)
             return False
     
     def get_transaction(self, transaction_id: int) -> dict or None:
@@ -436,7 +580,7 @@ class DatabaseManager:
                     'items': [dict(item) for item in items]
                 }
         except Exception as e:
-            print(f"❌ Error saat ambil transaksi: {e}")
+            logger.error(f"Error fetching transaction: {e}", exc_info=True)
             return None
     
     def get_all_transactions(self) -> list:
@@ -620,9 +764,9 @@ class DatabaseManager:
                 cursor.execute("DELETE FROM transactions")
                 cursor.execute("DELETE FROM products")
                 conn.commit()
-                print("⚠️ Database berhasil dikosongkan")
+                logger.warning("Database cleared - all data deleted")
         except Exception as e:
-            print(f"❌ Error saat clear database: {e}")
+            logger.error(f"Error clearing database: {e}", exc_info=True)
     
     def get_database_stats(self) -> dict:
         """
@@ -649,6 +793,113 @@ class DatabaseManager:
                 'total_items': total_items,
                 'db_path': self.db_path
             }
+    
+    # ========================================================================
+    # USER OPERATIONS - CRUD untuk user login dan role-based access
+    # ========================================================================
+    
+    def create_user(self, username: str, password: str, role: str = "cashier") -> bool:
+        """
+        Buat user baru dengan password di-hash.
+        
+        Args:
+            username (str): Username unik
+            password (str): Password plain text (akan di-hash)
+            role (str): Role user ('admin' atau 'cashier', default: 'cashier')
+            
+        Returns:
+            bool: True jika berhasil, False jika gagal
+        """
+        try:
+            hashed_pw = self.hash_password(password)
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO users (username, hashed_password, role)
+                    VALUES (?, ?, ?)
+                """, (username, hashed_pw, role))
+                conn.commit()
+                logger.info(f"User created: username={username}, role={role}")
+                return True
+        except sqlite3.IntegrityError:
+            logger.warning(f"Username '{username}' already exists")
+            return False
+        except Exception as e:
+            logger.error(f"Error creating user: {e}", exc_info=True)
+            return False
+    
+    def get_user_by_username(self, username: str) -> dict or None:
+        """
+        Ambil data user berdasarkan username.
+        
+        Args:
+            username (str): Username
+            
+        Returns:
+            dict: Data user {id, username, role, is_active}
+            None: Jika user tidak ditemukan
+        """
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, username, role, is_active 
+                FROM users 
+                WHERE username = ?
+            """, (username,))
+            result = cursor.fetchone()
+            return dict(result) if result else None
+    
+    def verify_user_login(self, username: str, password: str) -> dict or None:
+        """
+        Verifikasi login user (check username + password).
+        
+        Args:
+            username (str): Username
+            password (str): Password plain text
+            
+        Returns:
+            dict: Data user jika login berhasil {id, username, role}
+            None: Jika login gagal
+        """
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, username, hashed_password, role, is_active 
+                FROM users 
+                WHERE username = ?
+            """, (username,))
+            result = cursor.fetchone()
+            
+            if result is None:
+                return None
+            
+            user = dict(result)
+            
+            # Check if active
+            if not user['is_active']:
+                logger.warning(f"User '{username}' is inactive")
+                return None
+            
+            # Verify password
+            if self.verify_password(password, user['hashed_password']):
+                logger.info(f"User login successful: {username}")
+                return {'id': user['id'], 'username': user['username'], 'role': user['role']}
+            else:
+                logger.warning(f"Invalid password for user '{username}'")
+                return None
+    
+    def user_exists(self) -> bool:
+        """
+        Check apakah ada user di database.
+        
+        Returns:
+            bool: True jika ada, False jika belum ada
+        """
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) as count FROM users")
+            count = cursor.fetchone()['count']
+            return count > 0
 
 
 # ============================================================================

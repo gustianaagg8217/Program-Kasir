@@ -634,6 +634,69 @@ class POSTelegramBot:
         except Exception as e:
             logger.error(f"Error sending low stock alert: {e}")
     
+    def send_low_stock_alert_sync(self, product_name: str, stok: int) -> bool:
+        """
+        Kirim alert stok minim ke admin (synchronous wrapper).
+        
+        Args:
+            product_name (str): Nama produk
+            stok (int): Jumlah stok tersisa
+            
+        Returns:
+            bool: True jika berhasil dikirim atau skipped (bot tidak aktif)
+        """
+        if not self.available:
+            return True  # Return True karena bot tidak aktif (bukan error)
+        
+        # Check if low stock notification enabled
+        if not self.config_manager.config.get("notify_low_stock", True):
+            return True
+        
+        # Check threshold
+        threshold = self.config_manager.config.get("low_stock_threshold", 5)
+        if stok >= threshold:
+            return True  # Stok masih di atas threshold
+        
+        admin_id = self.config_manager.config.get("admin_chat_id")
+        if not admin_id:
+            logger.warning("Admin chat ID not configured for low stock alerts")
+            return False
+        
+        try:
+            import asyncio
+            from telegram import Bot as TelegramBot
+            
+            msg = (
+                f"⚠️ *STOK PRODUK MINIM*\n\n"
+                f"Produk: {product_name}\n"
+                f"Sisa Stok: {stok} unit\n"
+                f"Threshold: {threshold} unit\n"
+                f"Waktu: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            )
+            
+            # Try to send message using asyncio
+            try:
+                loop = asyncio.get_running_loop()
+                # Already in async context, create task
+                asyncio.create_task(self.bot.send_message(
+                    chat_id=admin_id,
+                    text=msg,
+                    parse_mode="Markdown"
+                ))
+            except RuntimeError:
+                # Not in async context, run new event loop
+                asyncio.run(self.bot.send_message(
+                    chat_id=admin_id,
+                    text=msg,
+                    parse_mode="Markdown"
+                ))
+            
+            logger.info(f"Low stock notification sent: {product_name} (stok={stok})")
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to send low stock alert: {e}")
+            return False
+    
     async def send_daily_report(self):
         """
         Kirim laporan harian ke admin (biasanya dijadwal setiap hari).
