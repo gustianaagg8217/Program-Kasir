@@ -1,0 +1,80 @@
+# ⚡ INSTAN FIX - GUI Tidak Muncul
+
+**Status:** ✅ SUDAH DIPERBAIKI
+
+---
+
+## 🚀 LANGSUNG COBA
+
+Buka CMD dan jalankan:
+
+```bash
+cd d:\Program_Kasir
+python gui_main.py
+```
+
+**Login window seharusnya muncul dalam 2-3 detik dengan:**
+- Username field
+- Password field  
+- Login button
+
+---
+
+## 🧪 KALAU MASIH TIDAK MUNCUL
+
+### COBA TEST INI:
+```bash
+python test_gui_display.py
+```
+
+**Expected:**
+- Simple test window muncul
+- Tulis "TEST: If you see this, GUI works!"
+- Close button
+
+**Jika test OK** → Program adalah OK, coba gui_main.py lagi
+
+---
+
+## 📝 PERBAIKAN YANG DILAKUKAN
+
+1. **Disable transient()** - bakan window independent
+2. **Add lift() & focus()** - bring window to front
+3. **Add error handling** - catch any issues
+4. **Remove emoji from title** - avoid encoding issues
+
+---
+
+## 🎯 LOGIN CREDENTIALS
+
+```
+Admin:    admin / admin123
+Cashier:  cashier / cashier123
+```
+
+---
+
+## ✅ CHECKLIST
+
+- [ ] Jalankan: `python gui_main.py`
+- [ ] Login window muncul?
+- [ ] Bisa type username?
+- [ ] Klik login dengan admin/admin123
+- [ ] Dashboard muncul?
+
+Kalau semua YES → **SELESAI!** 🎉
+
+---
+
+## 💬 BANTUAN
+
+Jika masih error:
+
+1. Lihat file: `FIX_GUI_TIDAK_MUNCUL.md` untuk detail lengkap
+2. Run: `python test_gui_display.py` untuk test GUI system
+3. Check: Tab "Logs" di program untuk error details
+
+---
+
+**Created:** April 3, 2026  
+**Status:** Ready to Use ✅

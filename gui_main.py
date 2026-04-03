@@ -79,19 +79,28 @@ class LoginWindow(tk.Toplevel):
         self.result = None
         
         # Window settings
-        self.title("🔐 Login - Sistem POS")
+        self.title("Login - Sistem POS")
         self.geometry("400x300")
-        self.transient(parent)
-        self.grab_set()
+        # Don't use transient with withdrawn parent - causes display issues
+        # self.transient(parent)  # DISABLED - causes window not to show
+        # self.grab_set()  # DISABLED - causes window to hang
         self.resizable(False, False)
         
-        # Center window on screen (not on parent, since parent is withdrawn)
+        # Make sure this window is on top and has focus
+        self.attributes('-topmost', True)
+        self.attributes('-topmost', False)
+        
+        # Center window on screen
         self.update_idletasks()
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
         x = (screen_width // 2) - 200
         y = (screen_height // 2) - 150
         self.geometry(f"+{x}+{y}")
+        
+        # Ensure window is visible and focused
+        self.lift()
+        self.focus_set()
         
         # Create UI
         self._create_ui()
@@ -449,6 +458,7 @@ class POSGUIApplication(tk.Tk):
         self._create_daily_sales_chart(chart_frame)
         
         # AI Recommendations section (top 3 products)
+        # NOTE: If dashboard loads slowly, comment out this line:
         self._create_ai_recommendations_section()
         
         # Recent transactions section
@@ -569,103 +579,95 @@ class POSGUIApplication(tk.Tk):
     
     def _create_ai_recommendations_section(self):
         """Create AI recommendations section showing top 3 best-selling products."""
-        # Get top 3 products
-        top_products = self.report_generator.get_produk_terlaris(limit=3)
-        
-        # Create container
-        rec_frame = tk.Frame(self.content_area, bg=COLORS['bg_main'], relief='flat')
-        rec_frame.pack(fill='x', pady=10)
-        
-        # Header
-        header = tk.Label(
-            rec_frame,
-            text="🤖 AI Rekomendasi - Top 3 Produk Terlaris",
-            font=FONTS['subheading'],
-            bg=COLORS['bg_main'],
-            fg=COLORS['primary']
-        )
-        header.pack(anchor='w', padx=15, pady=10)
-        
-        if not top_products:
-            # No data available
-            empty_label = tk.Label(
+        try:
+            # Try to get top 3 products - with error handling and simple queries
+            try:
+                # Test if we can even access the database quickly
+                top_products = self.report_generator.get_produk_terlaris(limit=3)
+                
+                # If no products, skip this section entirely for performance
+                if not top_products:
+                    return
+                    
+            except Exception as e:
+                logger.warning(f"Skipping recommendations (error/slow): {e}")
+                return
+            
+            # Create container
+            rec_frame = tk.Frame(self.content_area, bg=COLORS['bg_main'], relief='flat')
+            rec_frame.pack(fill='x', pady=5)
+            
+            # Header - simple text without emoji
+            header = tk.Label(
                 rec_frame,
-                text="Belum ada data penjualan untuk rekomendasi",
-                font=FONTS['normal'],
-                bg=COLORS['bg_main'],
-                fg=COLORS['text_secondary']
-            )
-            empty_label.pack(pady=20)
-            return
-        
-        # Create cards for top 3 products
-        cards_container = tk.Frame(rec_frame, bg=COLORS['bg_main'])
-        cards_container.pack(fill='x', padx=15, pady=5)
-        
-        # Colors for ranking (gold, silver, bronze)
-        rank_colors = [
-            '#FFD700',  # Gold for 1st
-            '#C0C0C0',  # Silver for 2nd
-            '#CD7F32'   # Bronze for 3rd
-        ]
-        
-        for idx, product in enumerate(top_products):
-            # Create card for each product
-            card = tk.Frame(
-                cards_container,
-                bg=COLORS['bg_card'],
-                relief='solid',
-                bd=1,
-                highlightbackground=rank_colors[idx],
-                highlightthickness=3
-            )
-            card.pack(side='left', padx=10, pady=5, fill='both', expand=True)
-            
-            # Rank (top-right corner with medal emoji)
-            medal_emoji = ['🥇', '🥈', '🥉'][idx]
-            rank_label = tk.Label(
-                card,
-                text=f"{medal_emoji} Rank #{product['rank']}",
-                font=FONTS['small'],
-                bg=COLORS['bg_card'],
-                fg=rank_colors[idx]
-            )
-            rank_label.pack(anchor='ne', padx=10, pady=5)
-            
-            # Product name
-            name_label = tk.Label(
-                card,
-                text=product['nama'],
+                text="Top 3 Produk Terlaris",
                 font=FONTS['subheading'],
-                bg=COLORS['bg_card'],
-                fg=COLORS['text_primary'],
-                wraplength=200
-            )
-            name_label.pack(anchor='w', padx=10, pady=5)
-            
-            # Stats frame
-            stats_frame = tk.Frame(card, bg=COLORS['bg_main'])
-            stats_frame.pack(fill='x', padx=10, pady=5)
-            
-            # Quantity sold
-            qty_label = tk.Label(
-                stats_frame,
-                text=f"📦 Terjual: {product['total_qty']} unit",
-                font=FONTS['small'],
                 bg=COLORS['bg_main'],
-                fg=COLORS['success']
+                fg=COLORS['primary']
             )
-            qty_label.pack(anchor='w', pady=2)
+            header.pack(anchor='w', padx=15, pady=8)
             
-            # Revenue
-            revenue_label = tk.Label(
-                stats_frame,
-                text=f"💰 Pendapatan: {format_rp(product['total_revenue'])}",
-                font=FONTS['small'],
-                bg=COLORS['bg_main'],
-                fg=COLORS['info']
-            )
-            revenue_label.pack(anchor='w', pady=2)
+            # Create cards for top 3 products
+            cards_container = tk.Frame(rec_frame, bg=COLORS['bg_main'])
+            cards_container.pack(fill='x', padx=15, pady=3)
+            
+            # Colors for ranking (gold, silver, bronze)
+            rank_colors = ['#FFD700', '#C0C0C0', '#CD7F32']
+            
+            for idx, product in enumerate(top_products):
+                try:
+                    # Simple card without complex styling
+                    card = tk.Frame(
+                        cards_container,
+                        bg=COLORS['bg_card'],
+                        relief='solid',
+                        bd=1
+                    )
+                    card.pack(side='left', padx=8, pady=3, fill='both', expand=True)
+                    
+                    # Rank label - keep it simple
+                    rank_text = ['#1', '#2', '#3'][idx]
+                    rank_label = tk.Label(
+                        card,
+                        text=f"Rank {rank_text}",
+                        font=FONTS['small'],
+                        bg=COLORS['bg_card'],
+                        fg=rank_colors[idx]
+                    )
+                    rank_label.pack(anchor='nw', padx=8, pady=4)
+                    
+                    # Product name - keep it short
+                    name = product.get('nama', 'Unknown')[:30]  # Limit length
+                    name_label = tk.Label(
+                        card,
+                        text=name,
+                        font=FONTS['normal'],
+                        bg=COLORS['bg_card'],
+                        fg=COLORS['text_primary'],
+                        wraplength=140
+                    )
+                    name_label.pack(anchor='w', padx=8, pady=3)
+                    
+                    # Simple stats
+                    qty = product.get('total_qty', 0)
+                    revenue = product.get('total_revenue', 0)
+                    
+                    stats_text = f"Qty: {qty} | {format_rp(revenue)}"
+                    stats_label = tk.Label(
+                        card,
+                        text=stats_text,
+                        font=FONTS['small'],
+                        bg=COLORS['bg_main'],
+                        fg=COLORS['secondary']
+                    )
+                    stats_label.pack(anchor='w', padx=8, pady=3)
+                    
+                except Exception as e:
+                    logger.warning(f"Error rendering product card {idx}: {e}")
+                    continue
+                    
+        except Exception as e:
+            logger.warning(f"AI recommendations skipped: {e}")
     
     def _show_transaction_detail(self, tree, event):
         """Show transaction detail dialog when double-clicked."""
@@ -2560,6 +2562,9 @@ def main():
     root = tk.Tk()
     root.withdraw()  # Hide root window temporarily
     
+    # Ensure root is properly initialized
+    root.update_idletasks()
+    
     # Initialize database
     db = DatabaseManager()
     logger.info("Database initialized")
@@ -2573,28 +2578,33 @@ def main():
     
     logger.info("Showing login window")
     
-    # Show login window
-    login_window = LoginWindow(root, db)
-    root.wait_window(login_window)
-    
-    # Get logged-in user
-    user = login_window.get_user()
-    
-    # If login failed or user clicked exit
-    if not user:
-        logger.warning("User cancelled login, exiting application")
+    try:
+        # Show login window
+        login_window = LoginWindow(root, db)
+        root.wait_window(login_window)
+        
+        # Get logged-in user
+        user = login_window.get_user()
+        
+        # If login failed or user clicked exit
+        if not user:
+            logger.warning("User cancelled login, exiting application")
+            root.destroy()
+            return
+        
+        # Destroy temporary root
         root.destroy()
-        return
-    
-    # Destroy temporary root
-    root.destroy()
-    
-    # Create main application with logged-in user
-    logger.info(f"Launching main application for user {user['username']}")
-    app = POSGUIApplication(user=user)
-    app.mainloop()
-    
-    logger.info(f"User {user['username']} logged out")
+        
+        # Create main application with logged-in user
+        logger.info(f"Launching main application for user {user['username']}")
+        app = POSGUIApplication(user=user)
+        app.mainloop()
+        
+        logger.info(f"User {user['username']} logged out")
+    except Exception as e:
+        logger.error(f"Error in main: {e}", exc_info=True)
+        root.destroy()
+        raise
 
 
 if __name__ == "__main__":
