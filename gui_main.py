@@ -446,9 +446,148 @@ Kembalian        : {format_rp(trans['kembalian'])}
         )
         summary_label.pack(anchor='w', padx=10, pady=10)
         
-        # Close button
+        # Button frame
+        btn_frame = ttk.Frame(dialog)
+        btn_frame.pack(fill='x', padx=10, pady=10)
+        
+        print_btn = ttk.Button(
+            btn_frame,
+            text="🖨️ Print Resi",
+            command=lambda: self._print_transaction_receipt(trans, items)
+        )
+        print_btn.pack(side='left', padx=5)
+        
         close_btn = ttk.Button(dialog, text="Tutup", command=dialog.destroy)
-        close_btn.pack(pady=10)
+        close_btn.pack(side='left', padx=5)
+    
+    def _generate_receipt_text(self, trans, items):
+        """Generate receipt text format."""
+        receipt = []
+        receipt.append("=" * 40)
+        receipt.append("TOKO ACCESSORIES G-LIES".center(40))
+        receipt.append("Jl. Majalaya, Solokanjeruk, Bandung".center(40))
+        receipt.append("=" * 40)
+        receipt.append("")
+        receipt.append(f"Transaksi ID  : {trans['id']}")
+        receipt.append(f"Tanggal/Waktu : {trans['tanggal']}")
+        receipt.append("-" * 40)
+        receipt.append("Daftar Item:")
+        receipt.append("-" * 40)
+        
+        for i, item in enumerate(items, 1):
+            product_name = item.get('nama', 'N/A')[:25]  # Truncate long names
+            qty = item.get('qty', 0)
+            harga = item.get('harga_satuan', 0)
+            subtotal = item.get('subtotal', 0)
+            
+            # Format: "Produk      Qty x Harga = Subtotal"
+            receipt.append(f"{i}. {product_name}")
+            receipt.append(f"   {qty}x {format_rp(harga)} = {format_rp(subtotal)}")
+        
+        receipt.append("-" * 40)
+        receipt.append(f"Total Belanja  : {format_rp(trans['total'])}")
+        receipt.append(f"Pembayaran     : {format_rp(trans['bayar'])}")
+        receipt.append(f"Kembalian      : {format_rp(trans['kembalian'])}")
+        receipt.append("=" * 40)
+        receipt.append("Terima Kasih".center(40))
+        receipt.append("=" * 40)
+        
+        return "\n".join(receipt)
+    
+    def _print_transaction_receipt(self, trans, items):
+        """Print transaction receipt."""
+        receipt_text = self._generate_receipt_text(trans, items)
+        
+        # Create print preview dialog
+        preview_dialog = tk.Toplevel(self)
+        preview_dialog.title("🖨️ Preview Resi")
+        preview_dialog.geometry("500x600")
+        preview_dialog.configure(bg=COLORS['bg_main'])
+        
+        # Header
+        header = tk.Label(
+            preview_dialog,
+            text="Preview Resi",
+            font=FONTS['heading'],
+            bg=COLORS['bg_main'],
+            fg=COLORS['primary']
+        )
+        header.pack(pady=10)
+        
+        # Receipt text display
+        text_frame = ttk.Frame(preview_dialog)
+        text_frame.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        receipt_display = tk.Text(text_frame, font=FONTS['mono'], height=25, width=50)
+        receipt_display.insert('1.0', receipt_text)
+        receipt_display.config(state='disabled')  # Read-only
+        
+        scrollbar = ttk.Scrollbar(text_frame, orient='vertical', command=receipt_display.yview)
+        receipt_display.config(yscroll=scrollbar.set)
+        scrollbar.pack(side='right', fill='y')
+        receipt_display.pack(fill='both', expand=True)
+        
+        # Buttons
+        btn_frame = ttk.Frame(preview_dialog)
+        btn_frame.pack(fill='x', padx=10, pady=10)
+        
+        def print_receipt():
+            """Print resi ke printer."""
+            try:
+                # Save to temporary file
+                import tempfile
+                import subprocess
+                
+                with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt', encoding='utf-8') as f:
+                    f.write(receipt_text)
+                    temp_file = f.name
+                
+                # Print the file (Windows)
+                subprocess.run(['notepad', '/p', temp_file], check=True)
+                messagebox.showinfo("Sukses", "Resi sedang dicetak...")
+                preview_dialog.destroy()
+            except Exception as e:
+                messagebox.showerror("Error", f"Gagal mencetak: {e}")
+        
+        def save_receipt():
+            """Save resi ke file."""
+            try:
+                from tkinter import filedialog
+                
+                file_path = filedialog.asksaveasfilename(
+                    defaultextension=".txt",
+                    filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
+                    initialfile=f"resi_{trans['id']}.txt"
+                )
+                
+                if file_path:
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        f.write(receipt_text)
+                    messagebox.showinfo("Sukses", f"Resi disimpan ke:\n{file_path}")
+            except Exception as e:
+                messagebox.showerror("Error", f"Gagal menyimpan: {e}")
+        
+        print_resi_btn = ttk.Button(
+            btn_frame,
+            text="🖨️ Cetak",
+            command=print_receipt
+        )
+        print_resi_btn.pack(side='left', padx=5)
+        
+        save_btn = ttk.Button(
+            btn_frame,
+            text="💾 Simpan",
+            command=save_receipt
+        )
+        save_btn.pack(side='left', padx=5)
+        
+        close_btn = ttk.Button(
+            btn_frame,
+            text="❌ Tutup",
+            command=preview_dialog.destroy
+        )
+        close_btn.pack(side='left', padx=5)
+    
     
     
     # ========================================================================
@@ -1075,16 +1214,23 @@ Total Item          : {laporan.get('total_item', 0)}
         
         def show_report():
             try:
-                start_str = start_date.get()
-                end_str = end_date.get()
+                # Get dates from DateEntry widget
+                start_str = start_date.get_date().strftime('%Y-%m-%d')
+                end_str = end_date.get_date().strftime('%Y-%m-%d')
+                
                 laporan = self.report_generator.get_laporan_periode(start_str, end_str)
+                
+                if laporan is None:
+                    messagebox.showerror("Error", "Gagal mengambil data laporan. Periksa format tanggal.")
+                    return
                 
                 result_text.config(state='normal')
                 result_text.delete(1.0, 'end')
-                result_text.insert('end', self.report_formatter.format_laporan_periode(laporan))
+                formatted_report = self.report_formatter.format_laporan_periode(laporan)
+                result_text.insert('end', formatted_report)
                 result_text.config(state='disabled')
             except Exception as e:
-                messagebox.showerror("Error", f"Error: {e}")
+                messagebox.showerror("Error", f"Error: {str(e)}")
         
         show_btn = ttk.Button(selector_frame, text="📊 Tampilkan Laporan", command=show_report)
         show_btn.pack(side='left', padx=5)
