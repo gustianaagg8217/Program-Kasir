@@ -294,3 +294,84 @@ AttributeError: 'DatabaseManager' object has no attribute 'get_products'
 2026-04-03 10:49:13 - INFO     - database - Database tables initialized successfully
 2026-04-03 10:49:13 - INFO     - backup_manager - Backup already exists for today: backup_20260403.db
 2026-04-03 10:49:13 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-03 15:27:57 - INFO     - logger_config - ======================================================================
+2026-04-03 15:27:57 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 15:27:57 - INFO     - logger_config - ======================================================================
+2026-04-03 15:27:57 - INFO     - logger_config - Logging initialized at 2026-04-03 15:27:57
+2026-04-03 15:27:58 - INFO     - __main__ - Application initialization started
+2026-04-03 15:27:58 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:27:58 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:27:58 - INFO     - database - Transaction table migration completed
+2026-04-03 15:27:58 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:27:58 - INFO     - __main__ - Database initialized
+2026-04-03 15:27:58 - INFO     - __main__ - Showing login window
+2026-04-03 15:28:09 - INFO     - database - User login successful: cashier
+2026-04-03 15:28:09 - INFO     - __main__ - User login successful: cashier (cashier)
+2026-04-03 15:28:09 - INFO     - __main__ - Launching main application for user cashier
+2026-04-03 15:28:09 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:28:09 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:28:09 - INFO     - database - Transaction table migration completed
+2026-04-03 15:28:09 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:28:10 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-03 15:28:10 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-03 15:28:10 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:28:10 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:28:10 - INFO     - database - Transaction table migration completed
+2026-04-03 15:28:10 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:28:10 - INFO     - backup_manager - Backup already exists for today: backup_20260403.db
+2026-04-03 15:28:10 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-03 15:29:39 - INFO     - __main__ - User cashier logged out
+2026-04-03 15:30:06 - INFO     - logger_config - ======================================================================
+2026-04-03 15:30:06 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 15:30:06 - INFO     - logger_config - ======================================================================
+2026-04-03 15:30:06 - INFO     - logger_config - Logging initialized at 2026-04-03 15:30:06
+2026-04-03 15:30:07 - INFO     - __main__ - Application initialization started
+2026-04-03 15:30:07 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:30:07 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:30:07 - INFO     - database - Transaction table migration completed
+2026-04-03 15:30:07 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:30:07 - INFO     - __main__ - Database initialized
+2026-04-03 15:30:07 - INFO     - __main__ - Showing login window
+2026-04-03 15:30:16 - INFO     - database - User login successful: cashier
+2026-04-03 15:30:16 - INFO     - __main__ - User login successful: cashier (cashier)
+2026-04-03 15:30:16 - INFO     - __main__ - Launching main application for user cashier
+2026-04-03 15:30:16 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:30:16 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:30:16 - INFO     - database - Transaction table migration completed
+2026-04-03 15:30:16 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:30:16 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-03 15:30:16 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-03 15:30:16 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:30:16 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:30:16 - INFO     - database - Transaction table migration completed
+2026-04-03 15:30:16 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:30:16 - INFO     - backup_manager - Backup already exists for today: backup_20260403.db
+2026-04-03 15:30:17 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-03 15:31:28 - INFO     - __main__ - User cashier logged out
+2026-04-03 15:31:33 - INFO     - logger_config - ======================================================================
+2026-04-03 15:31:33 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 15:31:33 - INFO     - logger_config - ======================================================================
+2026-04-03 15:31:33 - INFO     - logger_config - Logging initialized at 2026-04-03 15:31:33
+2026-04-03 15:31:34 - INFO     - __main__ - Application initialization started
+2026-04-03 15:31:34 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:31:34 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:31:34 - INFO     - database - Transaction table migration completed
+2026-04-03 15:31:34 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:31:34 - INFO     - __main__ - Database initialized
+2026-04-03 15:31:34 - INFO     - __main__ - Showing login window
+2026-04-03 15:31:43 - INFO     - database - User login successful: cashier
+2026-04-03 15:31:43 - INFO     - __main__ - User login successful: cashier (cashier)
+2026-04-03 15:31:43 - INFO     - __main__ - Launching main application for user cashier
+2026-04-03 15:31:43 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:31:43 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:31:43 - INFO     - database - Transaction table migration completed
+2026-04-03 15:31:43 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:31:44 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-03 15:31:44 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-03 15:31:44 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:31:44 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:31:44 - INFO     - database - Transaction table migration completed
+2026-04-03 15:31:44 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:31:44 - INFO     - backup_manager - Backup already exists for today: backup_20260403.db
+2026-04-03 15:31:44 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-03 15:31:52 - INFO     - __main__ - User cashier logged out

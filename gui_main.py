@@ -1536,9 +1536,13 @@ Kembalian        : {format_rp(trans['kembalian'])}
         )
         self.total_label.pack(anchor='w')
         
-        # Discount & Tax section
-        discount_tax_frame = ttk.LabelFrame(self.content_area, text="💰 Diskon & Pajak", padding=10)
-        discount_tax_frame.pack(fill='x', padx=5, pady=10)
+        # Discount & Tax and Payment sections (side by side)
+        discount_payment_container = ttk.Frame(self.content_area)
+        discount_payment_container.pack(fill='both', expand=True, padx=5, pady=10)
+        
+        # Discount & Tax section (left side)
+        discount_tax_frame = ttk.LabelFrame(discount_payment_container, text="💰 Diskon & Pajak", padding=10)
+        discount_tax_frame.pack(side='left', fill='both', expand=True, padx=(0, 5))
         
         # Discount section
         discount_inner = ttk.Frame(discount_tax_frame)
@@ -1560,28 +1564,25 @@ Kembalian        : {format_rp(trans['kembalian'])}
         tax_entry.pack(side='left', padx=5)
         tax_entry.bind('<KeyRelease>', lambda e: self._update_tax())
         
-        # Payment section
-        payment_frame = ttk.LabelFrame(self.content_area, text="💳 Pembayaran", padding=10)
-        payment_frame.pack(fill='x', padx=5, pady=10)
+        # Payment section (right side)
+        payment_frame = ttk.LabelFrame(discount_payment_container, text="💳 Pembayaran", padding=10)
+        payment_frame.pack(side='right', fill='both', expand=True, padx=(5, 0))
         
         ttk.Label(payment_frame, text="Jumlah Pembayaran:", font=FONTS['normal']).pack(side='left')
         self.payment_var = tk.StringVar()
         payment_entry = ttk.Entry(payment_frame, textvariable=self.payment_var, width=20)
         payment_entry.pack(side='left', padx=5)
         
-        # Buttons
-        btn_frame = ttk.Frame(self.content_area)
-        btn_frame.pack(fill='x', padx=5, pady=10)
-        
+        # Buttons (in payment frame, right side)
         process_btn = ttk.Button(
-            btn_frame,
+            payment_frame,
             text="✅ Proses Pembayaran",
             command=self._process_payment
         )
         process_btn.pack(side='left', padx=5)
         
         clear_btn = ttk.Button(
-            btn_frame,
+            payment_frame,
             text="❌ Batalkan",
             command=self._clear_transaction
         )
