@@ -448,6 +448,9 @@ class POSGUIApplication(tk.Tk):
         
         self._create_daily_sales_chart(chart_frame)
         
+        # AI Recommendations section (top 3 products)
+        self._create_ai_recommendations_section()
+        
         # Recent transactions section
         self._create_recent_transactions_section()
         
@@ -563,6 +566,106 @@ class POSGUIApplication(tk.Tk):
         hint_label.pack(anchor='w', padx=15, pady=5)
         
         tree.pack(fill='both', expand=True, padx=15, pady=10)
+    
+    def _create_ai_recommendations_section(self):
+        """Create AI recommendations section showing top 3 best-selling products."""
+        # Get top 3 products
+        top_products = self.report_generator.get_produk_terlaris(limit=3)
+        
+        # Create container
+        rec_frame = tk.Frame(self.content_area, bg=COLORS['bg_main'], relief='flat')
+        rec_frame.pack(fill='x', pady=10)
+        
+        # Header
+        header = tk.Label(
+            rec_frame,
+            text="🤖 AI Rekomendasi - Top 3 Produk Terlaris",
+            font=FONTS['subheading'],
+            bg=COLORS['bg_main'],
+            fg=COLORS['primary']
+        )
+        header.pack(anchor='w', padx=15, pady=10)
+        
+        if not top_products:
+            # No data available
+            empty_label = tk.Label(
+                rec_frame,
+                text="Belum ada data penjualan untuk rekomendasi",
+                font=FONTS['normal'],
+                bg=COLORS['bg_main'],
+                fg=COLORS['text_secondary']
+            )
+            empty_label.pack(pady=20)
+            return
+        
+        # Create cards for top 3 products
+        cards_container = tk.Frame(rec_frame, bg=COLORS['bg_main'])
+        cards_container.pack(fill='x', padx=15, pady=5)
+        
+        # Colors for ranking (gold, silver, bronze)
+        rank_colors = [
+            '#FFD700',  # Gold for 1st
+            '#C0C0C0',  # Silver for 2nd
+            '#CD7F32'   # Bronze for 3rd
+        ]
+        
+        for idx, product in enumerate(top_products):
+            # Create card for each product
+            card = tk.Frame(
+                cards_container,
+                bg=COLORS['bg_card'],
+                relief='solid',
+                bd=1,
+                highlightbackground=rank_colors[idx],
+                highlightthickness=3
+            )
+            card.pack(side='left', padx=10, pady=5, fill='both', expand=True)
+            
+            # Rank (top-right corner with medal emoji)
+            medal_emoji = ['🥇', '🥈', '🥉'][idx]
+            rank_label = tk.Label(
+                card,
+                text=f"{medal_emoji} Rank #{product['rank']}",
+                font=FONTS['small'],
+                bg=COLORS['bg_card'],
+                fg=rank_colors[idx]
+            )
+            rank_label.pack(anchor='ne', padx=10, pady=5)
+            
+            # Product name
+            name_label = tk.Label(
+                card,
+                text=product['nama'],
+                font=FONTS['subheading'],
+                bg=COLORS['bg_card'],
+                fg=COLORS['text_primary'],
+                wraplength=200
+            )
+            name_label.pack(anchor='w', padx=10, pady=5)
+            
+            # Stats frame
+            stats_frame = tk.Frame(card, bg=COLORS['bg_main'])
+            stats_frame.pack(fill='x', padx=10, pady=5)
+            
+            # Quantity sold
+            qty_label = tk.Label(
+                stats_frame,
+                text=f"📦 Terjual: {product['total_qty']} unit",
+                font=FONTS['small'],
+                bg=COLORS['bg_main'],
+                fg=COLORS['success']
+            )
+            qty_label.pack(anchor='w', pady=2)
+            
+            # Revenue
+            revenue_label = tk.Label(
+                stats_frame,
+                text=f"💰 Pendapatan: {format_rp(product['total_revenue'])}",
+                font=FONTS['small'],
+                bg=COLORS['bg_main'],
+                fg=COLORS['info']
+            )
+            revenue_label.pack(anchor='w', pady=2)
     
     def _show_transaction_detail(self, tree, event):
         """Show transaction detail dialog when double-clicked."""
