@@ -138,6 +138,7 @@ class TelegramPOSSystem:
                     CallbackQueryHandler(self.transaksi_back_menu, pattern="^back_menu$"),
                 ],
                 TAMBAH_ITEM_KODE: [
+                    CallbackQueryHandler(self.handle_product_selection, pattern="^(select_product_|cancel_search)"),
                     MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_item_kode),
                 ],
                 TAMBAH_ITEM_QTY: [
@@ -446,15 +447,21 @@ class TelegramPOSSystem:
             logger.error(f"[-] Error in show_transaksi_menu: {e}", exc_info=True)
     
     async def transaksi_tambah_item(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        """Handle tambah item - minta input kode."""
+        """Handle tambah item - minta input nama produk untuk pencarian."""
         query = update.callback_query
         await query.answer()
+        
+        # Clear previous search state
+        context.user_data.pop('search_results', None)
+        context.user_data.pop('current_product', None)
         
         try:
             await query.edit_message_text(
                 text=(
                     "📝 *TAMBAH ITEM*\n\n"
-                    "Silakan ketik *Kode Produk* (contoh: COFFEE, TEA, 0001)\n\n"
+                    "Silakan ketik *Nama Produk* atau clue pencarian\n"
+                    "(contoh: COF, coff, tea, 001)\n\n"
+                    "Sistem akan mencari produk yang sesuai.\n\n"
                     "Kirim /cancel untuk batalkan."
                 ),
                 parse_mode="Markdown"
@@ -465,46 +472,144 @@ class TelegramPOSSystem:
         return TAMBAH_ITEM_KODE
     
     async def handle_item_kode(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        """Handle kode produk input."""
-        kode = update.message.text.strip().upper()
+        """Handle product search by name or code."""
+        search_term = update.message.text.strip()
         user_id = update.effective_user.id
         
-        logger.info(f"Product code input: {kode} from user_id: {user_id}")
+        logger.info(f"Product search input: {search_term} from user_id: {user_id}")
         
-        # Lookup produk
-        product = self.db.get_product_by_kode(kode)
+        # Get all products and search by name or code
+        all_products = self.get_products_cached()
+        search_term_upper = search_term.upper()
         
-        if not product:
+        # Search results: match by nama (partial) or kode (exact or partial)
+        matching_products = []
+        for product in all_products:
+            # Check if product name contains search term (case-insensitive)
+            if search_term_upper in product['nama'].upper():
+                if product['stok'] > 0:
+                    matching_products.append(product)
+            # Also check by kode (exact match for consistency)
+            elif product['kode'].upper() == search_term_upper:
+                if product['stok'] > 0:
+                    matching_products.append(product)
+        
+        # No matches found
+        if not matching_products:
             await update.message.reply_text(
-                f"❌ Produk dengan kode *{kode}* tidak ditemukan!\n\n"
-                f"Silakan coba kode lain atau ketik /cancel untuk batalkan.",
+                f"❌ Produk dengan nama/kode *{search_term}* tidak ditemukan!\n\n"
+                f"Silakan coba pencarian lain atau ketik /cancel untuk batalkan.",
                 parse_mode="Markdown"
             )
             return TAMBAH_ITEM_KODE
         
-        # Check stok
-        if product['stok'] <= 0:
+        # Only 1 match found - proceed directly to quantity input
+        if len(matching_products) == 1:
+            product = matching_products[0]
+            context.user_data['current_product'] = product
+            
+            msg = (
+                f"✅ *Produk Ditemukan!*\n\n"
+                f"📦 Nama: {product['nama']}\n"
+                f"💰 Harga: {format_rp(product['harga'])}\n"
+                f"📊 Stok: {product['stok']} pcs\n\n"
+                f"Berapa banyak yang akan dibeli? (1-{product['stok']})\n\n"
+                f"Ketik angka atau /cancel untuk batalkan."
+            )
+            
+            await update.message.reply_text(msg, parse_mode="Markdown")
+            return TAMBAH_ITEM_QTY
+        
+        # Multiple matches found - show selection inline keyboard
+        msg = f"🔍 *HASIL PENCARIAN: {len(matching_products)} produk ditemukan*\n\n"
+        msg += "Pilih produk yang Anda maksud:\n\n"
+        
+        keyboard = []
+        for idx, product in enumerate(matching_products, 1):
+            btn_text = f"{idx}. {product['nama']} - {format_rp(product['harga'])} (Stok: {product['stok']})"
+            keyboard.append([
+                InlineKeyboardButton(
+                    btn_text,
+                    callback_data=f"select_product_{idx-1}"
+                )
+            ])
+        
+        keyboard.append([InlineKeyboardButton("❌ Batalkan", callback_data="cancel_search")])
+        
+        # Store search results in context for callback handler
+        context.user_data['search_results'] = matching_products
+        context.user_data['search_term'] = search_term
+        
+        try:
             await update.message.reply_text(
-                f"❌ Produk *{product['nama']}* stok tidak tersedia!\n\n"
-                f"Silakan pilih produk lain.",
+                msg,
+                reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown"
             )
+        except Exception as e:
+            logger.error(f"[-] Error showing search results: {e}", exc_info=True)
+            await update.message.reply_text(
+                "❌ Terjadi kesalahan saat menampilkan hasil. Silakan coba lagi.",
+                parse_mode="Markdown"
+            )
+        
+        # Stay in TAMBAH_ITEM_KODE state waiting for callback selection
+        return TAMBAH_ITEM_KODE
+    
+    async def handle_product_selection(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Handle product selection from search results (inline button callback)."""
+        query = update.callback_query
+        user_id = update.effective_user.id
+        
+        logger.info(f"Product selection callback: {query.data} from user_id: {user_id}")
+        
+        try:
+            await query.answer()
+            
+            # Handle cancel search
+            if query.data == "cancel_search":
+                # Clear search results and go back to transaksi menu
+                context.user_data.pop('search_results', None)
+                context.user_data.pop('current_product', None)
+                await self.show_transaksi_menu(update, context)
+                return TRANSAKSI_MENU
+            
+            # Extract product index from callback_data
+            product_idx = int(query.data.split("_")[-1])
+            
+            # Get search results from context
+            search_results = context.user_data.get('search_results', [])
+            
+            if product_idx >= len(search_results):
+                await query.answer("❌ Produk tidak ditemukan!", show_alert=True)
+                return TAMBAH_ITEM_KODE
+            
+            # Get selected product
+            selected_product = search_results[product_idx]
+            context.user_data['current_product'] = selected_product
+            
+            # Show product details and ask for quantity
+            msg = (
+                f"✅ *Produk Dipilih!*\n\n"
+                f"📦 Nama: {selected_product['nama']}\n"
+                f"💰 Harga: {format_rp(selected_product['harga'])}\n"
+                f"📊 Stok: {selected_product['stok']} pcs\n\n"
+                f"Berapa banyak yang akan dibeli? (1-{selected_product['stok']})\n\n"
+                f"Ketik angka atau /cancel untuk batalkan."
+            )
+            
+            # Replace the inline keyboard message with quantity request
+            await query.edit_message_text(msg, parse_mode="Markdown")
+            
+            logger.info(f"[+] Product selected: {selected_product['nama']} for user_id: {user_id}")
+            
+            # Transition to quantity input state
+            return TAMBAH_ITEM_QTY
+            
+        except Exception as e:
+            logger.error(f"[-] Error in handle_product_selection: {e}", exc_info=True)
+            await query.answer("❌ Terjadi kesalahan!", show_alert=True)
             return TAMBAH_ITEM_KODE
-        
-        # Display produk & minta qty
-        context.user_data['current_product'] = product
-        
-        msg = (
-            f"✅ *Produk Ditemukan!*\n\n"
-            f"📦 Nama: {product['nama']}\n"
-            f"💰 Harga: {format_rp(product['harga'])}\n"
-            f"📊 Stok: {product['stok']} pcs\n\n"
-            f"Berapa banyak yang akan dibeli? (1-{product['stok']})\n\n"
-            f"Ketik angka atau /cancel untuk batalkan."
-        )
-        
-        await update.message.reply_text(msg, parse_mode="Markdown")
-        return TAMBAH_ITEM_QTY
     
     async def handle_item_qty(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         """Handle quantity input."""
