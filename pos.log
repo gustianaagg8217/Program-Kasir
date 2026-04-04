@@ -375,3 +375,675 @@ AttributeError: 'DatabaseManager' object has no attribute 'get_products'
 2026-04-03 15:31:44 - INFO     - backup_manager - Backup already exists for today: backup_20260403.db
 2026-04-03 15:31:44 - INFO     - __main__ - Keyboard shortcuts registered:
 2026-04-03 15:31:52 - INFO     - __main__ - User cashier logged out
+2026-04-03 15:42:44 - INFO     - logger_config - ======================================================================
+2026-04-03 15:42:44 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 15:42:44 - INFO     - logger_config - ======================================================================
+2026-04-03 15:42:44 - INFO     - logger_config - Logging initialized at 2026-04-03 15:42:44
+2026-04-03 15:42:44 - INFO     - __main__ - Application initialization started
+2026-04-03 15:42:44 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:42:44 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:42:44 - INFO     - database - Transaction table migration completed
+2026-04-03 15:42:44 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:42:44 - INFO     - __main__ - Database initialized
+2026-04-03 15:42:44 - INFO     - __main__ - Showing login window
+2026-04-03 15:42:49 - WARNING  - __main__ - User cancelled login, exiting application
+2026-04-03 15:43:41 - INFO     - logger_config - ======================================================================
+2026-04-03 15:43:41 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 15:43:41 - INFO     - logger_config - ======================================================================
+2026-04-03 15:43:41 - INFO     - logger_config - Logging initialized at 2026-04-03 15:43:41
+2026-04-03 15:43:42 - INFO     - __main__ - Application initialization started
+2026-04-03 15:43:42 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:43:42 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:43:42 - INFO     - database - Transaction table migration completed
+2026-04-03 15:43:42 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:43:42 - INFO     - __main__ - Database initialized
+2026-04-03 15:43:42 - INFO     - __main__ - Showing login window
+2026-04-03 15:43:50 - INFO     - database - User login successful: admin
+2026-04-03 15:43:50 - INFO     - __main__ - User login successful: admin (admin)
+2026-04-03 15:43:50 - INFO     - __main__ - Launching main application for user admin
+2026-04-03 15:43:50 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:43:50 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:43:50 - INFO     - database - Transaction table migration completed
+2026-04-03 15:43:50 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:43:51 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-03 15:43:51 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-03 15:43:51 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:43:51 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:43:51 - INFO     - database - Transaction table migration completed
+2026-04-03 15:43:51 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:43:51 - INFO     - backup_manager - Backup already exists for today: backup_20260403.db
+2026-04-03 15:43:51 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-03 15:45:26 - INFO     - __main__ - User admin logged out
+2026-04-03 15:45:33 - INFO     - logger_config - ======================================================================
+2026-04-03 15:45:33 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 15:45:33 - INFO     - logger_config - ======================================================================
+2026-04-03 15:45:33 - INFO     - logger_config - Logging initialized at 2026-04-03 15:45:33
+2026-04-03 15:45:33 - INFO     - __main__ - Application initialization started
+2026-04-03 15:45:33 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:45:33 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:45:33 - INFO     - database - Transaction table migration completed
+2026-04-03 15:45:33 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:45:33 - INFO     - __main__ - Database initialized
+2026-04-03 15:45:33 - INFO     - __main__ - Showing login window
+2026-04-03 15:45:41 - INFO     - database - User login successful: admin
+2026-04-03 15:45:41 - INFO     - __main__ - User login successful: admin (admin)
+2026-04-03 15:45:41 - INFO     - __main__ - Launching main application for user admin
+2026-04-03 15:45:41 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:45:41 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:45:41 - INFO     - database - Transaction table migration completed
+2026-04-03 15:45:41 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:45:42 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-03 15:45:42 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-03 15:45:42 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:45:42 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:45:42 - INFO     - database - Transaction table migration completed
+2026-04-03 15:45:42 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:45:42 - INFO     - backup_manager - Backup already exists for today: backup_20260403.db
+2026-04-03 15:45:42 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-03 15:46:33 - INFO     - database - User created: username=gustiana, role=admin
+2026-04-03 15:46:56 - INFO     - __main__ - User admin logged out
+2026-04-03 15:47:02 - INFO     - logger_config - ======================================================================
+2026-04-03 15:47:02 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 15:47:02 - INFO     - logger_config - ======================================================================
+2026-04-03 15:47:02 - INFO     - logger_config - Logging initialized at 2026-04-03 15:47:02
+2026-04-03 15:47:02 - INFO     - __main__ - Application initialization started
+2026-04-03 15:47:02 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:47:02 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:47:02 - INFO     - database - Transaction table migration completed
+2026-04-03 15:47:02 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:47:02 - INFO     - __main__ - Database initialized
+2026-04-03 15:47:02 - INFO     - __main__ - Showing login window
+2026-04-03 15:47:24 - INFO     - database - User login successful: gustiana
+2026-04-03 15:47:24 - INFO     - __main__ - User login successful: gustiana (admin)
+2026-04-03 15:47:24 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-03 15:47:24 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:47:24 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:47:24 - INFO     - database - Transaction table migration completed
+2026-04-03 15:47:24 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:47:25 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-03 15:47:25 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-03 15:47:25 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:47:25 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:47:25 - INFO     - database - Transaction table migration completed
+2026-04-03 15:47:25 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:47:25 - INFO     - backup_manager - Backup already exists for today: backup_20260403.db
+2026-04-03 15:47:25 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-03 15:49:36 - INFO     - __main__ - User gustiana logged out
+2026-04-03 15:49:39 - INFO     - logger_config - ======================================================================
+2026-04-03 15:49:39 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 15:49:39 - INFO     - logger_config - ======================================================================
+2026-04-03 15:49:39 - INFO     - logger_config - Logging initialized at 2026-04-03 15:49:39
+2026-04-03 15:49:40 - INFO     - __main__ - Application initialization started
+2026-04-03 15:49:40 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:49:40 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:49:40 - INFO     - database - Transaction table migration completed
+2026-04-03 15:49:40 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:49:40 - INFO     - __main__ - Database initialized
+2026-04-03 15:49:40 - INFO     - __main__ - Showing login window
+2026-04-03 15:49:49 - INFO     - database - User login successful: gustiana
+2026-04-03 15:49:49 - INFO     - __main__ - User login successful: gustiana (admin)
+2026-04-03 15:49:49 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-03 15:49:49 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:49:49 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:49:49 - INFO     - database - Transaction table migration completed
+2026-04-03 15:49:49 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:49:50 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-03 15:49:50 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-03 15:49:50 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:49:50 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:49:50 - INFO     - database - Transaction table migration completed
+2026-04-03 15:49:50 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:49:50 - INFO     - backup_manager - Backup already exists for today: backup_20260403.db
+2026-04-03 15:49:50 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-03 15:49:50 - INFO     - __main__ -   Enter → Add item
+2026-04-03 15:49:50 - INFO     - __main__ -   F1 → New transaction
+2026-04-03 15:49:50 - INFO     - __main__ -   F2 → Process payment
+2026-04-03 15:49:50 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-03 15:52:48 - WARNING  - database - Product deleted: COFFEE
+2026-04-03 15:52:53 - WARNING  - database - Product deleted: TEST001
+2026-04-03 15:52:57 - WARNING  - database - Product deleted: TEA
+2026-04-03 15:53:07 - INFO     - __main__ - User gustiana logged out
+2026-04-03 15:54:04 - INFO     - logger_config - ======================================================================
+2026-04-03 15:54:04 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 15:54:04 - INFO     - logger_config - ======================================================================
+2026-04-03 15:54:04 - INFO     - logger_config - Logging initialized at 2026-04-03 15:54:04
+2026-04-03 15:54:04 - INFO     - __main__ - Application initialization started
+2026-04-03 15:54:04 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:54:04 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:54:04 - INFO     - database - Transaction table migration completed
+2026-04-03 15:54:04 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:54:04 - INFO     - __main__ - Database initialized
+2026-04-03 15:54:04 - INFO     - __main__ - Showing login window
+2026-04-03 15:54:12 - INFO     - database - User login successful: cashier
+2026-04-03 15:54:12 - INFO     - __main__ - User login successful: cashier (cashier)
+2026-04-03 15:54:12 - INFO     - __main__ - Launching main application for user cashier
+2026-04-03 15:54:12 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:54:12 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:54:12 - INFO     - database - Transaction table migration completed
+2026-04-03 15:54:12 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:54:13 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-03 15:54:13 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-03 15:54:13 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:54:13 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:54:13 - INFO     - database - Transaction table migration completed
+2026-04-03 15:54:13 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:54:13 - INFO     - backup_manager - Backup already exists for today: backup_20260403.db
+2026-04-03 15:54:14 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-03 15:54:14 - INFO     - __main__ -   Enter → Add item
+2026-04-03 15:54:14 - INFO     - __main__ -   F1 → New transaction
+2026-04-03 15:54:14 - INFO     - __main__ -   F2 → Process payment
+2026-04-03 15:54:14 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-03 15:54:17 - ERROR    - database - Database error: no such function: REGEXP
+Traceback (most recent call last):
+  File "D:\Program-Kasir\database.py", line 77, in get_connection
+    yield connection
+  File "D:\Program-Kasir\database.py", line 375, in get_next_product_code
+    cursor.execute("""
+sqlite3.OperationalError: no such function: REGEXP
+2026-04-03 15:54:17 - WARNING  - database - Error getting next product code: no such function: REGEXP, using fallback method
+2026-04-03 15:54:17 - ERROR    - database - Database error: 'sqlite3.Row' object has no attribute 'get'
+Traceback (most recent call last):
+  File "D:\Program-Kasir\database.py", line 375, in get_next_product_code
+    cursor.execute("""
+sqlite3.OperationalError: no such function: REGEXP
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Program-Kasir\database.py", line 77, in get_connection
+    yield connection
+  File "D:\Program-Kasir\database.py", line 401, in get_next_product_code
+    if result and result.get('max_len'):
+                  ^^^^^^^^^^
+AttributeError: 'sqlite3.Row' object has no attribute 'get'
+2026-04-03 15:54:17 - ERROR    - database - Fallback method failed: 'sqlite3.Row' object has no attribute 'get', returning 0001
+2026-04-03 15:54:56 - ERROR    - database - Database error: UNIQUE constraint failed: products.kode
+Traceback (most recent call last):
+  File "D:\Program-Kasir\database.py", line 77, in get_connection
+    yield connection
+  File "D:\Program-Kasir\database.py", line 292, in add_product
+    cursor.execute("""
+sqlite3.IntegrityError: UNIQUE constraint failed: products.kode
+2026-04-03 15:54:56 - WARNING  - database - Product code '0001' already exists
+2026-04-03 15:55:08 - ERROR    - database - Database error: no such function: REGEXP
+Traceback (most recent call last):
+  File "D:\Program-Kasir\database.py", line 77, in get_connection
+    yield connection
+  File "D:\Program-Kasir\database.py", line 375, in get_next_product_code
+    cursor.execute("""
+sqlite3.OperationalError: no such function: REGEXP
+2026-04-03 15:55:08 - WARNING  - database - Error getting next product code: no such function: REGEXP, using fallback method
+2026-04-03 15:55:08 - ERROR    - database - Database error: 'sqlite3.Row' object has no attribute 'get'
+Traceback (most recent call last):
+  File "D:\Program-Kasir\database.py", line 375, in get_next_product_code
+    cursor.execute("""
+sqlite3.OperationalError: no such function: REGEXP
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Program-Kasir\database.py", line 77, in get_connection
+    yield connection
+  File "D:\Program-Kasir\database.py", line 401, in get_next_product_code
+    if result and result.get('max_len'):
+                  ^^^^^^^^^^
+AttributeError: 'sqlite3.Row' object has no attribute 'get'
+2026-04-03 15:55:08 - ERROR    - database - Fallback method failed: 'sqlite3.Row' object has no attribute 'get', returning 0001
+2026-04-03 15:55:20 - WARNING  - database - Product with code '1' not found for deletion
+2026-04-03 15:56:05 - WARNING  - database - Product with code '1' not found for deletion
+2026-04-03 15:56:12 - WARNING  - database - Product with code '1' not found for deletion
+2026-04-03 15:57:07 - INFO     - __main__ - User cashier logged out
+2026-04-03 15:59:42 - INFO     - logger_config - ======================================================================
+2026-04-03 15:59:42 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 15:59:42 - INFO     - logger_config - ======================================================================
+2026-04-03 15:59:42 - INFO     - logger_config - Logging initialized at 2026-04-03 15:59:42
+2026-04-03 15:59:42 - INFO     - __main__ - Application initialization started
+2026-04-03 15:59:42 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:59:42 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:59:42 - INFO     - database - Transaction table migration completed
+2026-04-03 15:59:42 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:59:42 - INFO     - __main__ - Database initialized
+2026-04-03 15:59:42 - INFO     - __main__ - Showing login window
+2026-04-03 15:59:51 - INFO     - database - User login successful: cashier
+2026-04-03 15:59:51 - INFO     - __main__ - User login successful: cashier (cashier)
+2026-04-03 15:59:51 - INFO     - __main__ - Launching main application for user cashier
+2026-04-03 15:59:51 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:59:51 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:59:51 - INFO     - database - Transaction table migration completed
+2026-04-03 15:59:51 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:59:52 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-03 15:59:52 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-03 15:59:52 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 15:59:52 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 15:59:52 - INFO     - database - Transaction table migration completed
+2026-04-03 15:59:52 - INFO     - database - Database tables initialized successfully
+2026-04-03 15:59:52 - INFO     - backup_manager - Backup already exists for today: backup_20260403.db
+2026-04-03 15:59:52 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-03 15:59:52 - INFO     - __main__ -   Enter → Add item
+2026-04-03 15:59:52 - INFO     - __main__ -   F1 → New transaction
+2026-04-03 15:59:52 - INFO     - __main__ -   F2 → Process payment
+2026-04-03 15:59:52 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-03 16:00:03 - ERROR    - database - Database error: no such function: REGEXP
+Traceback (most recent call last):
+  File "D:\Program-Kasir\database.py", line 77, in get_connection
+    yield connection
+  File "D:\Program-Kasir\database.py", line 389, in get_next_product_code
+    cursor.execute("""
+sqlite3.OperationalError: no such function: REGEXP
+2026-04-03 16:00:03 - WARNING  - database - Error getting next product code: no such function: REGEXP, using fallback method
+2026-04-03 16:00:03 - ERROR    - database - Database error: 'sqlite3.Row' object has no attribute 'get'
+Traceback (most recent call last):
+  File "D:\Program-Kasir\database.py", line 389, in get_next_product_code
+    cursor.execute("""
+sqlite3.OperationalError: no such function: REGEXP
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Program-Kasir\database.py", line 77, in get_connection
+    yield connection
+  File "D:\Program-Kasir\database.py", line 415, in get_next_product_code
+    if result and result.get('max_len'):
+                  ^^^^^^^^^^
+AttributeError: 'sqlite3.Row' object has no attribute 'get'
+2026-04-03 16:00:03 - ERROR    - database - Fallback method failed: 'sqlite3.Row' object has no attribute 'get', returning 0001
+2026-04-03 16:00:15 - INFO     - __main__ - User cashier logged out
+2026-04-03 16:00:17 - INFO     - logger_config - ======================================================================
+2026-04-03 16:00:17 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 16:00:17 - INFO     - logger_config - ======================================================================
+2026-04-03 16:00:17 - INFO     - logger_config - Logging initialized at 2026-04-03 16:00:17
+2026-04-03 16:00:17 - INFO     - __main__ - Application initialization started
+2026-04-03 16:00:17 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 16:00:17 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 16:00:17 - INFO     - database - Transaction table migration completed
+2026-04-03 16:00:17 - INFO     - database - Database tables initialized successfully
+2026-04-03 16:00:17 - INFO     - __main__ - Database initialized
+2026-04-03 16:00:17 - INFO     - __main__ - Showing login window
+2026-04-03 16:00:28 - INFO     - database - User login successful: gustiana
+2026-04-03 16:00:28 - INFO     - __main__ - User login successful: gustiana (admin)
+2026-04-03 16:00:28 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-03 16:00:28 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 16:00:28 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 16:00:28 - INFO     - database - Transaction table migration completed
+2026-04-03 16:00:28 - INFO     - database - Database tables initialized successfully
+2026-04-03 16:00:29 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-03 16:00:29 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-03 16:00:29 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 16:00:29 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 16:00:29 - INFO     - database - Transaction table migration completed
+2026-04-03 16:00:29 - INFO     - database - Database tables initialized successfully
+2026-04-03 16:00:29 - INFO     - backup_manager - Backup already exists for today: backup_20260403.db
+2026-04-03 16:00:29 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-03 16:00:29 - INFO     - __main__ -   Enter → Add item
+2026-04-03 16:00:29 - INFO     - __main__ -   F1 → New transaction
+2026-04-03 16:00:29 - INFO     - __main__ -   F2 → Process payment
+2026-04-03 16:00:29 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-03 16:00:59 - INFO     - __main__ - User gustiana logged out
+2026-04-03 16:01:01 - INFO     - logger_config - ======================================================================
+2026-04-03 16:01:01 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 16:01:01 - INFO     - logger_config - ======================================================================
+2026-04-03 16:01:01 - INFO     - logger_config - Logging initialized at 2026-04-03 16:01:01
+2026-04-03 16:01:02 - INFO     - __main__ - Application initialization started
+2026-04-03 16:01:02 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 16:01:02 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 16:01:02 - INFO     - database - Transaction table migration completed
+2026-04-03 16:01:02 - INFO     - database - Database tables initialized successfully
+2026-04-03 16:01:02 - INFO     - __main__ - Database initialized
+2026-04-03 16:01:02 - INFO     - __main__ - Creating default users on first run
+2026-04-03 16:01:02 - INFO     - database - User created: username=admin, role=admin
+2026-04-03 16:01:02 - INFO     - database - User created: username=cashier, role=cashier
+2026-04-03 16:01:02 - INFO     - __main__ - Default users created: admin and cashier
+2026-04-03 16:01:02 - INFO     - __main__ - Showing login window
+2026-04-03 16:01:19 - INFO     - database - User login successful: admin
+2026-04-03 16:01:19 - INFO     - __main__ - User login successful: admin (admin)
+2026-04-03 16:01:19 - INFO     - __main__ - Launching main application for user admin
+2026-04-03 16:01:19 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 16:01:19 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 16:01:19 - INFO     - database - Transaction table migration completed
+2026-04-03 16:01:19 - INFO     - database - Database tables initialized successfully
+2026-04-03 16:01:20 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-03 16:01:20 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-03 16:01:20 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 16:01:20 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 16:01:20 - INFO     - database - Transaction table migration completed
+2026-04-03 16:01:20 - INFO     - database - Database tables initialized successfully
+2026-04-03 16:01:20 - INFO     - backup_manager - Backup already exists for today: backup_20260403.db
+2026-04-03 16:01:20 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-03 16:01:20 - INFO     - __main__ -   Enter → Add item
+2026-04-03 16:01:20 - INFO     - __main__ -   F1 → New transaction
+2026-04-03 16:01:20 - INFO     - __main__ -   F2 → Process payment
+2026-04-03 16:01:20 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-03 16:01:27 - ERROR    - database - Database error: no such function: REGEXP
+Traceback (most recent call last):
+  File "D:\Program-Kasir\database.py", line 77, in get_connection
+    yield connection
+  File "D:\Program-Kasir\database.py", line 389, in get_next_product_code
+    cursor.execute("""
+sqlite3.OperationalError: no such function: REGEXP
+2026-04-03 16:01:27 - WARNING  - database - Error getting next product code: no such function: REGEXP, using fallback method
+2026-04-03 16:01:27 - ERROR    - database - Database error: 'sqlite3.Row' object has no attribute 'get'
+Traceback (most recent call last):
+  File "D:\Program-Kasir\database.py", line 389, in get_next_product_code
+    cursor.execute("""
+sqlite3.OperationalError: no such function: REGEXP
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Program-Kasir\database.py", line 77, in get_connection
+    yield connection
+  File "D:\Program-Kasir\database.py", line 415, in get_next_product_code
+    if result and result.get('max_len'):
+                  ^^^^^^^^^^
+AttributeError: 'sqlite3.Row' object has no attribute 'get'
+2026-04-03 16:01:27 - ERROR    - database - Fallback method failed: 'sqlite3.Row' object has no attribute 'get', returning 0001
+2026-04-03 16:01:54 - INFO     - database - Product added: 0001 = Gantungan Kunci Karakter
+2026-04-03 16:01:54 - INFO     - models - Product added via ProductManager: 0001 = Gantungan Kunci Karakter
+2026-04-03 16:01:56 - INFO     - logger_config - Product added: 0001 = Gantungan Kunci Karakter
+2026-04-03 16:01:58 - ERROR    - database - Database error: no such function: REGEXP
+Traceback (most recent call last):
+  File "D:\Program-Kasir\database.py", line 77, in get_connection
+    yield connection
+  File "D:\Program-Kasir\database.py", line 389, in get_next_product_code
+    cursor.execute("""
+sqlite3.OperationalError: no such function: REGEXP
+2026-04-03 16:01:58 - WARNING  - database - Error getting next product code: no such function: REGEXP, using fallback method
+2026-04-03 16:01:58 - ERROR    - database - Database error: 'sqlite3.Row' object has no attribute 'get'
+Traceback (most recent call last):
+  File "D:\Program-Kasir\database.py", line 389, in get_next_product_code
+    cursor.execute("""
+sqlite3.OperationalError: no such function: REGEXP
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Program-Kasir\database.py", line 77, in get_connection
+    yield connection
+  File "D:\Program-Kasir\database.py", line 415, in get_next_product_code
+    if result and result.get('max_len'):
+                  ^^^^^^^^^^
+AttributeError: 'sqlite3.Row' object has no attribute 'get'
+2026-04-03 16:01:58 - ERROR    - database - Fallback method failed: 'sqlite3.Row' object has no attribute 'get', returning 0001
+2026-04-03 16:03:28 - INFO     - database - User created: username=gustiana, role=admin
+2026-04-03 16:03:42 - INFO     - __main__ - User admin logged out
+2026-04-03 16:03:44 - INFO     - logger_config - ======================================================================
+2026-04-03 16:03:44 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-03 16:03:44 - INFO     - logger_config - ======================================================================
+2026-04-03 16:03:44 - INFO     - logger_config - Logging initialized at 2026-04-03 16:03:44
+2026-04-03 16:03:45 - INFO     - __main__ - Application initialization started
+2026-04-03 16:03:45 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 16:03:45 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 16:03:45 - INFO     - database - Transaction table migration completed
+2026-04-03 16:03:45 - INFO     - database - Database tables initialized successfully
+2026-04-03 16:03:45 - INFO     - __main__ - Database initialized
+2026-04-03 16:03:45 - INFO     - __main__ - Showing login window
+2026-04-03 16:03:54 - INFO     - database - User login successful: gustiana
+2026-04-03 16:03:54 - INFO     - __main__ - User login successful: gustiana (admin)
+2026-04-03 16:03:54 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-03 16:03:54 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 16:03:54 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 16:03:54 - INFO     - database - Transaction table migration completed
+2026-04-03 16:03:54 - INFO     - database - Database tables initialized successfully
+2026-04-03 16:03:55 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-03 16:03:55 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-03 16:03:55 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-03 16:03:55 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-03 16:03:55 - INFO     - database - Transaction table migration completed
+2026-04-03 16:03:55 - INFO     - database - Database tables initialized successfully
+2026-04-03 16:03:55 - INFO     - backup_manager - Backup already exists for today: backup_20260403.db
+2026-04-03 16:03:55 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-03 16:03:55 - INFO     - __main__ -   Enter → Add item
+2026-04-03 16:03:55 - INFO     - __main__ -   F1 → New transaction
+2026-04-03 16:03:55 - INFO     - __main__ -   F2 → Process payment
+2026-04-03 16:03:55 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-03 16:03:59 - INFO     - database - Next product code generated: 0002
+2026-04-03 16:04:21 - INFO     - database - Product added: 0002 = Gantungan Kunci Acrylic
+2026-04-03 16:04:21 - INFO     - models - Product added via ProductManager: 0002 = Gantungan Kunci Acrylic
+2026-04-03 16:04:24 - INFO     - logger_config - Product added: 0002 = Gantungan Kunci Acrylic
+2026-04-03 16:04:29 - INFO     - __main__ - Product search: 'g' - Found 2 products
+2026-04-03 16:04:29 - INFO     - __main__ - Product search: 'gan' - Found 2 products
+2026-04-03 16:04:29 - INFO     - __main__ - Product search: 'gan' - Found 2 products
+2026-04-03 16:04:30 - INFO     - __main__ - Product search: 'ga' - Found 2 products
+2026-04-03 16:04:30 - INFO     - __main__ - Product search: 'g' - Found 2 products
+2026-04-03 16:04:32 - INFO     - __main__ - Product search: 'k' - Found 2 products
+2026-04-03 16:04:32 - INFO     - __main__ - Product search: 'ka' - Found 1 products
+2026-04-03 16:04:32 - INFO     - __main__ - Product search: 'kar' - Found 1 products
+2026-04-03 16:04:32 - INFO     - __main__ - Product search: 'kara' - Found 1 products
+2026-04-03 16:04:33 - INFO     - __main__ - Product search: 'kar' - Found 1 products
+2026-04-03 16:04:33 - INFO     - __main__ - Product search: 'ka' - Found 1 products
+2026-04-03 16:04:33 - INFO     - __main__ - Product search: 'k' - Found 2 products
+2026-04-03 16:04:35 - INFO     - __main__ - Product search: '0' - Found 2 products
+2026-04-03 16:04:35 - INFO     - __main__ - Product search: '00' - Found 2 products
+2026-04-03 16:04:36 - INFO     - __main__ - Product search: '000' - Found 2 products
+2026-04-03 16:04:36 - INFO     - __main__ - Product search: '0002' - Found 1 products
+2026-04-03 16:04:43 - INFO     - __main__ - Product selected: 0001 - Gantungan Kunci Karakter
+2026-04-03 16:05:07 - INFO     - models - Discount set: 2.0% (amount: Rp180)
+2026-04-03 16:05:07 - INFO     - __main__ - Discount updated: 2.0%
+2026-04-03 16:05:10 - INFO     - models - Discount set: 5.0% (amount: Rp450)
+2026-04-03 16:05:10 - INFO     - __main__ - Discount updated: 5.0%
+2026-04-03 16:05:21 - INFO     - database - Stock reduced: product_id=1, qty=3, remaining=17
+2026-04-03 16:05:21 - INFO     - transaction - Saving transaction to database...
+2026-04-03 16:05:21 - INFO     - database - Transaction created: ID=1, total=Rp8,550, discount=5.0% (Rp450), tax=0.0% (Rp0)
+2026-04-03 16:05:21 - INFO     - transaction - Transaction completed: ID=1, total=Rp8,550, items=1, payment=Rp10,000
+2026-04-03 16:05:27 - INFO     - database - Stock reduced: product_id=1, qty=3, remaining=14
+2026-04-03 16:05:27 - INFO     - transaction - Saving transaction to database...
+2026-04-03 16:05:27 - INFO     - database - Transaction created: ID=2, total=Rp8,550, discount=5.0% (Rp450), tax=0.0% (Rp0)
+2026-04-03 16:05:27 - INFO     - transaction - Transaction completed: ID=2, total=Rp8,550, items=1, payment=Rp10,000
+2026-04-03 16:05:38 - INFO     - __main__ - User gustiana logged out
+2026-04-04 10:37:32 - INFO     - logger_config - ======================================================================
+2026-04-04 10:37:32 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-04 10:37:32 - INFO     - logger_config - ======================================================================
+2026-04-04 10:37:32 - INFO     - logger_config - Logging initialized at 2026-04-04 10:37:32
+2026-04-04 10:37:32 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 10:37:32 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 10:37:32 - INFO     - database - Transaction table migration completed
+2026-04-04 10:37:32 - INFO     - database - Database tables initialized successfully
+2026-04-04 10:39:15 - INFO     - logger_config - ======================================================================
+2026-04-04 10:39:15 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-04 10:39:15 - INFO     - logger_config - ======================================================================
+2026-04-04 10:39:15 - INFO     - logger_config - Logging initialized at 2026-04-04 10:39:15
+2026-04-04 10:39:15 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 10:39:15 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 10:39:15 - INFO     - database - Transaction table migration completed
+2026-04-04 10:39:15 - INFO     - database - Database tables initialized successfully
+2026-04-04 10:40:38 - INFO     - logger_config - ======================================================================
+2026-04-04 10:40:38 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-04 10:40:38 - INFO     - logger_config - ======================================================================
+2026-04-04 10:40:38 - INFO     - logger_config - Logging initialized at 2026-04-04 10:40:38
+2026-04-04 10:40:39 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 10:40:39 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 10:40:39 - INFO     - database - Transaction table migration completed
+2026-04-04 10:40:39 - INFO     - database - Database tables initialized successfully
+2026-04-04 10:40:39 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 10:40:39 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 10:40:39 - INFO     - database - Transaction table migration completed
+2026-04-04 10:40:39 - INFO     - database - Database tables initialized successfully
+2026-04-04 10:40:39 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-04 10:40:39 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-04 10:44:44 - INFO     - logger_config - ======================================================================
+2026-04-04 10:44:44 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-04 10:44:44 - INFO     - logger_config - ======================================================================
+2026-04-04 10:44:44 - INFO     - logger_config - Logging initialized at 2026-04-04 10:44:44
+2026-04-04 10:44:44 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 10:44:44 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 10:44:44 - INFO     - database - Transaction table migration completed
+2026-04-04 10:44:44 - INFO     - database - Database tables initialized successfully
+2026-04-04 10:44:47 - INFO     - logger_config - ======================================================================
+2026-04-04 10:44:47 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-04 10:44:47 - INFO     - logger_config - ======================================================================
+2026-04-04 10:44:47 - INFO     - logger_config - Logging initialized at 2026-04-04 10:44:47
+2026-04-04 10:44:47 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 10:44:47 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 10:44:47 - INFO     - database - Transaction table migration completed
+2026-04-04 10:44:47 - INFO     - database - Database tables initialized successfully
+2026-04-04 10:44:47 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 10:44:47 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 10:44:47 - INFO     - database - Transaction table migration completed
+2026-04-04 10:44:47 - INFO     - database - Database tables initialized successfully
+2026-04-04 10:44:48 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-04 10:44:48 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-04 10:45:27 - INFO     - database - Stock reduced: product_id=1, qty=5, remaining=9
+2026-04-04 10:45:27 - INFO     - database - Stock reduced: product_id=2, qty=7, remaining=13
+2026-04-04 10:45:27 - INFO     - transaction - Saving transaction to database...
+2026-04-04 10:45:27 - INFO     - database - Transaction created: ID=3, total=Rp39,500, discount=0.0% (Rp0), tax=0.0% (Rp0)
+2026-04-04 10:45:27 - INFO     - transaction - Transaction completed: ID=3, total=Rp39,500, items=2, payment=Rp50,000
+2026-04-04 10:48:29 - INFO     - logger_config - ======================================================================
+2026-04-04 10:48:29 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-04 10:48:29 - INFO     - logger_config - ======================================================================
+2026-04-04 10:48:29 - INFO     - logger_config - Logging initialized at 2026-04-04 10:48:29
+2026-04-04 10:48:30 - INFO     - __main__ - Application initialization started
+2026-04-04 10:48:30 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 10:48:30 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 10:48:30 - INFO     - database - Transaction table migration completed
+2026-04-04 10:48:30 - INFO     - database - Database tables initialized successfully
+2026-04-04 10:48:30 - INFO     - __main__ - Database initialized
+2026-04-04 10:48:30 - INFO     - __main__ - Showing login window
+2026-04-04 10:48:57 - INFO     - logger_config - ======================================================================
+2026-04-04 10:48:57 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-04 10:48:57 - INFO     - logger_config - ======================================================================
+2026-04-04 10:48:57 - INFO     - logger_config - Logging initialized at 2026-04-04 10:48:57
+2026-04-04 10:48:57 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 10:48:57 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 10:48:57 - INFO     - database - Transaction table migration completed
+2026-04-04 10:48:57 - INFO     - database - Database tables initialized successfully
+2026-04-04 10:48:57 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 10:48:57 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 10:48:57 - INFO     - database - Transaction table migration completed
+2026-04-04 10:48:57 - INFO     - database - Database tables initialized successfully
+2026-04-04 10:48:58 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-04 10:48:58 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-04 10:49:39 - INFO     - models - Discount set: 5.0% (amount: Rp300)
+2026-04-04 10:49:48 - INFO     - database - Stock reduced: product_id=1, qty=2, remaining=7
+2026-04-04 10:49:48 - INFO     - transaction - Saving transaction to database...
+2026-04-04 10:49:48 - INFO     - database - Transaction created: ID=4, total=Rp5,700, discount=5.0% (Rp300), tax=0.0% (Rp0)
+2026-04-04 10:49:48 - INFO     - transaction - Transaction completed: ID=4, total=Rp5,700, items=1, payment=Rp10,000
+2026-04-04 10:52:46 - INFO     - logger_config - ======================================================================
+2026-04-04 10:52:46 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-04 10:52:46 - INFO     - logger_config - ======================================================================
+2026-04-04 10:52:46 - INFO     - logger_config - Logging initialized at 2026-04-04 10:52:46
+2026-04-04 10:52:47 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 10:52:47 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 10:52:47 - INFO     - database - Transaction table migration completed
+2026-04-04 10:52:47 - INFO     - database - Database tables initialized successfully
+2026-04-04 10:52:47 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 10:52:47 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 10:52:47 - INFO     - database - Transaction table migration completed
+2026-04-04 10:52:47 - INFO     - database - Database tables initialized successfully
+2026-04-04 10:52:48 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-04 10:52:48 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-04 10:53:25 - INFO     - models - Discount set: 2.0% (amount: Rp140)
+2026-04-04 10:53:32 - INFO     - database - Stock reduced: product_id=2, qty=2, remaining=11
+2026-04-04 10:53:32 - INFO     - transaction - Saving transaction to database...
+2026-04-04 10:53:32 - INFO     - database - Transaction created: ID=5, total=Rp6,860, discount=2.0% (Rp140), tax=0.0% (Rp0)
+2026-04-04 10:53:32 - INFO     - transaction - Transaction completed: ID=5, total=Rp6,860, items=1, payment=Rp20,000
+2026-04-04 10:57:56 - INFO     - logger_config - ======================================================================
+2026-04-04 10:57:56 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-04 10:57:56 - INFO     - logger_config - ======================================================================
+2026-04-04 10:57:56 - INFO     - logger_config - Logging initialized at 2026-04-04 10:57:56
+2026-04-04 10:57:56 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 10:57:56 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 10:57:56 - INFO     - database - Transaction table migration completed
+2026-04-04 10:57:56 - INFO     - database - Database tables initialized successfully
+2026-04-04 10:57:56 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 10:57:56 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 10:57:56 - INFO     - database - Transaction table migration completed
+2026-04-04 10:57:56 - INFO     - database - Database tables initialized successfully
+2026-04-04 10:57:57 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-04 10:57:57 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-04 10:59:20 - INFO     - database - Product updated: 0001
+2026-04-04 10:59:52 - INFO     - logger_config - ======================================================================
+2026-04-04 10:59:52 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-04 10:59:52 - INFO     - logger_config - ======================================================================
+2026-04-04 10:59:52 - INFO     - logger_config - Logging initialized at 2026-04-04 10:59:52
+2026-04-04 10:59:52 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 10:59:52 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 10:59:52 - INFO     - database - Transaction table migration completed
+2026-04-04 10:59:52 - INFO     - database - Database tables initialized successfully
+2026-04-04 10:59:52 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 10:59:52 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 10:59:52 - INFO     - database - Transaction table migration completed
+2026-04-04 10:59:52 - INFO     - database - Database tables initialized successfully
+2026-04-04 10:59:53 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-04 10:59:53 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-04 11:02:37 - INFO     - logger_config - ======================================================================
+2026-04-04 11:02:37 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-04 11:02:37 - INFO     - logger_config - ======================================================================
+2026-04-04 11:02:37 - INFO     - logger_config - Logging initialized at 2026-04-04 11:02:37
+2026-04-04 11:02:37 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 11:02:37 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 11:02:37 - INFO     - database - Transaction table migration completed
+2026-04-04 11:02:37 - INFO     - database - Database tables initialized successfully
+2026-04-04 11:02:37 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 11:02:37 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 11:02:37 - INFO     - database - Transaction table migration completed
+2026-04-04 11:02:37 - INFO     - database - Database tables initialized successfully
+2026-04-04 11:02:38 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-04 11:02:38 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-04 11:02:49 - INFO     - database - Next product code generated: 0003
+2026-04-04 11:05:10 - INFO     - database - Product added: 0003 = Strap Phone manik kupu
+2026-04-04 11:05:10 - INFO     - models - Product added via ProductManager: 0003 = Strap Phone manik kupu
+2026-04-04 11:10:53 - INFO     - database - Next product code generated: 0004
+2026-04-04 11:11:14 - INFO     - database - Product added: 0004 = Jepit Rambut
+2026-04-04 11:11:14 - INFO     - models - Product added via ProductManager: 0004 = Jepit Rambut
+2026-04-04 11:11:20 - INFO     - database - Next product code generated: 0005
+2026-04-04 11:12:45 - INFO     - database - Product added: 0005 = Ganci Animal
+2026-04-04 11:12:45 - INFO     - models - Product added via ProductManager: 0005 = Ganci Animal
+2026-04-04 11:14:44 - INFO     - database - Product updated: 0001
+2026-04-04 11:15:04 - INFO     - database - Product updated: 0002
+2026-04-04 11:15:48 - INFO     - database - Product updated: 0003
+2026-04-04 11:17:54 - INFO     - logger_config - ======================================================================
+2026-04-04 11:17:54 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-04 11:17:54 - INFO     - logger_config - ======================================================================
+2026-04-04 11:17:54 - INFO     - logger_config - Logging initialized at 2026-04-04 11:17:54
+2026-04-04 11:17:54 - INFO     - config_manager - Config loaded from config.json
+2026-04-04 11:17:54 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 11:17:54 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 11:17:54 - INFO     - database - Transaction table migration completed
+2026-04-04 11:17:54 - INFO     - database - Database tables initialized successfully
+2026-04-04 11:17:54 - INFO     - logger_config - ======================================================================
+2026-04-04 11:17:54 - INFO     - logger_config - ======================================================================
+2026-04-04 11:17:54 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-04 11:17:54 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-04 11:17:54 - INFO     - logger_config - ======================================================================
+2026-04-04 11:17:54 - INFO     - logger_config - ======================================================================
+2026-04-04 11:17:54 - INFO     - logger_config - Logging initialized at 2026-04-04 11:17:54
+2026-04-04 11:17:54 - INFO     - logger_config - Logging initialized at 2026-04-04 11:17:54
+2026-04-04 11:17:54 - INFO     - __main__ - Test log message
+2026-04-04 11:17:54 - INFO     - __main__ - Test log message
+2026-04-04 11:17:54 - INFO     - logger_config - ======================================================================
+2026-04-04 11:17:54 - INFO     - logger_config - ======================================================================
+2026-04-04 11:17:54 - INFO     - logger_config - ======================================================================
+2026-04-04 11:17:54 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-04 11:17:54 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-04 11:17:54 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-04 11:17:54 - INFO     - logger_config - ======================================================================
+2026-04-04 11:17:54 - INFO     - logger_config - ======================================================================
+2026-04-04 11:17:54 - INFO     - logger_config - ======================================================================
+2026-04-04 11:17:54 - INFO     - logger_config - Logging initialized at 2026-04-04 11:17:54
+2026-04-04 11:17:54 - INFO     - logger_config - Logging initialized at 2026-04-04 11:17:54
+2026-04-04 11:17:54 - INFO     - logger_config - Logging initialized at 2026-04-04 11:17:54
+2026-04-04 11:17:54 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 11:17:54 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 11:17:54 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-04 11:17:54 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 11:17:54 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 11:17:54 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-04 11:17:54 - INFO     - database - Transaction table migration completed
+2026-04-04 11:17:54 - INFO     - database - Transaction table migration completed
+2026-04-04 11:17:54 - INFO     - database - Transaction table migration completed
+2026-04-04 11:17:54 - INFO     - database - Database tables initialized successfully
+2026-04-04 11:17:54 - INFO     - database - Database tables initialized successfully
+2026-04-04 11:17:54 - INFO     - database - Database tables initialized successfully
+2026-04-04 11:17:54 - INFO     - database - User created: username=test_user, role=cashier
+2026-04-04 11:17:54 - INFO     - database - User created: username=test_user, role=cashier
+2026-04-04 11:17:54 - INFO     - database - User created: username=test_user, role=cashier
+2026-04-04 11:17:54 - INFO     - database - User login successful: test_user
+2026-04-04 11:17:54 - INFO     - database - User login successful: test_user
+2026-04-04 11:17:54 - INFO     - database - User login successful: test_user
+2026-04-04 11:17:54 - INFO     - database - User 4 deleted
+2026-04-04 11:17:54 - INFO     - database - User 4 deleted
+2026-04-04 11:17:54 - INFO     - database - User 4 deleted
+2026-04-04 11:22:23 - INFO     - logger_config - ======================================================================
+2026-04-04 11:22:23 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-04 11:22:23 - INFO     - logger_config - ======================================================================
+2026-04-04 11:22:23 - INFO     - logger_config - Logging initialized at 2026-04-04 11:22:23

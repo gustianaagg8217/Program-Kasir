@@ -108,24 +108,12 @@ REM ===============================================
 REM Step 4: Initialize Database
 REM ===============================================
 echo [4/5] Initializing database...
+echo.
 
-python -c "
-from database import DatabaseManager
-try:
-    db = DatabaseManager()
-    print('✅ Database initialized')
-    
-    # Show stats
-    stats = db.get_database_stats()
-    print(f'   Products: {stats[\"total_products\"]}')
-    print(f'   Transactions: {stats[\"total_transaksi\"]}')
-    
-    db.close()
-except Exception as e:
-    print(f'❌ Database error: {e}')
-" 2>&1
+python setup_database.py
 
 if errorlevel 1 (
+    echo.
     echo ❌ Database initialization failed
     echo.
     pause
@@ -140,42 +128,7 @@ echo [5/5] Verifying installation...
 echo.
 
 echo Testing Python modules...
-python -c "
-import sys
-print('Python version:', sys.version.split()[0])
-
-# Test built-in modules
-try:
-    import sqlite3
-    print('✅ sqlite3 (built-in)')
-except:
-    print('❌ sqlite3 failed')
-
-try:
-    import json
-    print('✅ json (built-in)')
-except:
-    print('❌ json failed')
-
-try:
-    import csv
-    print('✅ csv (built-in)')
-except:
-    print('❌ csv failed')
-
-# Test optional modules
-try:
-    import telegram
-    print('✅ python-telegram-bot')
-except:
-    print('⚠️  python-telegram-bot (optional - needed for Telegram features)')
-
-try:
-    import requests
-    print('✅ requests')
-except:
-    print('⚠️  requests (optional)')
-"
+python setup_verify.py
 echo.
 
 REM ===============================================

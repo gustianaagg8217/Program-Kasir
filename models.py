@@ -94,7 +94,7 @@ def validate_kode(kode: str) -> str:
 def validate_nama(nama: str) -> str:
     """
     Validasi nama produk.
-    Nama harus string non-empty, min 2 karakter, max 100.
+    Nama harus string non-empty, min 2 karakter, max 20.
     
     Args:
         nama (str): Nama produk
@@ -111,8 +111,8 @@ def validate_nama(nama: str) -> str:
     nama = nama.strip()
     if len(nama) < 2:
         raise ValidationError("Nama minimal 2 karakter")
-    if len(nama) > 100:
-        raise ValidationError("Nama max 100 karakter")
+    if len(nama) > 20:
+        raise ValidationError("Nama maksimal 20 karakter")
     
     return nama
 
@@ -737,6 +737,25 @@ class ProductManager:
         """
         data_list = self.db.get_all_products()
         return [Product.from_dict(data) for data in data_list]
+    
+    def get_next_product_code(self) -> str:
+        """
+        Generate kode produk otomatis dengan format 4 digit (0001, 0002, 0003, dst).
+        
+        Method ini langsung query database untuk mencari kode tertinggi dan increment.
+        Format hasil: 0001, 0002, 0003, ..., 0010, ..., 9999
+        
+        Returns:
+            str: Kode produk berikutnya dengan format 4 digit
+            
+        Contoh:
+            Jika sudah ada produk: 0001, 0002, 0003
+            Maka return: "0004"
+            
+            Jika belum ada produk:
+            Maka return: "0001"
+        """
+        return self.db.get_next_product_code()
     
     def update_product(self, kode: str, **kwargs) -> bool:
         """

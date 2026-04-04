@@ -8,7 +8,16 @@
 import logging
 import logging.handlers
 import os
+import sys
 from datetime import datetime
+
+# Force UTF-8 encoding for console output
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except:
+        pass
 
 # ============================================================================
 # LOGGING CONFIGURATION
@@ -55,7 +64,8 @@ def setup_logging(log_file=LOG_FILE, log_level=LOG_LEVEL):
         file_handler = logging.handlers.RotatingFileHandler(
             log_file,
             maxBytes=5 * 1024 * 1024,  # 5MB
-            backupCount=5  # Keep 5 backup files
+            backupCount=5,  # Keep 5 backup files
+            encoding='utf-8'  # UTF-8 encoding untuk support Unicode characters
         )
         file_handler.setLevel(log_level)
         file_handler.setFormatter(formatter)
@@ -65,7 +75,7 @@ def setup_logging(log_file=LOG_FILE, log_level=LOG_LEVEL):
         # CONSOLE HANDLER - Display log ke terminal
         # ================================================================
         
-        console_handler = logging.StreamHandler()
+        console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(logging.INFO)  # Only show INFO and above di console
         console_handler.setFormatter(formatter)
         root_logger.addHandler(console_handler)

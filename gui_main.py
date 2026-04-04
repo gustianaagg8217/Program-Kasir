@@ -1213,8 +1213,26 @@ Kembalian        : {format_rp(trans['kembalian'])}
         form_frame = ttk.Frame(dialog)
         form_frame.pack(fill='both', expand=True, padx=20, pady=10)
         
+        # Get next product code automatically
+        next_code = self.db.get_next_product_code()
+        
+        # Kode Produk field (read-only, auto-generated)
+        kode_label = ttk.Label(form_frame, text="Kode Produk (Otomatis):", font=FONTS['normal'])
+        kode_label.pack(anchor='w', pady=5)
+        
+        kode_display = ttk.Label(
+            form_frame,
+            text=f"🏷️ {next_code}",
+            font=("Arial", 14, "bold"),
+            foreground=COLORS['success']
+        )
+        kode_display.pack(anchor='w', pady=5, padx=10)
+        
+        # Store the auto-generated code
+        fields['kode'] = next_code
+        
+        # Other fields
         field_configs = [
-            ("Kode Produk:", "kode"),
             ("Nama Produk:", "nama"),
             ("Harga (Rp):", "harga"),
             ("Stok Awal:", "stok"),
@@ -1234,7 +1252,7 @@ Kembalian        : {format_rp(trans['kembalian'])}
         
         def save_product():
             try:
-                kode = fields['kode'].get().strip().upper()
+                kode = fields['kode']  # Use auto-generated code
                 nama = fields['nama'].get().strip()
                 harga = int(fields['harga'].get().strip())
                 stok = int(fields['stok'].get().strip())
@@ -1244,11 +1262,12 @@ Kembalian        : {format_rp(trans['kembalian'])}
                     return
                 
                 if self.product_manager.add_product(kode, nama, harga, stok):
-                    messagebox.showinfo("Sukses", f"Produk '{nama}' berhasil ditambahkan!")
+                    messagebox.showinfo("Sukses", f"Produk '{nama}' (Kode: {kode}) berhasil ditambahkan!")
+                    log_product_added(kode, nama)
                     dialog.destroy()
                     self.show_products()
                 else:
-                    messagebox.showerror("Error", "Gagal menambahkan produk")
+                    messagebox.showerror("Error", "Gagal menambahkan produk (mungkin kode sudah ada)")
             except ValueError:
                 messagebox.showerror("Error", "Harga dan Stok harus berupa angka!")
         
@@ -1274,7 +1293,20 @@ Kembalian        : {format_rp(trans['kembalian'])}
         
         item = tree.item(selection[0])
         values = item['values']
-        product_kode = values[1]
+        
+        # Extract kode and strip whitespace
+        product_kode = str(values[1]).strip()
+        
+        # Find the actual product object from the products list
+        selected_product = None
+        for prod in products:
+            if str(prod.kode).strip() == product_kode:
+                selected_product = prod
+                break
+        
+        if not selected_product:
+            messagebox.showerror("Error", f"Produk dengan kode '{product_kode}' tidak ditemukan!")
+            return
         
         # Show options dialog
         dialog = tk.Toplevel(self)
@@ -1310,10 +1342,15 @@ Kembalian        : {format_rp(trans['kembalian'])}
     
     def _show_edit_product_dialog(self, kode, parent_dialog):
         """Show edit product dialog."""
+        # Ensure kode is stripped of whitespace
+        kode = str(kode).strip()
+        
+        # Get product from database
         product = self.product_manager.get_product(kode)
         
         if not product:
-            messagebox.showerror("Error", "Produk tidak ditemukan")
+            messagebox.showerror("Error", f"Produk dengan kode '{kode}' tidak ditemukan!\n\nMungkin produk sudah dihapus atau ada masalah dengan database.")
+            parent_dialog.destroy()
             return
         
         parent_dialog.destroy()
@@ -1358,12 +1395,13 @@ Kembalian        : {format_rp(trans['kembalian'])}
                 
                 if self.product_manager.update_product(kode, **update_data):
                     messagebox.showinfo("Sukses", "Produk berhasil diupdate!")
+                    log_product_updated(kode, update_data['nama'])
                     dialog.destroy()
                     self.show_products()
                 else:
                     messagebox.showerror("Error", "Gagal mengupdate produk")
             except ValueError:
-                messagebox.showerror("Error", "Input tidak valid!")
+                messagebox.showerror("Error", "Input tidak valid! Harga dan Stok harus berupa angka!")
         
         save_btn = ttk.Button(
             btn_frame,
@@ -1381,13 +1419,18 @@ Kembalian        : {format_rp(trans['kembalian'])}
     
     def _delete_product(self, kode, parent_dialog):
         """Delete a product."""
-        if messagebox.askyesno("Konfirmasi", f"Hapus produk {kode}?"):
+        kode = str(kode).strip()
+        
+        if messagebox.askyesno("Konfirmasi", f"Yakin ingin menghapus produk '{kode}'?\n\nTindakan ini tidak dapat dibatalkan!"):
             if self.product_manager.delete_product(kode):
                 messagebox.showinfo("Sukses", "Produk berhasil dihapus!")
+                log_product_deleted(kode, "")
                 parent_dialog.destroy()
                 self.show_products()
             else:
-                messagebox.showerror("Error", "Gagal menghapus produk")
+                messagebox.showerror("Error", f"Gagal menghapus produk '{kode}'")
+        else:
+            parent_dialog.destroy()
     
     # ========================================================================
     # TRANSACTION PAGE
@@ -2323,6 +2366,213 @@ RINGKASAN:
             command=save_store_settings
         )
         store_save_btn.grid(row=4, column=0, columnspan=2, sticky='ew', pady=15, padx=5)
+        
+        # ========== USER MANAGEMENT SECTION ==========
+        user_mgmt_frame = ttk.LabelFrame(self.content_area, text="👥 Manajemen User", padding=10)
+        user_mgmt_frame.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        # User list table
+        user_list_frame = ttk.Frame(user_mgmt_frame)
+        user_list_frame.pack(fill='both', expand=True, padx=5, pady=5)
+        
+        # Columns
+        columns = ('ID', 'Username', 'Role', 'Status', 'Bergabung')
+        user_tree = ttk.Treeview(user_list_frame, columns=columns, height=8, show='headings')
+        
+        # Define column headings and widths
+        user_tree.heading('ID', text='ID')
+        user_tree.column('ID', width=40, anchor='center')
+        user_tree.heading('Username', text='Username')
+        user_tree.column('Username', width=120)
+        user_tree.heading('Role', text='Role')
+        user_tree.column('Role', width=80, anchor='center')
+        user_tree.heading('Status', text='Status')
+        user_tree.column('Status', width=100, anchor='center')
+        user_tree.heading('Bergabung', text='Bergabung')
+        user_tree.column('Bergabung', width=150)
+        
+        user_tree.pack(fill='both', expand=True, side='left')
+        
+        # Scrollbar
+        scrollbar = ttk.Scrollbar(user_list_frame, orient='vertical', command=user_tree.yview)
+        scrollbar.pack(side='right', fill='y')
+        user_tree.configure(yscroll=scrollbar.set)
+        
+        # Load users into tree
+        def refresh_user_list():
+            """Refresh user list display."""
+            for item in user_tree.get_children():
+                user_tree.delete(item)
+            
+            users = self.db.get_all_users()
+            for user in users:
+                status = "✅ Aktif" if user['is_active'] else "❌ Nonaktif"
+                created_at = user['created_at'][:10] if user['created_at'] else "N/A"
+                user_tree.insert('', 'end', values=(
+                    user['id'],
+                    user['username'],
+                    user['role'].upper(),
+                    status,
+                    created_at
+                ))
+        
+        refresh_user_list()
+        
+        # Buttons frame
+        user_btn_frame = ttk.Frame(user_mgmt_frame)
+        user_btn_frame.pack(fill='x', padx=5, pady=10)
+        
+        def add_new_user():
+            """Open dialog to add new user."""
+            add_window = tk.Toplevel(self)
+            add_window.title("Tambah User Baru")
+            add_window.geometry("300x250")
+            add_window.resizable(False, False)
+            
+            ttk.Label(add_window, text="Username:", font=FONTS['normal']).pack(anchor='w', padx=10, pady=(10, 0))
+            username_entry = ttk.Entry(add_window, width=30)
+            username_entry.pack(padx=10, pady=(0, 10), fill='x')
+            username_entry.focus()
+            
+            ttk.Label(add_window, text="Password:", font=FONTS['normal']).pack(anchor='w', padx=10, pady=(0, 0))
+            password_entry = ttk.Entry(add_window, width=30, show='*')
+            password_entry.pack(padx=10, pady=(0, 10), fill='x')
+            
+            ttk.Label(add_window, text="Role:", font=FONTS['normal']).pack(anchor='w', padx=10, pady=(0, 0))
+            role_var = tk.StringVar(value='cashier')
+            role_combo = ttk.Combobox(add_window, textvariable=role_var, values=['admin', 'cashier'], state='readonly', width=28)
+            role_combo.pack(padx=10, pady=(0, 15), fill='x')
+            
+            def save_new_user():
+                username = username_entry.get().strip()
+                password = password_entry.get().strip()
+                role = role_var.get()
+                
+                if not username or not password:
+                    messagebox.showwarning("Validasi", "Username dan password harus diisi!")
+                    return
+                
+                if self.db.create_user(username, password, role):
+                    messagebox.showinfo("Sukses", f"User '{username}' berhasil ditambahkan!")
+                    refresh_user_list()
+                    add_window.destroy()
+                else:
+                    messagebox.showerror("Error", f"Username '{username}' sudah ada atau terjadi error!")
+            
+            save_btn = ttk.Button(add_window, text="💾 Simpan", command=save_new_user)
+            save_btn.pack(padx=10, pady=(0, 10), fill='x')
+        
+        def edit_user():
+            """Edit selected user."""
+            selection = user_tree.selection()
+            if not selection:
+                messagebox.showwarning("Peringatan", "Pilih user yang ingin diedit!")
+                return
+            
+            item = selection[0]
+            values = user_tree.item(item, 'values')
+            user_id = int(values[0])
+            username = values[1]
+            current_role = values[2].lower()
+            
+            edit_window = tk.Toplevel(self)
+            edit_window.title(f"Edit User: {username}")
+            edit_window.geometry("300x250")
+            edit_window.resizable(False, False)
+            
+            ttk.Label(edit_window, text=f"Username: {username}", font=FONTS['normal']).pack(anchor='w', padx=10, pady=(10, 15))
+            
+            ttk.Label(edit_window, text="Password Baru (kosongkan jika tidak diubah):", font=FONTS['normal']).pack(anchor='w', padx=10, pady=(0, 0))
+            password_entry = ttk.Entry(edit_window, width=30, show='*')
+            password_entry.pack(padx=10, pady=(0, 10), fill='x')
+            
+            ttk.Label(edit_window, text="Role:", font=FONTS['normal']).pack(anchor='w', padx=10, pady=(0, 0))
+            role_var = tk.StringVar(value=current_role)
+            role_combo = ttk.Combobox(edit_window, textvariable=role_var, values=['admin', 'cashier'], state='readonly', width=28)
+            role_combo.pack(padx=10, pady=(0, 15), fill='x')
+            
+            def save_edited_user():
+                password = password_entry.get().strip()
+                new_role = role_var.get()
+                
+                update_data = {'role': new_role}
+                if password:
+                    update_data['password'] = password
+                
+                if self.db.update_user(user_id, **update_data):
+                    messagebox.showinfo("Sukses", f"User '{username}' berhasil diupdate!")
+                    refresh_user_list()
+                    edit_window.destroy()
+                else:
+                    messagebox.showerror("Error", "Gagal mengupdate user!")
+            
+            save_btn = ttk.Button(edit_window, text="💾 Simpan", command=save_edited_user)
+            save_btn.pack(padx=10, pady=(0, 10), fill='x')
+        
+        def delete_user():
+            """Delete selected user."""
+            selection = user_tree.selection()
+            if not selection:
+                messagebox.showwarning("Peringatan", "Pilih user yang ingin dihapus!")
+                return
+            
+            item = selection[0]
+            values = user_tree.item(item, 'values')
+            user_id = int(values[0])
+            username = values[1]
+            
+            # Prevent deleting the current logged-in user
+            if user_id == self.current_user.get('id'):
+                messagebox.showerror("Error", "Tidak dapat menghapus user yang sedang login!")
+                return
+            
+            if messagebox.askyesno("Konfirmasi", f"Hapus user '{username}'?\n\nTindakan ini tidak dapat dibatalkan!"):
+                if self.db.delete_user(user_id):
+                    messagebox.showinfo("Sukses", f"User '{username}' berhasil dihapus!")
+                    refresh_user_list()
+                else:
+                    messagebox.showerror("Error", "Gagal menghapus user!")
+        
+        def toggle_user_status():
+            """Deactivate/Activate selected user."""
+            selection = user_tree.selection()
+            if not selection:
+                messagebox.showwarning("Peringatan", "Pilih user yang ingin diubah statusnya!")
+                return
+            
+            item = selection[0]
+            values = user_tree.item(item, 'values')
+            user_id = int(values[0])
+            username = values[1]
+            is_active = "Nonaktif" not in values[3]
+            
+            # Prevent deactivating the current logged-in user
+            if user_id == self.current_user.get('id'):
+                messagebox.showerror("Error", "Tidak dapat menonaktifkan user yang sedang login!")
+                return
+            
+            new_status = not is_active
+            action = "Nonaktifkan" if is_active else "Aktifkan"
+            
+            if messagebox.askyesno("Konfirmasi", f"{action} user '{username}'?"):
+                if self.db.update_user(user_id, is_active=new_status):
+                    messagebox.showinfo("Sukses", f"User '{username}' berhasil diupdate!")
+                    refresh_user_list()
+                else:
+                    messagebox.showerror("Error", "Gagal mengupdate user!")
+        
+        # Action buttons
+        add_btn = ttk.Button(user_btn_frame, text="➕ Tambah User", command=add_new_user)
+        add_btn.pack(side='left', padx=5)
+        
+        edit_btn = ttk.Button(user_btn_frame, text="✏️ Edit User", command=edit_user)
+        edit_btn.pack(side='left', padx=5)
+        
+        toggle_btn = ttk.Button(user_btn_frame, text="🔄 Toggle Status", command=toggle_user_status)
+        toggle_btn.pack(side='left', padx=5)
+        
+        delete_btn = ttk.Button(user_btn_frame, text="🗑️ Hapus User", command=delete_user)
+        delete_btn.pack(side='left', padx=5)
         
         # Database stats
         stats_frame = ttk.LabelFrame(self.content_area, text="📊 Database Info", padding=10)

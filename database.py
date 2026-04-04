@@ -306,6 +306,7 @@ class DatabaseManager:
     def get_product_by_kode(self, kode: str) -> dict or None:
         """
         Ambil data produk berdasarkan kode.
+        Kode di-uppercase dan di-strip untuk konsistensi.
         
         Args:
             kode (str): Kode produk
@@ -315,13 +316,26 @@ class DatabaseManager:
             None: Jika produk tidak ditemukan
             
         Contoh return:
-            {'id': 1, 'kode': 'PROD001', 'nama': 'Mie Goreng', 'harga': 15000, 'stok': 100}
+            {'id': 1, 'kode': '0001', 'nama': 'Mie Goreng', 'harga': 15000, 'stok': 100}
         """
-        with self.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM products WHERE kode = ?", (kode,))
-            result = cursor.fetchone()
-            return dict(result) if result else None
+        try:
+            # Normalize kode: strip whitespace
+            kode = str(kode).strip()
+            
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM products WHERE LOWER(TRIM(kode)) = LOWER(TRIM(?))", (kode,))
+                result = cursor.fetchone()
+                
+                if result:
+                    logger.debug(f"Product found by kode: {kode}")
+                    return dict(result)
+                else:
+                    logger.debug(f"Product not found by kode: {kode}")
+                    return None
+        except Exception as e:
+            logger.error(f"Error getting product by kode '{kode}': {e}", exc_info=True)
+            return None
     
     def get_product_by_id(self, product_id: int) -> dict or None:
         """
@@ -352,6 +366,49 @@ class DatabaseManager:
             cursor.execute("SELECT * FROM products ORDER BY kode")
             results = cursor.fetchall()
             return [dict(row) for row in results]
+    
+    def get_next_product_code(self) -> str:
+        """
+        Generate kode produk otomatis dengan format 4 digit (0001, 0002, 0003, dst).
+        
+        Returns:
+            str: Kode produk berikutnya dengan format 0001, 0002, dll
+            
+        Contoh:
+            Jika sudah ada produk: 0001, 0002, 0003
+            Maka akan return: "0004"
+            
+            Jika belum ada produk sama sekali:
+            Maka akan return: "0001"
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Get all products ordered by ID (DESC to get latest)
+                cursor.execute("SELECT kode FROM products ORDER BY id DESC")
+                results = cursor.fetchall()
+                
+                # Find the highest numeric code
+                max_code = 0
+                for row in results:
+                    kode = row['kode'].strip()
+                    # Check if kode is all digits
+                    if kode.isdigit():
+                        code_num = int(kode)
+                        if code_num > max_code:
+                            max_code = code_num
+                
+                next_code = max_code + 1
+                
+                # Format dengan leading zeros (4 digit)
+                formatted_code = str(next_code).zfill(4)
+                logger.info(f"Next product code generated: {formatted_code}")
+                return formatted_code
+                
+        except Exception as e:
+            logger.error(f"Error generating next product code: {e}", exc_info=True)
+            return "0001"
     
     def update_product(self, kode: str, nama: str = None, harga: int = None, stok: int = None) -> bool:
         """
@@ -900,6 +957,123 @@ class DatabaseManager:
             cursor.execute("SELECT COUNT(*) as count FROM users")
             count = cursor.fetchone()['count']
             return count > 0
+    
+    def get_all_users(self) -> list:
+        """
+        Ambil semua user dari database.
+        
+        Returns:
+            list: List berisi semua user
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT id, username, role, is_active, created_at 
+                    FROM users 
+                    ORDER BY created_at
+                """)
+                users = [dict(row) for row in cursor.fetchall()]
+                return users
+        except Exception as e:
+            logger.error(f"Error getting all users: {e}", exc_info=True)
+            return []
+    
+    def update_user(self, user_id: int, **kwargs) -> bool:
+        """
+        Update data user (role, password, atau status aktif).
+        
+        Args:
+            user_id (int): ID user yang akan diupdate
+            **kwargs: Field yang akan diupdate {role, password, is_active}
+                     - role: 'admin' atau 'cashier'
+                     - password: password baru (plain text, akan di-hash)
+                     - is_active: True/False
+            
+        Returns:
+            bool: True jika berhasil, False jika gagal
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Build update query dynamically
+                update_parts = []
+                update_values = []
+                
+                if 'role' in kwargs:
+                    update_parts.append("role = ?")
+                    update_values.append(kwargs['role'])
+                
+                if 'password' in kwargs:
+                    hashed_pw = self.hash_password(kwargs['password'])
+                    update_parts.append("hashed_password = ?")
+                    update_values.append(hashed_pw)
+                
+                if 'is_active' in kwargs:
+                    update_parts.append("is_active = ?")
+                    update_values.append(kwargs['is_active'])
+                
+                if not update_parts:
+                    logger.warning("No fields to update")
+                    return False
+                
+                update_values.append(user_id)
+                query = f"UPDATE users SET {', '.join(update_parts)} WHERE id = ?"
+                
+                cursor.execute(query, update_values)
+                conn.commit()
+                logger.info(f"User {user_id} updated: {kwargs}")
+                return True
+        except Exception as e:
+            logger.error(f"Error updating user: {e}", exc_info=True)
+            return False
+    
+    def delete_user(self, user_id: int) -> bool:
+        """
+        Hapus user dari database (fisik delete).
+        
+        Args:
+            user_id (int): ID user yang akan dihapus
+            
+        Returns:
+            bool: True jika berhasil, False jika gagal
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+                conn.commit()
+                logger.info(f"User {user_id} deleted")
+                return True
+        except Exception as e:
+            logger.error(f"Error deleting user: {e}", exc_info=True)
+            return False
+    
+    def deactivate_user(self, user_id: int) -> bool:
+        """
+        Nonaktifkan user (soft delete - tidak menghapus data).
+        Lebih aman daripada delete karena tetap menyimpan history.
+        
+        Args:
+            user_id (int): ID user yang akan dinonaktifkan
+            
+        Returns:
+            bool: True jika berhasil, False jika gagal
+        """
+        return self.update_user(user_id, is_active=False)
+    
+    def activate_user(self, user_id: int) -> bool:
+        """
+        Aktifkan kembali user yang telah dinonaktifkan.
+        
+        Args:
+            user_id (int): ID user yang akan diaktifkan
+            
+        Returns:
+            bool: True jika berhasil, False jika gagal
+        """
+        return self.update_user(user_id, is_active=True)
 
 
 # ============================================================================

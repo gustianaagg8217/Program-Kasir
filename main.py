@@ -3,6 +3,7 @@
 # ============================================================================
 # Fungsi: Entry point utama sistem POS dengan menu interaktif
 # Mengintegrasikan semua modul: database, models, transaction, laporan
+# Updated: Added config management dan authentication system
 # ============================================================================
 
 import os
@@ -16,6 +17,13 @@ from models import ProductManager, ValidationError, format_rp
 from transaction import TransactionService, TransactionHandler, ReceiptManager
 from laporan import ReportGenerator, ReportFormatter, CSVExporter
 from telegram_bot import POSTelegramBot, TelegramConfigManager, TELEGRAM_AVAILABLE
+from config_manager import get_config, ConfigManager
+from auth_manager import AuthManager, User
+from logger_config import get_logger, setup_logging
+
+# Setup logging dulu sebelum semua operasi
+setup_logging()
+logger = get_logger(__name__)
 
 # ============================================================================
 # POS SYSTEM - Main class yang manage semua operasi
@@ -25,8 +33,16 @@ class POSSystem:
     """
     Main POS System class yang mengintegrasikan semua operasi.
     
+    Fitur baru:
+    - Configuration management (config.json)
+    - User authentication & authorization
+    - Role-based access control (admin, cashier)
+    - Comprehensive logging
+    
     Attributes:
         db (DatabaseManager): Database instance
+        config (ConfigManager): Configuration manager
+        auth (AuthManager): Authentication manager
         product_manager (ProductManager): Product management
         transaction_handler (TransactionHandler): Transaction handling
         report_generator (ReportGenerator): Report generation
@@ -35,36 +51,152 @@ class POSSystem:
         
     Methods:
         run(): Jalankan sistem
-        show_main_menu(): Tampilkan menu utama
+        login(): Login flow
+        show_main_menu(): Tampilkan menu utama sesuai role
     """
     
     def __init__(self):
         """Inisialisasi POS System."""
         print("\n🚀 Inisialisasi POS System...")
         
-        # Inisialisasi database
-        self.db = DatabaseManager()
-        
-        # Inisialisasi managers
-        self.product_manager = ProductManager(self.db)
-        self.transaction_handler = TransactionHandler(self.db)
-        self.report_generator = ReportGenerator(self.db)
-        self.report_formatter = ReportFormatter()
-        self.csv_exporter = CSVExporter()
-        
-        # Inisialisasi Telegram Bot
-        self.telegram_bot = None
-        if TELEGRAM_AVAILABLE:
-            try:
-                self.telegram_bot = POSTelegramBot()
-            except Exception as e:
-                print(f"⚠️ Telegram bot init failed: {e}")
-        
-        print("✅ POS System siap digunakan!\n")
+        try:
+            # Load configuration
+            self.config = get_config()
+            logger.info("Configuration manager initialized")
+            
+            # Inisialisasi database
+            self.db = DatabaseManager()
+            logger.info("Database initialized")
+            
+            # Inisialisasi authentication
+            self.auth = AuthManager(self.db)
+            logger.info("Authentication manager initialized")
+            
+            # Inisialisasi managers
+            self.product_manager = ProductManager(self.db)
+            self.transaction_handler = TransactionHandler(self.db)
+            self.report_generator = ReportGenerator(self.db)
+            self.report_formatter = ReportFormatter()
+            self.csv_exporter = CSVExporter()
+            
+            # Inisialisasi Telegram Bot
+            self.telegram_bot = None
+            if TELEGRAM_AVAILABLE:
+                try:
+                    self.telegram_bot = POSTelegramBot()
+                    logger.info("Telegram bot initialized")
+                except Exception as e:
+                    logger.warning(f"Telegram bot init failed: {e}")
+                    print(f"⚠️ Telegram bot init failed: {e}")
+            
+            print("✅ POS System siap digunakan!\n")
+            logger.info("POS System initialization complete")
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize POS System: {e}", exc_info=True)
+            print(f"❌ Error initializing system: {e}")
+            raise
     
     # ========================================================================
-    # UTILITY FUNCTIONS - Helper untuk UI/CLI
+    # LOGIN & AUTHENTICATION
     # ========================================================================
+    
+    def login_flow(self) -> bool:
+        """
+        Interactive login flow.
+        
+        User dapat login atau menggunakan demo mode.
+        
+        Returns:
+            bool: True jika berhasil login, False jika cancel
+        """
+        self.clear_screen()
+        print("=" * 70)
+        print(self.config.get_store_name().center(70))
+        print("LOGIN SISTEM POS".center(70))
+        print("=" * 70)
+        
+        # Show options
+        print("\n1. 🔑 Login dengan Username & Password")
+        print("2. 📌 Demo Mode (Admin)")
+        print("3. 🚪 Keluar")
+        
+        choice = input("\n👉 Pilih opsi (1-3): ").strip()
+        
+        if choice == '1':
+            return self._try_login()
+        elif choice == '2':
+            return self._demo_login()
+        elif choice == '3':
+            return False
+        else:
+            print("❌ Pilihan tidak valid")
+            time.sleep(2)
+            return self.login_flow()
+    
+    def _try_login(self) -> bool:
+        """
+        Attempt user login dengan username & password.
+        
+        Returns:
+            bool: True jika berhasil login
+        """
+        print("\n" + "-" * 70)
+        print("LOGIN")
+        print("-" * 70 + "\n")
+        
+        username = input("Username: ").strip()
+        if not username:
+            print("❌ Username tidak boleh kosong")
+            time.sleep(2)
+            return self.login_flow()
+        
+        password = input("Password: ").strip()
+        if not password:
+            print("❌ Password tidak boleh kosong")
+            time.sleep(2)
+            return self.login_flow()
+        
+        # Attempt login
+        success, message = self.auth.login(username, password)
+        print(f"\n{message}")
+        
+        if success:
+            logger.info(f"User logged in: {username}")
+            time.sleep(1)
+            return True
+        else:
+            time.sleep(2)
+            return self.login_flow()
+    
+    def _demo_login(self) -> bool:
+        """
+        Login dengan demo admin account.
+        Untuk testing dan demo purposes.
+        
+        Returns:
+            bool: True
+        """
+        # Check if demo user exists, create if not
+        if not self.db.user_exists():
+            print("\n📌 Creating demo admin account...")
+            self.db.create_user("admin", "admin123", role="admin")
+            logger.info("Demo admin account created")
+        
+        success, message = self.auth.login("admin", "admin123")
+        print(f"\n{message}")
+        logger.info(f"Demo login: {self.auth.get_username()}")
+        
+        time.sleep(1)
+        return success
+    
+    def show_login_status(self):
+        """Tampilkan status login di main menu."""
+        user = self.auth.get_current_user()
+        if user:
+            role_display = "👨‍💼 Admin" if user.is_admin() else "💼 Cashier"
+            return f"{role_display} | {user.username}"
+        return "❌ Not Logged In"
     
     @staticmethod
     def clear_screen():
@@ -152,20 +284,22 @@ class POSSystem:
                 self.pause()
     
     def tambah_produk(self):
-        """Proses tambah produk baru."""
+        """Proses tambah produk baru dengan kode otomatis."""
         self.clear_screen()
         self.draw_header("➕ TAMBAH PRODUK BARU")
         
         try:
-            kode = input("Kode Produk (contoh: PROD001): ").strip().upper()
-            if not kode:
-                print("❌ Kode tidak boleh kosong")
-                self.pause()
-                return
+            # Generate kode otomatis
+            kode = self.product_manager.get_next_product_code()
+            print(f"✅ Kode Produk (otomatis): {kode}\n")
             
-            nama = input("Nama Produk: ").strip()
+            nama = input("Nama Produk (max 20 karakter): ").strip()
             if not nama:
                 print("❌ Nama tidak boleh kosong")
+                self.pause()
+                return
+            if len(nama) > 20:
+                print("❌ Nama produk maksimal 20 karakter")
                 self.pause()
                 return
             
@@ -234,13 +368,17 @@ class POSSystem:
         
         print("Field yang bisa diedit (kosongkan jika tidak ingin mengubah):")
         
-        nama = input("  Nama baru: ").strip()
+        nama = input("  Nama baru (max 20 karakter): ").strip()
         harga_str = input("  Harga baru: ").strip()
         stok_str = input("  Stok baru: ").strip()
         
         # Persiapkan data update
         update_data = {}
         if nama:
+            if len(nama) > 20:
+                print("❌ Nama produk maksimal 20 karakter")
+                self.pause()
+                return
             update_data['nama'] = nama
         if harga_str:
             try:
@@ -347,7 +485,7 @@ class POSSystem:
                     # Get items untuk display
                     items = self.transaction_handler.get_items()
                     for idx, item in enumerate(items, 1):
-                        product = self.db.get_product(item['kode'])
+                        product = self.product_manager.get_product(item['kode'])
                         if product:
                             print(f"   {idx}. {product.nama} x{item['qty']} = {format_rp(item['subtotal'])}")
                     print("-" * 70)
@@ -401,7 +539,7 @@ class POSSystem:
         
         # Lookup produk dari database
         try:
-            product = self.db.get_product(kode)
+            product = self.product_manager.get_product(kode)
             
             if not product:
                 print(f"\n❌ Produk dengan kode '{kode}' tidak ditemukan!")
@@ -457,22 +595,98 @@ class POSSystem:
             self.pause()
             return
         
-        print(f"\nTotal Belanja: {format_rp(summary['total'])}")
+        print(f"\n📊 RINCIAN TRANSAKSI")
+        print(f"Subtotal Belanja: {format_rp(summary['total'])}")
         
-        bayar = self.get_safe_int("Jumlah Pembayaran: ", min_val=summary['total'])
+        # Input Diskon
+        print("\n💰 DISKON (Opsional)")
+        print("   Kosongkan jika tidak ada diskon")
+        diskon_input = input("   Masukkan diskon dalam % (0-100): ").strip()
+        
+        diskon_persen = 0
+        if diskon_input:
+            try:
+                diskon_persen = float(diskon_input)
+                if diskon_persen < 0 or diskon_persen > 100:
+                    print("   ❌ Diskon harus antara 0-100%")
+                    self.pause()
+                    return
+            except ValueError:
+                print("   ❌ Input harus berupa angka")
+                self.pause()
+                return
+        
+        # Input Pajak
+        print("\n🏛️  PAJAK (PPN) (Opsional)")
+        print("   Kosongkan jika tidak ada pajak")
+        pajak_input = input("   Masukkan pajak dalam % (0-100): ").strip()
+        
+        pajak_persen = 0
+        if pajak_input:
+            try:
+                pajak_persen = float(pajak_input)
+                if pajak_persen < 0 or pajak_persen > 100:
+                    print("   ❌ Pajak harus antara 0-100%")
+                    self.pause()
+                    return
+            except ValueError:
+                print("   ❌ Input harus berupa angka")
+                self.pause()
+                return
+        
+        # Set discount dan tax di transaction
+        transaction = self.transaction_handler.transaction_service.get_current_transaction()
+        if transaction:
+            try:
+                if diskon_persen > 0:
+                    transaction.set_discount(diskon_persen)
+                if pajak_persen > 0:
+                    transaction.set_tax(pajak_persen)
+            except Exception as e:
+                print(f"❌ Error saat set diskon/pajak: {e}")
+                self.pause()
+                return
+        
+        # Update summary setelah diskon/pajak
+        summary = self.transaction_handler.get_transaction_summary()
+        print(f"\n📋 PERHITUNGAN TOTAL")
+        if transaction:
+            print(f"Subtotal        : {format_rp(transaction.subtotal)}")
+            if transaction.discount_amount > 0:
+                print(f"Diskon ({diskon_persen}%): -{format_rp(transaction.discount_amount)}")
+            if transaction.tax_amount > 0:
+                print(f"Pajak ({pajak_persen}%) : +{format_rp(transaction.tax_amount)}")
+        print(f"Total Akhir     : {format_rp(summary['total'])}")
+        
+        bayar = self.get_safe_int("\n💳 Jumlah Pembayaran: ", min_val=summary['total'])
         
         if bayar is None:
             return
         
-        # Complete transaction
+        # Complete transaction (tanpa print receipt dulu)
         trans_id = self.transaction_handler.complete_transaction(
             bayar,
-            store_name="TOKO ACCESSORIES G-LIES",
-            store_address="Jl. Majalaya, Solokanjeruk, Bandung"
+            store_name=self.config.get_store_name(),
+            store_address=self.config.get_store_address(),
+            print_receipt=False
         )
         
         if trans_id:
             print(f"\n✅ Transaksi selesai! ID: {trans_id}")
+            
+            # Tanya user apakah ingin cetak resi
+            print("\n" + "-" * 70)
+            cetak = input("🖨️  Apakah ingin cetak resi? (y/n): ").strip().lower()
+            
+            if cetak == 'y':
+                print("\n📋 STRUK TRANSAKSI")
+                print("-" * 70)
+                self.transaction_handler.print_receipt(
+                    store_name=self.config.get_store_name(),
+                    store_address=self.config.get_store_address()
+                )
+            else:
+                print("\n⏭️  Resi tidak dicetak (tersimpan di folder receipts)")
         else:
             print("❌ Gagal meproses transaksi")
         
@@ -494,9 +708,10 @@ class POSSystem:
             print("4. 📦 Informasi Stok")
             print("5. 🎨 Dashboard")
             print("6. 💾 Export ke CSV")
+            print("7. 🖨️  Cetak Ulang Resi")
             print("0. ↩️  Kembali ke Menu Utama")
             
-            choice = input("\n👉 Pilih menu (0-6): ").strip()
+            choice = input("\n👉 Pilih menu (0-7): ").strip()
             
             if choice == '1':
                 self.laporan_harian()
@@ -510,6 +725,8 @@ class POSSystem:
                 self.tampilkan_dashboard()
             elif choice == '6':
                 self.export_csv()
+            elif choice == '7':
+                self.cetak_ulang_resi()
             elif choice == '0':
                 break
             else:
@@ -578,6 +795,124 @@ class POSSystem:
             return
         
         print("✅ File berhasil diekspor ke folder 'exports/'")
+        self.pause()
+    
+    def cetak_ulang_resi(self):
+        """Cetak ulang resi dari transaksi sebelumnya."""
+        self.clear_screen()
+        self.draw_header("🖨️  CETAK ULANG RESI")
+        
+        # Pilihan periode
+        print("Pilih periode transaksi:")
+        print("1. Hari Ini")
+        print("2. Tanggal Tertentu")
+        print("0. Kembali")
+        
+        periode_choice = input("\n👉 Pilih (0-2): ").strip()
+        
+        if periode_choice == '0':
+            return
+        
+        transactions = []
+        
+        if periode_choice == '1':
+            # Ambil transaksi hari ini
+            from datetime import datetime
+            today = datetime.now().strftime("%Y-%m-%d")
+            transactions = self.db.get_transactions_by_date(today)
+        elif periode_choice == '2':
+            # Tanya user tanggal
+            date_str = input("\nMasukkan tanggal (YYYY-MM-DD): ").strip()
+            try:
+                transactions = self.db.get_transactions_by_date(date_str)
+            except Exception as e:
+                print(f"❌ Error: {e}")
+                self.pause()
+                return
+        else:
+            print("❌ Pilihan tidak valid")
+            self.pause()
+            return
+        
+        if not transactions:
+            print("⚠️  Tidak ada transaksi untuk periode yang dipilih")
+            self.pause()
+            return
+        
+        # Tampilkan list transaksi
+        self.clear_screen()
+        self.draw_header("📋 DAFTAR TRANSAKSI")
+        
+        print("No. | ID | Tanggal            | Total")
+        print("-" * 60)
+        
+        for i, trans in enumerate(transactions, 1):
+            trans_id = trans.get('id', 'N/A')
+            tanggal = trans.get('tanggal', 'N/A')
+            total = trans.get('total', 0)
+            
+            print(f"{i:>2}. | {trans_id:<3} | {str(tanggal):<18} | {format_rp(total)}")
+        
+        print("-" * 60)
+        print(f"Total: {len(transactions)} transaksi")
+        
+        # Tanya user mana yang ingin dicetak
+        pilih = self.get_safe_int("\n👉 Pilih nomor transaksi untuk dicetak (atau 0 untuk kembali): ", min_val=0)
+        
+        if pilih is None or pilih == 0:
+            return
+        
+        if pilih < 1 or pilih > len(transactions):
+            print("❌ Nomor tidak valid")
+            self.pause()
+            return
+        
+        selected_trans = transactions[pilih - 1]
+        trans_id = selected_trans.get('id')
+        
+        if trans_id is None:
+            print("❌ Data transaksi tidak valid")
+            self.pause()
+            return
+        
+        # Get full transaction data dengan items
+        full_trans = self.db.get_transaction(trans_id)
+        
+        if full_trans is None:
+            print(f"❌ Transaksi ID {trans_id} tidak ditemukan")
+            self.pause()
+            return
+        
+        # Reconstruct Transaction object dari database data
+        try:
+            from models import Transaction
+            transaction = Transaction.from_dict(full_trans, self.db)
+            
+            # Tampilkan resi
+            print("\n" + "=" * 70)
+            print("📋 RESI TRANSAKSI (CETAK ULANG)")
+            print("=" * 70)
+            
+            # Display receipt
+            self.transaction_handler.receipt_manager.display_receipt(
+                transaction,
+                store_name=self.config.get_store_name(),
+                store_address=self.config.get_store_address()
+            )
+            
+            # Tanya user apakah ingin simpan file baru
+            print("\n" + "-" * 70)
+            simpan = input("💾 Simpan file resi baru? (y/n): ").strip().lower()
+            if simpan == 'y':
+                self.transaction_handler.receipt_manager.save_receipt(
+                    transaction,
+                    store_name=self.config.get_store_name(),
+                    store_address=self.config.get_store_address()
+                )
+            
+        except Exception as e:
+            print(f"❌ Error saat cetak resi: {e}")
+        
         self.pause()
     
     # ========================================================================
@@ -907,7 +1242,7 @@ class POSSystem:
     # ========================================================================
     
     def show_main_menu(self):
-        """Tampilkan main menu POS system."""
+        """Tampilkan main menu sesuai dengan user role."""
         while True:
             self.clear_screen()
             
@@ -921,6 +1256,8 @@ class POSSystem:
 ╚════════════════════════════════════════════════════════════════════╝
             """)
             
+            print(f"Toko: {self.config.get_store_name()}")
+            print(f"User: {self.show_login_status()}")
             print(f"Waktu: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
             
             print("=" * 70)
@@ -930,8 +1267,12 @@ class POSSystem:
             print("\n1. 📦 Kelola Produk")
             print("2. 🛒 Transaksi Penjualan")
             print("3. 📊 Laporan & Analisis")
-            print("4. 🤖 Telegram Bot")
-            print("5. ⚙️  Settings & Utility")
+            
+            # Role-based menu items
+            if self.auth.require_admin():
+                print("4. 🤖 Telegram Bot")
+                print("5. ⚙️  Settings & Utility")
+            
             print("0. 🚪 Keluar dari Sistem")
             
             choice = input("\n👉 Pilih menu (0-5): ").strip()
@@ -943,9 +1284,17 @@ class POSSystem:
             elif choice == '3':
                 self.menu_laporan()
             elif choice == '4':
-                self.menu_telegram()
+                if self.auth.require_admin():
+                    self.menu_telegram()
+                else:
+                    print("❌ Hanya admin yang dapat mengakses menu Telegram")
+                    self.pause()
             elif choice == '5':
-                self.menu_settings()
+                if self.auth.require_admin():
+                    self.menu_settings()
+                else:
+                    print("❌ Hanya admin yang dapat mengakses menu Settings")
+                    self.pause()
             elif choice == '0':
                 self.exit_system()
                 break
@@ -969,14 +1318,27 @@ class POSSystem:
         time.sleep(2)
     
     def run(self):
-        """Jalankan POS System."""
+        """Jalankan POS System dengan login flow."""
         try:
+            logger.info("=" * 70)
+            logger.info("POS System started")
+            logger.info("=" * 70)
+            
+            # Login flow dulu
+            if not self.login_flow():
+                logger.info("User cancelled login")
+                return
+            
+            # Setelah login, tampilkan main menu
             self.show_main_menu()
+            
         except KeyboardInterrupt:
             print("\n\n❌ Program dihentikan oleh user")
+            logger.info("Program terminated by user (Ctrl+C)")
             self.exit_system()
         except Exception as e:
-            print(f"\n❌ Error tidak terduga: {e}")
+            print(f"\n❌ Error tidak terdupa: {e}")
+            logger.error(f"Unexpected error: {e}", exc_info=True)
             import traceback
             traceback.print_exc()
 

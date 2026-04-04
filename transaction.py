@@ -411,9 +411,12 @@ class ReceiptManager:
             Mie Goreng      2x Rp 15.000 = Rp 30.000
             Teh Botol       3x Rp 5.000  = Rp 15.000
             -----------------------------------------
-            TOTAL          : Rp 45.000
+            SUBTOTAL       : Rp 45.000
+            DISKON (10%)   : -Rp 4.500
+            PAJAK (10%)    : +Rp 4.050
+            TOTAL          : Rp 44.550
             PEMBAYARAN     : Rp 50.000
-            KEMBALIAN      : Rp 5.000
+            KEMBALIAN      : Rp 5.450
             ===========================================
             Terima kasih telah berbelanja!
             ===========================================
@@ -442,6 +445,19 @@ class ReceiptManager:
             lines.append(f"  {item.display()}")
         
         # Total section
+        lines.append("-" * 50)
+        lines.append(f"SUBTOTAL       : {format_rp(transaction.subtotal):<20}")
+        
+        # Diskon
+        if transaction.discount_amount > 0:
+            diskon_text = f"DISKON ({transaction.discount_percent}%)"
+            lines.append(f"{diskon_text:<15}: -{format_rp(transaction.discount_amount):<18}")
+        
+        # Pajak
+        if transaction.tax_amount > 0:
+            pajak_text = f"PAJAK ({transaction.tax_percent}%)"
+            lines.append(f"{pajak_text:<15}: +{format_rp(transaction.tax_amount):<18}")
+        
         lines.append("-" * 50)
         lines.append(f"TOTAL          : {format_rp(transaction.total):<20}")
         lines.append(f"PEMBAYARAN     : {format_rp(transaction.bayar):<20}")
@@ -579,14 +595,17 @@ class TransactionHandler:
     
     def complete_transaction(self, bayar: int, 
                             store_name: str = "TOKO POS",
-                            store_address: str = None) -> Optional[int]:
+                            store_address: str = None,
+                            print_receipt: bool = False) -> Optional[int]:
         """
-        Selesaikan transaksi (set bayar, save ke DB, display struk).
+        Selesaikan transaksi (set bayar, save ke DB).
+        Receipt printing adalah optional dan bisa dilakukan terpisah dengan print_receipt().
         
         Args:
             bayar (int): Jumlah pembayaran
             store_name (str): Nama toko
             store_address (str): Alamat toko
+            print_receipt (bool): Jika True, langsung display dan save receipt
             
         Returns:
             int: Transaction ID jika berhasil
@@ -612,16 +631,39 @@ class TransactionHandler:
             # Log transaction completion
             logger.info(f"Transaction completed: ID={trans_id}, total=Rp{total:,}, items={items_count}, payment=Rp{bayar:,}")
             
+            # Display receipt jika print_receipt=True
+            if print_receipt:
+                self.print_receipt(store_name, store_address)
+            
+            return trans_id
+        except Exception as e:
+            logger.error(f"Error completing transaction: {e}", exc_info=True)
+            return None
+    
+    def print_receipt(self, store_name: str = "TOKO POS", store_address: str = None):
+        """
+        Display dan save receipt untuk transaksi yang sudah completed.
+        Gunakan method ini untuk print receipt setelah transaksi selesai.
+        
+        Args:
+            store_name (str): Nama toko
+            store_address (str): Alamat toko (optional)
+        """
+        try:
+            transaction = self.transaction_service.get_current_transaction()
+            if transaction is None:
+                print("❌ Tidak ada transaksi yang aktif")
+                return
+            
             # Display receipt
             self.receipt_manager.display_receipt(transaction, store_name, store_address)
             
             # Save receipt to file
             self.receipt_manager.save_receipt(transaction, store_name, store_address)
             
-            return trans_id
         except Exception as e:
-            logger.error(f"Error completing transaction: {e}", exc_info=True)
-            return None
+            logger.error(f"Error printing receipt: {e}", exc_info=True)
+            print(f"❌ Error saat cetak resi: {e}")
     
     def cancel_transaction(self):
         """Cancel transaksi aktif."""
