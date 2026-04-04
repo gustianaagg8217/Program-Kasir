@@ -56,10 +56,11 @@ for handler in logging.root.handlers:
 # ============================================================================
 
 MAIN_MENU, TRANSAKSI_MENU, TAMBAH_ITEM_KODE, TAMBAH_ITEM_QTY, PEMBAYARAN = range(5)
-LIHAT_STOK, LIHAT_LAPORAN = range(5, 7)
-KELOLA_PRODUK_MENU, KELOLA_PRODUK_TAMBAH_KODE, KELOLA_PRODUK_TAMBAH_NAMA = range(7, 10)
-KELOLA_PRODUK_TAMBAH_HARGA, KELOLA_PRODUK_TAMBAH_STOK, KELOLA_PRODUK_LIHAT = range(10, 13)
-KELOLA_PRODUK_EDIT, KELOLA_PRODUK_HAPUS = range(13, 15)
+DISKON, PAJAK = range(5, 7)
+LIHAT_STOK, LIHAT_LAPORAN = range(7, 9)
+KELOLA_PRODUK_MENU, KELOLA_PRODUK_TAMBAH_KODE, KELOLA_PRODUK_TAMBAH_NAMA = range(9, 12)
+KELOLA_PRODUK_TAMBAH_HARGA, KELOLA_PRODUK_TAMBAH_STOK, KELOLA_PRODUK_LIHAT = range(12, 15)
+KELOLA_PRODUK_EDIT, KELOLA_PRODUK_HAPUS = range(15, 17)
 
 # ============================================================================
 # TELEGRAM POS SYSTEM - Main class untuk Telegram-based POS
@@ -143,6 +144,12 @@ class TelegramPOSSystem:
                 ],
                 TAMBAH_ITEM_QTY: [
                     MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_item_qty),
+                ],
+                DISKON: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_diskon),
+                ],
+                PAJAK: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_pajak),
                 ],
                 PEMBAYARAN: [
                     MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_pembayaran),
@@ -673,6 +680,131 @@ class TelegramPOSSystem:
         
         return TRANSAKSI_MENU
     
+    async def handle_diskon(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Handle diskon input."""
+        user_id = update.effective_user.id
+        
+        try:
+            diskon_input = update.message.text.strip()
+            diskon_percent = float(diskon_input)
+        except ValueError:
+            await update.message.reply_text(
+                "❌ Masukkan angka yang valid (0-100)!\n\n"
+                "Silakan coba lagi atau ketik /cancel untuk batalkan.",
+                parse_mode="Markdown"
+            )
+            return DISKON
+        
+        # Validate diskon
+        if diskon_percent < 0 or diskon_percent > 100:
+            await update.message.reply_text(
+                "❌ Diskon harus antara 0-100%!\n\n"
+                "Silakan coba lagi atau ketik /cancel untuk batalkan.",
+                parse_mode="Markdown"
+            )
+            return DISKON
+        
+        # Store diskon in context and get updated summary
+        context.user_data['diskon_percent'] = diskon_percent
+        trans_handler = self.get_user_transaction(user_id)
+        
+        # Set discount on transaction
+        trans = trans_handler.transaction_service.get_current_transaction()
+        if trans:
+            trans.set_discount(diskon_percent)
+            summary = trans_handler.get_transaction_summary()
+            context.user_data['transaction_summary'] = summary
+            
+            logger.info(f"Discount applied: {diskon_percent}% (Rp{trans.discount_amount:,}) for user_id: {user_id}")
+        
+        # Ask for pajak
+        summary = context.user_data.get('transaction_summary', {})
+        subtotal = summary.get('total', 0)
+        diskon_amount = 0
+        
+        if trans:
+            subtotal = trans.subtotal
+            diskon_amount = trans.discount_amount
+        
+        msg = (
+            f"🏷️  *DISKON DITERAPKAN*\n"
+            f"Diskon: {diskon_percent}%\n"
+            f"Potongan: {format_rp(diskon_amount)}\n\n"
+            f"💰 *MASUKKAN PAJAK (%)*\n"
+            f"(Ketik angka 0-100 atau 0 untuk tanpa pajak)\n\n"
+            f"Contoh: 10 (untuk pajak 10% PPN)"
+        )
+        
+        await update.message.reply_text(msg, parse_mode="Markdown")
+        return PAJAK
+    
+    async def handle_pajak(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Handle pajak input."""
+        user_id = update.effective_user.id
+        
+        try:
+            pajak_input = update.message.text.strip()
+            pajak_percent = float(pajak_input)
+        except ValueError:
+            await update.message.reply_text(
+                "❌ Masukkan angka yang valid (0-100)!\n\n"
+                "Silakan coba lagi atau ketik /cancel untuk batalkan.",
+                parse_mode="Markdown"
+            )
+            return PAJAK
+        
+        # Validate pajak
+        if pajak_percent < 0 or pajak_percent > 100:
+            await update.message.reply_text(
+                "❌ Pajak harus antara 0-100%!\n\n"
+                "Silakan coba lagi atau ketik /cancel untuk batalkan.",
+                parse_mode="Markdown"
+            )
+            return PAJAK
+        
+        # Store pajak in context
+        context.user_data['pajak_percent'] = pajak_percent
+        trans_handler = self.get_user_transaction(user_id)
+        
+        # Set tax on transaction
+        trans = trans_handler.transaction_service.get_current_transaction()
+        if trans:
+            trans.set_tax(pajak_percent)
+            summary = trans_handler.get_transaction_summary()
+            context.user_data['transaction_summary'] = summary
+            
+            logger.info(f"Tax applied: {pajak_percent}% (Rp{trans.tax_amount:,}) for user_id: {user_id}")
+        
+        # Show summary and ask for pembayaran
+        diskon_percent = context.user_data.get('diskon_percent', 0)
+        pajak_amount = 0
+        diskon_amount = 0
+        subtotal = 0
+        total = 0
+        
+        if trans:
+            subtotal = trans.subtotal
+            diskon_amount = trans.discount_amount
+            pajak_amount = trans.tax_amount
+            total = trans.total
+        
+        msg = (
+            f"📊 *RINGKASAN BELANJA*\n\n"
+            f"Subtotal : {format_rp(subtotal)}\n"
+            f"Diskon   : -{format_rp(diskon_amount)} ({diskon_percent}%)\n"
+            f"Pajak    : +{format_rp(pajak_amount)} ({pajak_percent}%)\n"
+            f"-" + "─" * 30 + "\n"
+            f"💵 *TOTAL  : {format_rp(total)}*\n\n"
+            f"💳 *MASUKKAN JUMLAH PEMBAYARAN*\n"
+            f"(Ketik nominal atau ketik 0 untuk membatalkan)\n\n"
+            f"Minimum pembayaran: {format_rp(total)}"
+        )
+        
+        context.user_data['transaction_total'] = total
+        
+        await update.message.reply_text(msg, parse_mode="Markdown")
+        return PEMBAYARAN
+    
     async def transaksi_lihat_item(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         """Lihat detail items."""
         query = update.callback_query
@@ -771,7 +903,7 @@ class TelegramPOSSystem:
         return TRANSAKSI_MENU
     
     async def transaksi_checkout(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        """Handle checkout & minta pembayaran."""
+        """Handle checkout & minta diskon."""
         query = update.callback_query
         await query.answer()
         
@@ -790,24 +922,24 @@ class TelegramPOSSystem:
         summary = trans_handler.get_transaction_summary()
         
         msg = (
-            f"💳 *KONFIRMASI PEMBAYARAN*\n\n"
+            f"💳 *KONFIRMASI CHECKOUT*\n\n"
             f"📊 Ringkasan:\n"
             f"  Total Item: {summary['items_count']}\n"
             f"  Total Qty: {summary['qty_total']}\n"
-            f"  Harga Total: {format_rp(summary['total'])}\n\n"
-            f"Berapa yang akan dibayarkan?\n"
-            f"(Ketik nominal atau ketik 0 untuk membatalkan)\n\n"
-            f"Minimum pembayaran: {format_rp(summary['total'])}"
+            f"  Subtotal: {format_rp(summary['total'])}\n\n"
+            f"🏷️  *MASUKKAN DISKON (%)*\n"
+            f"(Ketik angka 0-100 atau 0 untuk tanpa diskon)\n\n"
+            f"Contoh: 10 (untuk diskon 10%)"
         )
         
-        context.user_data['transaction_total'] = summary['total']
+        context.user_data['transaction_summary'] = summary
         
         try:
             await query.edit_message_text(text=msg, parse_mode="Markdown")
         except Exception as e:
             logger.error(f"[-] Error in transaksi_checkout: {e}", exc_info=True)
         
-        return PEMBAYARAN
+        return DISKON
     
     async def handle_pembayaran(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         """Handle pembayaran input."""
@@ -849,14 +981,34 @@ class TelegramPOSSystem:
         
         if trans_id:
             kembalian = bayar - total
+            diskon_percent = context.user_data.get('diskon_percent', 0)
+            pajak_percent = context.user_data.get('pajak_percent', 0)
+            
+            # Get transaction for detailed breakdown
+            trans = trans_handler.transaction_service.get_current_transaction()
+            subtotal = trans.subtotal if trans else 0
+            diskon_amount = trans.discount_amount if trans else 0
+            pajak_amount = trans.tax_amount if trans else 0
             
             msg = (
                 f"✅ *TRANSAKSI BERHASIL*\n\n"
                 f"📄 No. Invoice: {trans_id}\n"
-                f"💰 Total: {format_rp(total)}\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                f"Subtotal     : {format_rp(subtotal)}\n"
+            )
+            
+            if diskon_percent > 0:
+                msg += f"Diskon {diskon_percent}%  : -{format_rp(diskon_amount)}\n"
+            
+            if pajak_percent > 0:
+                msg += f"Pajak {pajak_percent}%   : +{format_rp(pajak_amount)}\n"
+            
+            msg += (
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                f"💰 *Total    : {format_rp(total)}*\n"
                 f"💵 Pembayaran: {format_rp(bayar)}\n"
-                f"🔄 Kembalian: {format_rp(kembalian)}\n"
-                f"⏰ Waktu: {datetime.now().strftime('%H:%M:%S')}\n\n"
+                f"🔄 Kembalian : {format_rp(kembalian)}\n"
+                f"⏰ Waktu     : {datetime.now().strftime('%H:%M:%S')}\n\n"
                 f"Terima kasih telah berbelanja! 🙏"
             )
             
@@ -868,7 +1020,7 @@ class TelegramPOSSystem:
                 parse_mode="Markdown"
             )
             
-            logger.info(f"[+] Transaction completed: ID={trans_id}, user_id={user_id}")
+            logger.info(f"[+] Transaction completed: ID={trans_id}, subtotal={subtotal}, diskon={diskon_amount}, pajak={pajak_amount}, total={total}, payment={bayar}, user_id={user_id}")
             
             # Clear user transaction
             if user_id in self.transaction_handlers:
@@ -1309,29 +1461,40 @@ class TelegramPOSSystem:
         return KELOLA_PRODUK_LIHAT
     
     async def kelola_produk_tambah_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        """Mulai proses tambah produk - minta kode."""
+        """Mulai proses tambah produk - auto-generate kode, lalu minta nama."""
         query = update.callback_query
         await query.answer()
         
         try:
+            # Auto-generate next product code
+            next_kode = self.db.get_next_product_code()
+            
+            # Store in context
+            context.user_data['new_product'] = {'kode': next_kode}
+            
+            # Show generated code and ask for nama (skip manual kode input)
             await query.edit_message_text(
                 text=(
                     "*TAMBAH PRODUK BARU*\n\n"
-                    "Step 1/4: Masukkan *Kode Produk*\n\n"
-                    "Contoh: COFFEE, TEA, ACC001\n\n"
+                    "Step 1/3: Masukkan *Nama Produk*\n\n"
+                    f"🔢 Kode Otomatis: `{next_kode}`\n\n"
                     "Kirim /cancel untuk batalkan."
                 ),
                 parse_mode="Markdown"
             )
             
-            # Reset product data
-            context.user_data['new_product'] = {}
+            logger.info(f"[+] Product add started with auto-generated code: {next_kode}")
             
-            logger.info(f"[+] Product add started")
+            # Skip KODE state and go directly to NAMA state
+            return KELOLA_PRODUK_TAMBAH_NAMA
+            
         except Exception as e:
             logger.error(f"[-] Error in kelola_produk_tambah_start: {e}", exc_info=True)
-        
-        return KELOLA_PRODUK_TAMBAH_KODE
+            await query.edit_message_text(
+                text="❌ Error saat generate kode produk. Silakan coba lagi.",
+                parse_mode="Markdown"
+            )
+            return KELOLA_PRODUK_MENU
     
     async def handle_kp_kode(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         """Handle kode produk input."""
@@ -1368,13 +1531,13 @@ class TelegramPOSSystem:
         
         context.user_data['new_product']['nama'] = nama
         
-        # Ask for harga
+        # Ask for harga (now Step 2 instead of Step 3)
         await update.message.reply_text(
             text=(
                 "*TAMBAH PRODUK BARU*\n\n"
-                f"Step 3/4: Masukkan *Harga Produk* (angka saja)\n\n"
-                f"Kode: {context.user_data['new_product']['kode']}\n"
-                f"Nama: {nama}\n\n"
+                f"Step 2/3: Masukkan *Harga Produk* (angka saja)\n\n"
+                f"🔢 Kode: `{context.user_data['new_product']['kode']}`\n"
+                f"📝 Nama: {nama}\n\n"
                 "Contoh: 50000, 100000\n"
                 "Kirim /cancel untuk batalkan."
             ),
@@ -1398,14 +1561,14 @@ class TelegramPOSSystem:
         
         context.user_data['new_product']['harga'] = harga
         
-        # Ask for stok
+        # Ask for stok (now Step 3 instead of Step 4)
         await update.message.reply_text(
             text=(
                 "*TAMBAH PRODUK BARU*\n\n"
-                f"Step 4/4: Masukkan *Stok Awal* (angka saja)\n\n"
-                f"Kode: {context.user_data['new_product']['kode']}\n"
-                f"Nama: {context.user_data['new_product']['nama']}\n"
-                f"Harga: {format_rp(harga)}\n\n"
+                f"Step 3/3: Masukkan *Stok Awal* (angka saja)\n\n"
+                f"🔢 Kode: `{context.user_data['new_product']['kode']}`\n"
+                f"📝 Nama: {context.user_data['new_product']['nama']}\n"
+                f"💰 Harga: {format_rp(harga)}\n\n"
                 "Kirim /cancel untuk batalkan."
             ),
             parse_mode="Markdown"
