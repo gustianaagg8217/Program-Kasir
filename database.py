@@ -147,6 +147,7 @@ class DatabaseManager:
                     nama TEXT NOT NULL,
                     harga INTEGER NOT NULL,
                     stok INTEGER NOT NULL,
+                    foto_path TEXT DEFAULT NULL,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -270,7 +271,7 @@ class DatabaseManager:
     # PRODUCT OPERATIONS - CRUD operasi untuk tabel products
     # ========================================================================
     
-    def add_product(self, kode: str, nama: str, harga: int, stok: int) -> bool:
+    def add_product(self, kode: str, nama: str, harga: int, stok: int, foto_path: str = None) -> bool:
         """
         Tambah produk baru ke database.
         
@@ -279,6 +280,7 @@ class DatabaseManager:
             nama (str): Nama produk
             harga (int): Harga dalam Rupiah
             stok (int): Jumlah stok awal
+            foto_path (str, optional): Path file foto produk
             
         Returns:
             bool: True jika berhasil, False jika gagal
@@ -290,11 +292,11 @@ class DatabaseManager:
             with self.get_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute("""
-                    INSERT INTO products (kode, nama, harga, stok)
-                    VALUES (?, ?, ?, ?)
-                """, (kode, nama, harga, stok))
+                    INSERT INTO products (kode, nama, harga, stok, foto_path)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (kode, nama, harga, stok, foto_path))
                 conn.commit()
-                logger.info(f"Product added: {kode} = {nama}")
+                logger.info(f"Product added: {kode} = {nama} (foto: {foto_path})")
                 return True
         except sqlite3.IntegrityError:
             logger.warning(f"Product code '{kode}' already exists")
@@ -410,7 +412,7 @@ class DatabaseManager:
             logger.error(f"Error generating next product code: {e}", exc_info=True)
             return "0001"
     
-    def update_product(self, kode: str, nama: str = None, harga: int = None, stok: int = None) -> bool:
+    def update_product(self, kode: str, nama: str = None, harga: int = None, stok: int = None, foto_path: str = None) -> bool:
         """
         Update data produk. Hanya field yang diberikan yang akan diupdate.
         
@@ -419,6 +421,7 @@ class DatabaseManager:
             nama (str): Nama produk baru (opsional)
             harga (int): Harga baru (opsional)
             stok (int): Stok baru (opsional)
+            foto_path (str): Path to product photo (opsional)
             
         Returns:
             bool: True jika berhasil
@@ -440,6 +443,9 @@ class DatabaseManager:
                 if stok is not None:
                     fields.append("stok = ?")
                     values.append(stok)
+                if foto_path is not None:
+                    fields.append("foto_path = ?")
+                    values.append(foto_path)
                 
                 if not fields:
                     logger.warning("No fields to update in product")

@@ -11,6 +11,10 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 import time
+import asyncio
+import sys
+import subprocess
+import threading
 
 from telegram import (
     Update, Bot, InlineKeyboardButton, InlineKeyboardMarkup, 
@@ -59,8 +63,8 @@ MAIN_MENU, TRANSAKSI_MENU, TAMBAH_ITEM_KODE, TAMBAH_ITEM_QTY, PEMBAYARAN = range
 DISKON, PAJAK = range(5, 7)
 LIHAT_STOK, LIHAT_LAPORAN = range(7, 9)
 KELOLA_PRODUK_MENU, KELOLA_PRODUK_TAMBAH_KODE, KELOLA_PRODUK_TAMBAH_NAMA = range(9, 12)
-KELOLA_PRODUK_TAMBAH_HARGA, KELOLA_PRODUK_TAMBAH_STOK, KELOLA_PRODUK_LIHAT = range(12, 15)
-KELOLA_PRODUK_EDIT, KELOLA_PRODUK_HAPUS = range(15, 17)
+KELOLA_PRODUK_TAMBAH_HARGA, KELOLA_PRODUK_TAMBAH_STOK, KELOLA_PRODUK_TAMBAH_FOTO = range(12, 15)
+KELOLA_PRODUK_LIHAT, KELOLA_PRODUK_EDIT, KELOLA_PRODUK_HAPUS = range(15, 18)
 
 # ============================================================================
 # TELEGRAM POS SYSTEM - Main class untuk Telegram-based POS
@@ -108,11 +112,52 @@ class TelegramPOSSystem:
         self._cache_timestamp = 0
         self._cache_ttl = 10  # Cache timeout 10 seconds untuk product list
         
+        # Auto-restart configuration (ENABLED)
+        # Auto-restart every 25 seconds
+        self.restart_interval = 25  # 25 seconds
+        self.auto_restart_enabled = True  # ENABLED - auto-restart every 25 seconds
+        self.restart_counter = 0
+        self._restart_timer = None
+        
         # Setup application
         self.application = Application.builder().token(token).build()
         self._register_handlers()
         
         logger.info("[+] TelegramPOSSystem initialized")
+    
+    def _schedule_restart(self):
+        """Schedule restart setelah interval tertentu."""
+        if self._restart_timer:
+            self._restart_timer.cancel()
+        
+        self._restart_timer = threading.Timer(
+            self.restart_interval,
+            self._trigger_restart
+        )
+        self._restart_timer.daemon = True
+        self._restart_timer.start()
+        logger.debug(f"[*] Restart scheduled in {self.restart_interval} seconds")
+    
+    def _trigger_restart(self):
+        """Trigger restart dengan menghentikan polling."""
+        self.restart_counter += 1
+        restart_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        logger.info(f"[*] Auto-restart triggered #{self.restart_counter} at {restart_time}")
+        print(f"\n[*] AUTO-RESTART TRIGGERED #{self.restart_counter} at {restart_time}")
+        
+        try:
+            # Stop application gracefully
+            if self.application.updater:
+                self.application.updater.stop()
+                logger.info("[+] Updater stopped")
+        except Exception as e:
+            logger.error(f"[-] Error in restart trigger: {e}")
+    
+    def _cleanup_restart_timer(self):
+        """Cleanup restart timer saat exit."""
+        if self._restart_timer:
+            self._restart_timer.cancel()
+            self._restart_timer = None
     
     # ========================================================================
     # HANDLER REGISTRATION
@@ -137,26 +182,38 @@ class TelegramPOSSystem:
                     CallbackQueryHandler(self.transaksi_checkout, pattern="^checkout$"),
                     CallbackQueryHandler(self.transaksi_cancel, pattern="^cancel_transaksi$"),
                     CallbackQueryHandler(self.transaksi_back_menu, pattern="^back_menu$"),
+                    CallbackQueryHandler(self.transaksi_back_menu, pattern="^transaksi$"),
+                    CallbackQueryHandler(self.transaksi_exit_to_main_menu, pattern="^main_menu$"),
+                    CallbackQueryHandler(self.transaksi_exit_to_kelola_produk, pattern="^kelola_produk$"),
+                    CallbackQueryHandler(self.transaksi_exit_to_lihat_stok, pattern="^lihat_stok$"),
+                    CallbackQueryHandler(self.transaksi_exit_to_lihat_laporan, pattern="^lihat_laporan$"),
+                    CallbackQueryHandler(self.transaksi_exit_to_lihat_dashboard, pattern="^lihat_dashboard$"),
                 ],
                 TAMBAH_ITEM_KODE: [
                     CallbackQueryHandler(self.handle_product_selection, pattern="^(select_product_|cancel_search)"),
+                    CommandHandler("cancel", self.cmd_cancel_transaksi),
                     MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_item_kode),
                 ],
                 TAMBAH_ITEM_QTY: [
+                    CommandHandler("cancel", self.cmd_cancel_transaksi),
                     MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_item_qty),
                 ],
                 DISKON: [
+                    CommandHandler("cancel", self.cmd_cancel_transaksi),
                     MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_diskon),
                 ],
                 PAJAK: [
+                    CommandHandler("cancel", self.cmd_cancel_transaksi),
                     MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_pajak),
                 ],
                 PEMBAYARAN: [
+                    CommandHandler("cancel", self.cmd_cancel_transaksi),
                     MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_pembayaran),
                 ],
             },
             fallbacks=[
                 CallbackQueryHandler(self.transaksi_cancel, pattern="^cancel_transaksi$"),
+                CommandHandler("cancel", self.cmd_cancel_transaksi),
             ],
             per_user=True,
             per_chat=True,
@@ -175,19 +232,34 @@ class TelegramPOSSystem:
                     CallbackQueryHandler(self.kelola_produk_hapus_select, pattern="^kp_hapus_select$"),
                     CallbackQueryHandler(self.kelola_produk_info_stok, pattern="^kp_info_stok$"),
                     CallbackQueryHandler(self.kelola_produk_menu, pattern="^kembali_kp$"),
-                    CallbackQueryHandler(self.callback_main_menu, pattern="^main_menu$"),
+                    CallbackQueryHandler(self.kelola_produk_exit_to_main_menu, pattern="^main_menu$"),
+                    CallbackQueryHandler(self.kelola_produk_exit_to_transaksi, pattern="^transaksi$"),
+                    CallbackQueryHandler(self.kelola_produk_exit_to_lihat_stok, pattern="^lihat_stok$"),
+                    CallbackQueryHandler(self.kelola_produk_exit_to_lihat_laporan, pattern="^lihat_laporan$"),
+                    CallbackQueryHandler(self.kelola_produk_exit_to_lihat_dashboard, pattern="^lihat_dashboard$"),
                 ],
                 KELOLA_PRODUK_TAMBAH_KODE: [
+                    CommandHandler("cancel", self.cmd_cancel_kelola_produk),
                     MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_kp_kode),
                 ],
                 KELOLA_PRODUK_TAMBAH_NAMA: [
+                    CommandHandler("cancel", self.cmd_cancel_kelola_produk),
                     MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_kp_nama),
                 ],
                 KELOLA_PRODUK_TAMBAH_HARGA: [
+                    CommandHandler("cancel", self.cmd_cancel_kelola_produk),
                     MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_kp_harga),
                 ],
                 KELOLA_PRODUK_TAMBAH_STOK: [
+                    CommandHandler("cancel", self.cmd_cancel_kelola_produk),
                     MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_kp_stok),
+                ],
+                KELOLA_PRODUK_TAMBAH_FOTO: [
+                    CommandHandler("cancel", self.cmd_cancel_kelola_produk),
+                    CallbackQueryHandler(self.handle_kp_upload_foto_btn, pattern="^kp_upload_foto$"),
+                    CallbackQueryHandler(self.handle_kp_skip_foto, pattern="^kp_skip_foto$"),
+                    MessageHandler(filters.PHOTO, self.handle_kp_foto),
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_kp_skip_foto_text),
                 ],
                 KELOLA_PRODUK_LIHAT: [
                     CallbackQueryHandler(self.kelola_produk_edit_start, pattern="^kp_edit_\d+$"),
@@ -441,7 +513,7 @@ class TelegramPOSSystem:
             [InlineKeyboardButton("🗑️  Hapus Item", callback_data="hapus_item")],
             [InlineKeyboardButton("💳 Checkout", callback_data="checkout")],
             [InlineKeyboardButton("❌ Batalkan", callback_data="cancel_transaksi")],
-            [InlineKeyboardButton("⬅️  Kembali", callback_data="main_menu")],
+            [InlineKeyboardButton("⬅️  Kembali ke Menu Utama", callback_data="main_menu")],
         ]
         
         try:
@@ -828,7 +900,7 @@ class TelegramPOSSystem:
             
             msg += f"---------\nTotal: {format_rp(total)}"
         
-        keyboard = [[InlineKeyboardButton("⬅️  Kembali", callback_data="transaksi")]]
+        keyboard = [[InlineKeyboardButton("⬅️  Kembali ke Transaksi", callback_data="back_menu")]]
         
         try:
             await query.edit_message_text(
@@ -854,7 +926,7 @@ class TelegramPOSSystem:
             try:
                 await query.edit_message_text(
                     text="📋 Keranjang kosong. Tidak ada item untuk dihapus.",
-                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️  Kembali", callback_data="transaksi")]])
+                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️  Kembali ke Transaksi", callback_data="back_menu")]])
                 )
             except:
                 pass
@@ -867,7 +939,7 @@ class TelegramPOSSystem:
             msg += f"{idx}. {item['nama']} x{item['qty']}\n"
             keyboard.append([InlineKeyboardButton(f"❌ Hapus Item {idx}", callback_data=f"remove_item_{idx-1}")])
         
-        keyboard.append([InlineKeyboardButton("⬅️  Batal", callback_data="transaksi")])
+        keyboard.append([InlineKeyboardButton("⬅️  Batal", callback_data="back_menu")])
         
         try:
             await query.edit_message_text(
@@ -1055,6 +1127,76 @@ class TelegramPOSSystem:
         
         return ConversationHandler.END
     
+    async def cmd_cancel_transaksi(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Handle /cancel command during transaksi conversation."""
+        user_id = update.effective_user.id
+        
+        # Cancel transaction
+        if user_id in self.transaction_handlers:
+            trans_handler = self.transaction_handlers[user_id]
+            trans_handler.cancel_transaction()
+            del self.transaction_handlers[user_id]
+        
+        try:
+            await update.message.reply_text(
+                text="❌ Transaksi dibatalkan.\n\nKembali ke menu utama.",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📋 Menu Utama", callback_data="main_menu")]])
+            )
+        except Exception as e:
+            logger.error(f"[-] Error in cmd_cancel_transaksi: {e}", exc_info=True)
+        
+        return ConversationHandler.END
+    
+    async def transaksi_exit_to_main_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Exit transaksi conversation dan tampilkan main menu."""
+        user_id = update.effective_user.id
+        
+        if user_id in self.transaction_handlers:
+            del self.transaction_handlers[user_id]
+        
+        await self.callback_main_menu(update, context)
+        return ConversationHandler.END
+    
+    async def transaksi_exit_to_kelola_produk(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Exit transaksi conversation dan tampilkan kelola produk menu."""
+        user_id = update.effective_user.id
+        
+        if user_id in self.transaction_handlers:
+            del self.transaction_handlers[user_id]
+        
+        await self.kelola_produk_menu(update, context)
+        return ConversationHandler.END
+    
+    async def transaksi_exit_to_lihat_stok(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Exit transaksi conversation dan tampilkan lihat stok."""
+        user_id = update.effective_user.id
+        
+        if user_id in self.transaction_handlers:
+            del self.transaction_handlers[user_id]
+        
+        await self.lihat_stok(update, context)
+        return ConversationHandler.END
+    
+    async def transaksi_exit_to_lihat_laporan(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Exit transaksi conversation dan tampilkan lihat laporan."""
+        user_id = update.effective_user.id
+        
+        if user_id in self.transaction_handlers:
+            del self.transaction_handlers[user_id]
+        
+        await self.lihat_laporan(update, context)
+        return ConversationHandler.END
+    
+    async def transaksi_exit_to_lihat_dashboard(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Exit transaksi conversation dan tampilkan lihat dashboard."""
+        user_id = update.effective_user.id
+        
+        if user_id in self.transaction_handlers:
+            del self.transaction_handlers[user_id]
+        
+        await self.lihat_dashboard(update, context)
+        return ConversationHandler.END
+    
     async def transaksi_back_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         """Kembali ke transaksi menu."""
         await self.show_transaksi_menu(update, context)
@@ -1200,6 +1342,38 @@ class TelegramPOSSystem:
         )
         logger.info("[>] Kelola produk operation cancelled")
         return KELOLA_PRODUK_MENU
+    
+    async def kelola_produk_exit_to_main_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Exit kelola produk conversation dan tampilkan main menu."""
+        await self.callback_main_menu(update, context)
+        return ConversationHandler.END
+    
+    async def kelola_produk_exit_to_transaksi(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Exit kelola produk conversation dan tampilkan transaksi menu."""
+        query = update.callback_query
+        await query.answer()
+        
+        user_id = update.effective_user.id
+        trans_handler = self.get_user_transaction(user_id)
+        trans_handler.start_transaction()
+        
+        await self.show_transaksi_menu(update, context)
+        return ConversationHandler.END
+    
+    async def kelola_produk_exit_to_lihat_stok(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Exit kelola produk conversation dan tampilkan lihat stok."""
+        await self.lihat_stok(update, context)
+        return ConversationHandler.END
+    
+    async def kelola_produk_exit_to_lihat_laporan(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Exit kelola produk conversation dan tampilkan lihat laporan."""
+        await self.lihat_laporan(update, context)
+        return ConversationHandler.END
+    
+    async def kelola_produk_exit_to_lihat_dashboard(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Exit kelola produk conversation dan tampilkan lihat dashboard."""
+        await self.lihat_dashboard(update, context)
+        return ConversationHandler.END
     
     async def kelola_produk_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         """Tampilkan menu kelola produk lengkap."""
@@ -1466,6 +1640,11 @@ class TelegramPOSSystem:
         await query.answer()
         
         try:
+            logger.info(f"[>] kelola_produk_tambah_start triggered")
+            
+            # Clear any existing product data
+            context.user_data.pop('new_product', None)
+            
             # Auto-generate next product code
             next_kode = self.db.get_next_product_code()
             
@@ -1490,10 +1669,13 @@ class TelegramPOSSystem:
             
         except Exception as e:
             logger.error(f"[-] Error in kelola_produk_tambah_start: {e}", exc_info=True)
-            await query.edit_message_text(
-                text="❌ Error saat generate kode produk. Silakan coba lagi.",
-                parse_mode="Markdown"
-            )
+            try:
+                await query.edit_message_text(
+                    text="❌ Error saat generate kode produk. Silakan coba lagi.",
+                    parse_mode="Markdown"
+                )
+            except:
+                pass
             return KELOLA_PRODUK_MENU
     
     async def handle_kp_kode(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -1577,7 +1759,7 @@ class TelegramPOSSystem:
         return KELOLA_PRODUK_TAMBAH_STOK
     
     async def handle_kp_stok(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        """Handle stok input dan simpan produk."""
+        """Handle stok input dan lanjut ke foto input."""
         try:
             stok = int(update.message.text.strip())
             if stok < 0:
@@ -1589,26 +1771,131 @@ class TelegramPOSSystem:
             )
             return KELOLA_PRODUK_TAMBAH_STOK
         
-        # Tambah produk ke database
+        # Simpan stok ke context dan lanjut ke foto input
+        prod_data = context.user_data.get('new_product', {})
+        prod_data['stok'] = stok
+        context.user_data['new_product'] = prod_data
+        
+        # Tampilkan menu foto
+        keyboard = [
+            [InlineKeyboardButton("📷 Upload Foto", callback_data="kp_upload_foto")],
+            [InlineKeyboardButton("⏭️  Skip (Tidak Ada Foto)", callback_data="kp_skip_foto")],
+        ]
+        
+        await update.message.reply_text(
+            "📸 *TAMBAHKAN FOTO PRODUK?*\n\n"
+            "Foto produk adalah optional (tidak wajib).\n"
+            "Anda bisa upload foto atau langsung skip.\n\n"
+            "Pilih opsi di bawah:",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode="Markdown"
+        )
+        
+        return KELOLA_PRODUK_TAMBAH_FOTO
+    
+    async def handle_kp_upload_foto_btn(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Handle klik tombol upload foto."""
+        query = update.callback_query
+        await query.answer()
+        
+        await query.edit_message_text(
+            text=(
+                "📸 *UPLOAD FOTO PRODUK*\n\n"
+                "Silakan kirim foto produk Anda.\n"
+                "File harus berformat: JPG, PNG, atau JPEG\n\n"
+                "Atau ketik '/cancel' atau tombol skip untuk melewati."
+            ),
+            parse_mode="Markdown"
+        )
+        
+        return KELOLA_PRODUK_TAMBAH_FOTO
+    
+    async def handle_kp_foto(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Handle foto upload dari user."""
         try:
-            prod_data = context.user_data['new_product']
-            prod_data['stok'] = stok
+            prod_data = context.user_data.get('new_product', {})
+            photo = update.message.photo[-1]  # Get the largest photo
+            
+            # Download dan simpan foto
+            file = await self.application.bot.get_file(photo.file_id)
+            
+            # Buat folder untuk foto jika belum ada
+            import os
+            foto_dir = "product_photos"
+            if not os.path.exists(foto_dir):
+                os.makedirs(foto_dir)
+            
+            # Simpan dengan nama: kode_produk.jpg
+            foto_filename = f"{prod_data['kode']}.jpg"
+            foto_path = os.path.join(foto_dir, foto_filename)
+            
+            # Download file foto
+            await file.download_to_drive(foto_path)
+            
+            # Simpan path ke context
+            prod_data['foto_path'] = foto_path
+            context.user_data['new_product'] = prod_data
+            
+            # Verifikasi dan simpan produk
+            await self._save_product_to_db(update, context)
+            
+            logger.info(f"[+] Product with photo added: {prod_data['kode']}")
+            return KELOLA_PRODUK_MENU
+            
+        except Exception as e:
+            logger.error(f"[-] Error handling photo: {e}", exc_info=True)
+            await update.message.reply_text(
+                f"❌ Gagal upload foto: {e}\n\n"
+                "Silakan coba lagi atau skip.",
+                parse_mode="Markdown"
+            )
+            return KELOLA_PRODUK_TAMBAH_FOTO
+    
+    async def handle_kp_skip_foto(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Handle skip foto (callback button)."""
+        query = update.callback_query
+        await query.answer()
+        
+        context.user_data['new_product']['foto_path'] = None
+        
+        # Simpan produk ke database
+        await self._save_product_to_db_from_callback(update, context)
+        
+        return KELOLA_PRODUK_MENU
+    
+    async def handle_kp_skip_foto_text(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Handle skip foto dari text input (user ketik apapun untuk skip)."""
+        context.user_data['new_product']['foto_path'] = None
+        
+        # Simpan produk ke database
+        await self._save_product_to_db(update, context)
+        
+        return KELOLA_PRODUK_MENU
+    
+    async def _save_product_to_db(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Simpan produk ke database (helper untuk message update)."""
+        try:
+            prod_data = context.user_data.get('new_product', {})
             
             self.db.add_product(
                 kode=prod_data['kode'],
                 nama=prod_data['nama'],
                 harga=prod_data['harga'],
-                stok=stok
+                stok=prod_data['stok'],
+                foto_path=prod_data.get('foto_path')
             )
             
-            # Invalidate cache setelah menambah produk
+            # Invalidate cache
             self.invalidate_products_cache()
+            
+            foto_status = "✅ dengan foto" if prod_data.get('foto_path') else "tanpa foto"
             msg = (
                 f"[+] *PRODUK BERHASIL DITAMBAHKAN!*\n\n"
                 f"KODE: {prod_data['kode']}\n"
                 f"NAMA: {prod_data['nama']}\n"
                 f"HARGA: {format_rp(prod_data['harga'])}\n"
-                f"STOK: {stok} pcs\n\n"
+                f"STOK: {prod_data['stok']} pcs\n"
+                f"FOTO: {foto_status}\n\n"
                 f"Data produk tersimpan di database."
             )
             
@@ -1624,13 +1911,69 @@ class TelegramPOSSystem:
                 parse_mode="Markdown"
             )
             
-            logger.info(f"[+] Product added: {prod_data['kode']} - {prod_data['nama']}")
+            logger.info(f"[+] Product added: {prod_data['kode']} - {prod_data['nama']} (foto: {prod_data.get('foto_path', 'None')})")
+            
+            # Cleanup context
+            context.user_data.pop('new_product', None)
             
         except Exception as e:
             logger.error(f"[-] Error saving product: {e}", exc_info=True)
             await update.message.reply_text(f"[ERROR] Gagal menyimpan: {e}")
-        
-        return KELOLA_PRODUK_MENU
+            # Cleanup context even on error
+            context.user_data.pop('new_product', None)
+    
+    async def _save_product_to_db_from_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Simpan produk ke database (helper untuk callback query update)."""
+        try:
+            query = update.callback_query
+            prod_data = context.user_data.get('new_product', {})
+            
+            self.db.add_product(
+                kode=prod_data['kode'],
+                nama=prod_data['nama'],
+                harga=prod_data['harga'],
+                stok=prod_data['stok'],
+                foto_path=prod_data.get('foto_path')
+            )
+            
+            # Invalidate cache
+            self.invalidate_products_cache()
+            
+            foto_status = "✅ dengan foto" if prod_data.get('foto_path') else "tanpa foto"
+            msg = (
+                f"[+] *PRODUK BERHASIL DITAMBAHKAN!*\n\n"
+                f"KODE: {prod_data['kode']}\n"
+                f"NAMA: {prod_data['nama']}\n"
+                f"HARGA: {format_rp(prod_data['harga'])}\n"
+                f"STOK: {prod_data['stok']} pcs\n"
+                f"FOTO: {foto_status}\n\n"
+                f"Data produk tersimpan di database."
+            )
+            
+            keyboard = [
+                [InlineKeyboardButton("[+] Tambah Lagi", callback_data="kp_tambah")],
+                [InlineKeyboardButton("[LIST] Lihat Semua", callback_data="kp_lihat")],
+                [InlineKeyboardButton("[KEMBALI]", callback_data="kembali_kp")],
+            ]
+            
+            # Send NEW message instead of editing to avoid callback issues
+            await query.message.reply_text(
+                msg,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
+            
+            logger.info(f"[+] Product added: {prod_data['kode']} - {prod_data['nama']} (foto: {prod_data.get('foto_path', 'None')})")
+            
+            # Cleanup context
+            context.user_data.pop('new_product', None)
+            
+        except Exception as e:
+            logger.error(f"[-] Error saving product: {e}", exc_info=True)
+            await query.message.reply_text(f"[ERROR] Gagal menyimpan: {e}")
+            # Cleanup context even on error
+            context.user_data.pop('new_product', None)
+    
     
     async def kelola_produk_edit_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         """Mulai edit produk - tampilkan opsi field."""
@@ -1796,27 +2139,72 @@ class TelegramPOSSystem:
     # ========================================================================
     
     def run(self):
-        """Run Telegram bot (blocking call)."""
+        """Run Telegram bot (now without auto-restart due to event loop issues)."""
         print("\n" + "=" * 70)
         print("[TELEGRAM POS SYSTEM - STARTING]".center(70))
         print("=" * 70)
         print(f"Bot Token: {self.token[:20]}...")
         print(f"Admin Chat ID: {self.config_manager.config.get('admin_chat_id')}")
+        print(f"Auto-restart: {'ENABLED' if self.auto_restart_enabled else 'DISABLED'}")
         print("=" * 70)
         print("\n[*] Bot waiting for commands...")
         print("    Send /start or /menu to begin")
         print("=" * 70 + "\n")
         
         try:
-            # Run polling directly - python-telegram-bot handles event loop internally
-            self.application.run_polling(allowed_updates=Update.ALL_TYPES)
+            if self.auto_restart_enabled:
+                # Mode with auto-restart (NOT RECOMMENDED due to event loop issues)
+                loop_count = 0
+                while True:
+                    loop_count += 1
+                    run_start_time = datetime.now().strftime('%H:%M:%S')
+                    logger.info(f"[>] Polling loop #{loop_count} started at {run_start_time}")
+                    print(f"[*] Polling session #{loop_count} started at {run_start_time}")
+                    
+                    try:
+                        # Schedule restart timer
+                        self._schedule_restart()
+                        
+                        # Run polling - akan dihentikan oleh timer setelah interval
+                        self.application.run_polling(allowed_updates=Update.ALL_TYPES)
+                        
+                    except Exception as e:
+                        logger.error(f"[-] Polling error in loop #{loop_count}: {e}", exc_info=True)
+                        print(f"[!] Polling error: {e}")
+                    finally:
+                        # Cleanup timer
+                        self._cleanup_restart_timer()
+                    
+                    # Log setelah polling selesai
+                    run_end_time = datetime.now().strftime('%H:%M:%S')
+                    logger.info(f"[<] Polling loop #{loop_count} ended at {run_end_time}")
+                    print(f"[*] Polling session #{loop_count} ended at {run_end_time}")
+                    
+                    # Recreate application untuk restart
+                    print("\n[!] Restarting application...\n")
+                    self.application = Application.builder().token(self.token).build()
+                    self._register_handlers()
+            else:
+                # Mode tanpa restart (RECOMMENDED)
+                logger.info("[+] Running bot in stable mode (without auto-restart)")
+                print("[+] Running bot in stable mode (without auto-restart)\n")
+                
+                try:
+                    # Run polling directly - stable, no event loop issues
+                    self.application.run_polling(allowed_updates=Update.ALL_TYPES)
+                except Exception as e:
+                    logger.error(f"[-] Polling error: {e}", exc_info=True)
+                    print(f"[!] Polling error: {e}")
+                
         except KeyboardInterrupt:
-            print("\n\n[!] Bot stopped by user")
+            print("\n\n[!] Bot stopped by user (Ctrl+C)")
+            logger.info("[!] Bot stopped by user (Ctrl+C)")
+            self._cleanup_restart_timer()
         except Exception as e:
-            print(f"\n\n[ERROR] {e}")
+            print(f"\n\n[ERROR] Fatal error: {e}")
+            logger.error(f"Error running bot: {e}", exc_info=True)
             import traceback
             traceback.print_exc()
-            logger.error(f"Error running bot: {e}", exc_info=True)
 
 # ============================================================================
 # MAIN ENTRY POINT

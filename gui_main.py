@@ -6,7 +6,7 @@
 # ============================================================================
 
 import tkinter as tk
-from tkinter import ttk, messagebox, simpledialog
+from tkinter import ttk, messagebox, simpledialog, filedialog
 from datetime import datetime, timedelta
 from tkcalendar import DateEntry
 import os
@@ -150,7 +150,7 @@ class LoginWindow(tk.Toplevel):
         exit_btn = ttk.Button(
             btn_frame,
             text="❌ Keluar",
-            command=self.quit
+            command=self.destroy
         )
         exit_btn.pack(side='left', padx=5)
         
@@ -1191,10 +1191,10 @@ Kembalian        : {format_rp(trans['kembalian'])}
         tree.bind('<Double-1>', lambda e: self._handle_product_click(tree, products))
     
     def show_add_product(self):
-        """Show add product dialog."""
+        """Show add product dialog dengan opsi foto produk."""
         dialog = tk.Toplevel(self)
         dialog.title("➕ Tambah Produk Baru")
-        dialog.geometry("400x400")
+        dialog.geometry("450x500")
         dialog.configure(bg=COLORS['bg_main'])
         
         # Header
@@ -1209,6 +1209,7 @@ Kembalian        : {format_rp(trans['kembalian'])}
         
         # Form fields
         fields = {}
+        foto_path_var = tk.StringVar(value="")
         
         form_frame = ttk.Frame(dialog)
         form_frame.pack(fill='both', expand=True, padx=20, pady=10)
@@ -1246,6 +1247,37 @@ Kembalian        : {format_rp(trans['kembalian'])}
             entry.pack(fill='x', pady=5)
             fields[field_name] = entry
         
+        # Foto field (OPSIONAL)
+        ttk.Label(form_frame, text="📸 Foto Produk (Opsional):", font=FONTS['normal']).pack(anchor='w', pady=(15, 5))
+        
+        foto_frame = ttk.Frame(form_frame)
+        foto_frame.pack(fill='x', pady=5)
+        
+        foto_display = ttk.Label(
+            foto_frame,
+            text="Belum ada file dipilih",
+            font=FONTS['small'],
+            foreground=COLORS['text_secondary']
+        )
+        foto_display.pack(side='left', fill='x', expand=True)
+        
+        def browse_photo():
+            filename = filedialog.askopenfilename(
+                title="Pilih Foto Produk",
+                filetypes=[("Image Files", "*.jpg *.jpeg *.png *.bmp"), ("All Files", "*.*")]
+            )
+            if filename:
+                foto_path_var.set(filename)
+                display_name = os.path.basename(filename)
+                foto_display.config(text=f"✅ {display_name}", foreground=COLORS['success'])
+        
+        browse_btn = ttk.Button(
+            foto_frame,
+            text="📁 Browse",
+            command=browse_photo
+        )
+        browse_btn.pack(side='right', padx=5)
+        
         # Buttons
         btn_frame = ttk.Frame(dialog)
         btn_frame.pack(fill='x', padx=20, pady=15)
@@ -1261,8 +1293,28 @@ Kembalian        : {format_rp(trans['kembalian'])}
                     messagebox.showwarning("Peringatan", "Semua field harus diisi!")
                     return
                 
-                if self.product_manager.add_product(kode, nama, harga, stok):
-                    messagebox.showinfo("Sukses", f"Produk '{nama}' (Kode: {kode}) berhasil ditambahkan!")
+                # Handle foto upload
+                foto_path = None
+                foto_file = foto_path_var.get()
+                if foto_file and os.path.exists(foto_file):
+                    try:
+                        import shutil
+                        if not os.path.exists('product_photos'):
+                            os.makedirs('product_photos')
+                        
+                        filename = os.path.basename(foto_file)
+                        # Rename dengan kode produk untuk unique identifier
+                        filename_new = f"{kode}_{filename}"
+                        foto_path = os.path.join('product_photos', filename_new)
+                        
+                        shutil.copy2(foto_file, foto_path)
+                    except Exception as e:
+                        messagebox.showwarning("Peringatan", f"Gagal menyimpan foto: {e}")
+                        foto_path = None
+                
+                if self.product_manager.add_product(kode, nama, harga, stok, foto_path=foto_path):
+                    foto_status = "dengan foto" if foto_path else "tanpa foto"
+                    messagebox.showinfo("Sukses", f"Produk '{nama}' (Kode: {kode}) berhasil ditambahkan! ({foto_status})")
                     log_product_added(kode, nama)
                     dialog.destroy()
                     self.show_products()
@@ -1295,7 +1347,12 @@ Kembalian        : {format_rp(trans['kembalian'])}
         values = item['values']
         
         # Extract kode and strip whitespace
+        # Note: Treeview converts numeric strings to integers, so we need to format back to 4-digit code
         product_kode = str(values[1]).strip()
+        
+        # If the kode is numeric and shorter than 4 digits, pad with leading zeros
+        if product_kode.isdigit() and len(product_kode) < 4:
+            product_kode = product_kode.zfill(4)
         
         # Find the actual product object from the products list
         selected_product = None
@@ -1341,7 +1398,7 @@ Kembalian        : {format_rp(trans['kembalian'])}
         delete_btn.pack(side='left', padx=5)
     
     def _show_edit_product_dialog(self, kode, parent_dialog):
-        """Show edit product dialog."""
+        """Show edit product dialog with photo upload option."""
         # Ensure kode is stripped of whitespace
         kode = str(kode).strip()
         
@@ -1357,11 +1414,12 @@ Kembalian        : {format_rp(trans['kembalian'])}
         
         dialog = tk.Toplevel(self)
         dialog.title(f"✏️ Edit Produk - {kode}")
-        dialog.geometry("400x350")
+        dialog.geometry("450x500")
         dialog.configure(bg=COLORS['bg_main'])
         
         # Form fields
         fields = {}
+        foto_path_var = tk.StringVar(value=product.foto_path or "")
         
         form_frame = ttk.Frame(dialog)
         form_frame.pack(fill='both', expand=True, padx=20, pady=10)
@@ -1381,6 +1439,45 @@ Kembalian        : {format_rp(trans['kembalian'])}
             entry.pack(fill='x', pady=5)
             fields[field_name] = entry
         
+        # Foto field (OPSIONAL)
+        ttk.Label(form_frame, text="📸 Foto Produk (Opsional):", font=FONTS['normal']).pack(anchor='w', pady=(15, 5))
+        
+        foto_frame = ttk.Frame(form_frame)
+        foto_frame.pack(fill='x', pady=5)
+        
+        # Show current foto path if exists
+        current_foto_text = "Belum ada file dipilih"
+        current_foto_color = COLORS['text_secondary']
+        if product.foto_path:
+            current_foto_text = f"✅ {os.path.basename(product.foto_path)}"
+            current_foto_color = COLORS['success']
+        
+        foto_display = tk.Label(
+            foto_frame,
+            text=current_foto_text,
+            font=FONTS['small'],
+            fg=current_foto_color,
+            bg=COLORS['bg_main']
+        )
+        foto_display.pack(side='left', fill='x', expand=True)
+        
+        def browse_photo():
+            filename = filedialog.askopenfilename(
+                title="Pilih Foto Produk",
+                filetypes=[("Image Files", "*.jpg *.jpeg *.png *.bmp"), ("All Files", "*.*")]
+            )
+            if filename:
+                foto_path_var.set(filename)
+                display_name = os.path.basename(filename)
+                foto_display.config(text=f"✅ {display_name}", fg=COLORS['success'])
+        
+        browse_btn = ttk.Button(
+            foto_frame,
+            text="📁 Browse",
+            command=browse_photo
+        )
+        browse_btn.pack(side='right', padx=5)
+        
         # Buttons
         btn_frame = ttk.Frame(dialog)
         btn_frame.pack(fill='x', padx=20, pady=15)
@@ -1392,6 +1489,24 @@ Kembalian        : {format_rp(trans['kembalian'])}
                     'harga': int(fields['harga'].get().strip()),
                     'stok': int(fields['stok'].get().strip()),
                 }
+                
+                # Handle foto upload
+                foto_file = foto_path_var.get()
+                if foto_file and os.path.exists(foto_file):
+                    try:
+                        import shutil
+                        if not os.path.exists('product_photos'):
+                            os.makedirs('product_photos')
+                        
+                        filename = os.path.basename(foto_file)
+                        # Rename dengan kode produk untuk unique identifier
+                        filename_new = f"{kode}_{filename}"
+                        foto_path = os.path.join('product_photos', filename_new)
+                        
+                        shutil.copy2(foto_file, foto_path)
+                        update_data['foto_path'] = foto_path
+                    except Exception as e:
+                        messagebox.showwarning("Peringatan", f"Gagal menyimpan foto: {e}")
                 
                 if self.product_manager.update_product(kode, **update_data):
                     messagebox.showinfo("Sukses", "Produk berhasil diupdate!")

@@ -284,7 +284,7 @@ class POSSystem:
                 self.pause()
     
     def tambah_produk(self):
-        """Proses tambah produk baru dengan kode otomatis."""
+        """Proses tambah produk baru dengan kode otomatis dan opsi foto."""
         self.clear_screen()
         self.draw_header("➕ TAMBAH PRODUK BARU")
         
@@ -311,12 +311,44 @@ class POSSystem:
             if stok is None:
                 return
             
+            # Step: Upload foto (opsional)
+            foto_path = None
+            print("\n📸 Langkah 4: Tambah Foto Produk (OPSIONAL)")
+            print("   Masukkan path file foto atau tekan Enter untuk skip")
+            foto_input = input("   Path file foto: ").strip()
+            
+            if foto_input:
+                if os.path.exists(foto_input):
+                    # Copy file ke folder product_photos
+                    try:
+                        import shutil
+                        if not os.path.exists('product_photos'):
+                            os.makedirs('product_photos')
+                        
+                        filename = os.path.basename(foto_input)
+                        # Rename dengan kode produk untuk unique identifier
+                        filename_new = f"{kode}_{filename}"
+                        foto_path = os.path.join('product_photos', filename_new)
+                        
+                        shutil.copy2(foto_input, foto_path)
+                        print(f"✅ Foto berhasil disalin ke: {foto_path}")
+                    except Exception as e:
+                        print(f"⚠️ Gagal menyalin foto: {e}")
+                        foto_path = None
+                else:
+                    print(f"⚠️ File tidak ditemukan: {foto_input}")
+                    foto_path = None
+            else:
+                print("   ⏭️  Foto tidak ditambahkan")
+            
             # Tambah ke database
-            if self.product_manager.add_product(kode, nama, harga, stok):
+            if self.product_manager.add_product(kode, nama, harga, stok, foto_path=foto_path):
                 print(f"\n✅ Produk '{nama}' berhasil ditambahkan!")
                 print(f"   Kode: {kode}")
                 print(f"   Harga: {format_rp(harga)}")
                 print(f"   Stok: {stok}")
+                if foto_path:
+                    print(f"   Foto: {foto_path}")
             else:
                 print("❌ Gagal menambahkan produk")
             

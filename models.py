@@ -153,6 +153,7 @@ class Product:
         nama (str): Nama produk
         harga (int): Harga dalam Rupiah
         stok (int): Jumlah stok
+        foto_path (str): Path ke foto produk (opsional)
         
     Methods:
         from_dict(): Konversi dict ke Product object
@@ -166,6 +167,7 @@ class Product:
     nama: str = None
     harga: int = None
     stok: int = None
+    foto_path: Optional[str] = None
     
     def __post_init__(self):
         """
@@ -198,7 +200,8 @@ class Product:
             kode=data.get('kode'),
             nama=data.get('nama'),
             harga=data.get('harga'),
-            stok=data.get('stok')
+            stok=data.get('stok'),
+            foto_path=data.get('foto_path')
         )
     
     def to_dict(self) -> dict:
@@ -213,7 +216,8 @@ class Product:
             'kode': self.kode,
             'nama': self.nama,
             'harga': self.harga,
-            'stok': self.stok
+            'stok': self.stok,
+            'foto_path': self.foto_path
         }
     
     def validate(self):
