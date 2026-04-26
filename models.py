@@ -415,6 +415,7 @@ class Transaction:
     subtotal: int = 0  # Sebelum discount/tax
     discount_percent: float = 0.0  # Dalam persen
     discount_amount: int = 0  # Dalam rupiah
+    discount_type: str = "percent"  # "percent" atau "fixed" (fixed = rupiah)
     tax_percent: float = 0.0  # Dalam persen
     tax_amount: int = 0  # Dalam rupiah
     total: int = 0  # Setelah discount/tax
@@ -484,7 +485,9 @@ class Transaction:
         
         Formula:
         1. Hitung subtotal dari semua item
-        2. Hitung diskon: discount_amount = subtotal * (discount_percent / 100)
+        2. Hitung diskon: 
+           - Jika discount_type == "percent": discount_amount = subtotal * (discount_percent / 100)
+           - Jika discount_type == "fixed": gunakan discount_amount langsung
         3. Hitung pajak: tax_amount = (subtotal - discount_amount) * (tax_percent / 100)
         4. Total = subtotal - discount_amount + tax_amount
         
@@ -495,8 +498,13 @@ class Transaction:
         self.subtotal = sum(item.subtotal for item in self.items)
         
         # Step 2: Hitung discount
-        if self.discount_percent > 0:
+        if self.discount_type == "percent" and self.discount_percent > 0:
             self.discount_amount = int(self.subtotal * (self.discount_percent / 100))
+        elif self.discount_type == "fixed":
+            # discount_amount sudah di-set oleh set_discount_amount()
+            # Pastikan tidak melebihi subtotal
+            if self.discount_amount > self.subtotal:
+                self.discount_amount = self.subtotal
         else:
             self.discount_amount = 0
         
@@ -529,8 +537,35 @@ class Transaction:
             raise ValidationError("Diskon harus antara 0-100%")
         
         self.discount_percent = discount_percent
+        self.discount_type = "percent"
         self.calculate_total()
         logger.info(f"Discount set: {discount_percent}% (amount: Rp{self.discount_amount:,})")
+        return True
+    
+    def set_discount_amount(self, discount_amount: int) -> bool:
+        """
+        Set diskon dalam rupiah (fixed amount).
+        
+        Args:
+            discount_amount (int): Diskon dalam rupiah
+            
+        Returns:
+            bool: True jika berhasil
+            
+        Raises:
+            ValidationError: Jika diskon invalid
+        """
+        discount_amount = validate_harga(discount_amount)
+        
+        if discount_amount < 0 or discount_amount > self.subtotal:
+            logger.warning(f"Invalid discount amount: Rp{discount_amount:,}")
+            raise ValidationError(f"Diskon harus antara 0-{format_rp(self.subtotal)}")
+        
+        self.discount_amount = discount_amount
+        self.discount_type = "fixed"
+        self.discount_percent = 0  # Reset percentage
+        self.calculate_total()
+        logger.info(f"Discount set: Rp{discount_amount:,} (fixed amount)")
         return True
     
     def set_tax(self, tax_percent: float) -> bool:

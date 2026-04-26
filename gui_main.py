@@ -493,7 +493,13 @@ class POSGUIApplication(tk.Tk):
         
         # Add mouse wheel scrolling support
         def _on_mousewheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            try:
+                # Check if canvas still exists before scrolling
+                if canvas.winfo_exists():
+                    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            except tk.TclError:
+                # Canvas widget sudah dihapus, ignore error
+                pass
         
         canvas.bind_all("<MouseWheel>", _on_mousewheel)
         
@@ -1430,18 +1436,44 @@ Kembalian        : {format_rp(trans['kembalian'])}
                     tree.delete(item)
                 
                 # Filter and display products
-                filtered_products = [p for p in products if 
-                                    search_term in (p.get('nama', '') or '').lower() or
-                                    search_term in (p.get('kode', '') or '').lower()]
+                filtered_products = []
+                for p in products:
+                    # Handle both dict and Product object
+                    if isinstance(p, dict):
+                        nama = (p.get('nama', '') or '').lower()
+                        kode = (p.get('kode', '') or '').lower()
+                    else:
+                        # Product object
+                        nama = (p.nama or '').lower()
+                        kode = (p.kode or '').lower()
+                    
+                    if search_term in nama or search_term in kode:
+                        filtered_products.append(p)
                 
+                # Add filtered products to table
                 for i, product in enumerate(filtered_products, 1):
+                    # Handle both dict and Product object
+                    if isinstance(product, dict):
+                        kode = product.get('kode', 'N/A')
+                        nama = product.get('nama', 'N/A')
+                        harga = product.get('harga', 0)
+                        stok = product.get('stok', 0)
+                        satuan = product.get('satuan', 'pcs')
+                    else:
+                        # Product object
+                        kode = product.kode
+                        nama = product.nama
+                        harga = product.harga
+                        stok = product.stok
+                        satuan = product.satuan
+                    
                     tree.insert('', 'end', values=(
                         str(i),
-                        product.get('kode', 'N/A'),
-                        product.get('nama', 'N/A'),
-                        format_rp(product.get('harga', 0)),
-                        f"{product.get('stok', 0)} {product.get('satuan', '')}",
-                        product.get('satuan', 'N/A'),
+                        kode,
+                        nama,
+                        format_rp(harga),
+                        f"{stok} {satuan}",
+                        satuan,
                         "✏️ Edit | 🗑️ Hapus"
                     ))
                 
@@ -1466,100 +1498,6 @@ Kembalian        : {format_rp(trans['kembalian'])}
             show_loading=False
         )
         product_operation.start()
-        search_frame.pack(fill='x', pady=10, padx=5)
-        
-        search_label = ttk.Label(search_frame, text="🔍 Cari Produk:", font=FONTS['normal'])
-        search_label.pack(side='left', padx=5)
-        
-        search_var = tk.StringVar()
-        
-        search_entry = ttk.Entry(search_frame, textvariable=search_var, width=40)
-        search_entry.pack(side='left', padx=5, fill='x', expand=True)
-        
-        clear_btn = ttk.Button(
-            search_frame,
-            text="✕ Hapus",
-            command=lambda: search_var.set("")
-        )
-        clear_btn.pack(side='right', padx=5)
-        
-        # Create treeview with scrollbar
-        tree_frame = ttk.Frame(self.content_area)
-        tree_frame.pack(fill='both', expand=True, pady=10)
-        
-        columns = ('No', 'Kode', 'Nama', 'Harga', 'Stok', 'Satuan', 'Aksi')
-        tree = ttk.Treeview(tree_frame, columns=columns, height=15, show='headings')
-        
-        # Define column headings
-        tree.heading('No', text='No')
-        tree.heading('Kode', text='Kode Produk')
-        tree.heading('Nama', text='Nama Produk')
-        tree.heading('Harga', text='Harga')
-        tree.heading('Stok', text='Stok')
-        tree.heading('Satuan', text='Satuan')
-        tree.heading('Aksi', text='Aksi')
-        
-        tree.column('No', width=30)
-        tree.column('Kode', width=80)
-        tree.column('Nama', width=250)
-        tree.column('Harga', width=100)
-        tree.column('Stok', width=60)
-        tree.column('Satuan', width=60)
-        tree.column('Aksi', width=120)
-        
-        # Add scrollbar
-        scrollbar = ttk.Scrollbar(tree_frame, orient='vertical', command=tree.yview)
-        tree.configure(yscroll=scrollbar.set)
-        scrollbar.pack(side='right', fill='y')
-        tree.pack(fill='both', expand=True)
-        
-        # Store reference to original products for filtering
-        self._product_list = products
-        self._product_tree = tree
-        self._all_products = products
-        
-        def update_product_list(*args):
-            """Update product list based on search input."""
-            search_term = search_var.get().lower().strip()
-            
-            # Clear existing items
-            for item in tree.get_children():
-                tree.delete(item)
-            
-            # Filter products
-            filtered_products = []
-            if search_term:
-                for prod in products:
-                    if (search_term in str(prod.kode).lower() or 
-                        search_term in prod.nama.lower()):
-                        filtered_products.append(prod)
-            else:
-                filtered_products = products
-            
-            # Add filtered products to table
-            for i, prod in enumerate(filtered_products, 1):
-                tree.insert('', 'end', values=(
-                    str(i),
-                    prod.kode,
-                    prod.nama,
-                    format_rp(prod.harga),
-                    f"{prod.stok} {format_satuan(prod.satuan)}",
-                    format_satuan(prod.satuan),
-                    "✏️ Edit | 🗑️ Hapus"
-                ))
-            
-            # Store filtered list for click handler
-            self._current_filtered_products = filtered_products
-        
-        # Bind search input to update function
-        search_var.trace('w', update_product_list)
-        
-        # Initial population of tree
-        self._current_filtered_products = products
-        update_product_list()
-        
-        # Add click handler for edit/delete
-        tree.bind('<Double-1>', lambda e: self._handle_product_click(tree, self._current_filtered_products))
     
     def show_add_product(self):
         """Show add product dialog dengan opsi foto produk."""
@@ -1752,7 +1690,13 @@ Kembalian        : {format_rp(trans['kembalian'])}
         # Find the actual product object from the products list
         selected_product = None
         for prod in products:
-            if str(prod.kode).strip() == product_kode:
+            # Handle both dict and Product object
+            if isinstance(prod, dict):
+                prod_kode = str(prod.get('kode', '')).strip()
+            else:
+                prod_kode = str(prod.kode).strip()
+            
+            if prod_kode == product_kode:
                 selected_product = prod
                 break
         
@@ -2121,19 +2065,29 @@ Kembalian        : {format_rp(trans['kembalian'])}
         discount_tax_frame = ttk.LabelFrame(discount_payment_container, text="💰 Diskon & Pajak", padding=10)
         discount_tax_frame.pack(side='left', fill='both', expand=True, padx=(0, 5))
         
-        # Discount section
-        discount_inner = ttk.Frame(discount_tax_frame)
-        discount_inner.pack(side='left', padx=20)
+        # Discount section - Percentage
+        discount_pct_inner = ttk.Frame(discount_tax_frame)
+        discount_pct_inner.pack(side='left', padx=10)
         
-        ttk.Label(discount_inner, text="Diskon (%):", font=FONTS['normal']).pack(side='left', padx=5)
+        ttk.Label(discount_pct_inner, text="Diskon (%):", font=FONTS['normal']).pack(side='left', padx=5)
         self.discount_var = tk.StringVar(value="0")
-        discount_entry = ttk.Entry(discount_inner, textvariable=self.discount_var, width=10)
-        discount_entry.pack(side='left', padx=5)
-        discount_entry.bind('<KeyRelease>', lambda e: self._update_discount())
+        discount_pct_entry = ttk.Entry(discount_pct_inner, textvariable=self.discount_var, width=10)
+        discount_pct_entry.pack(side='left', padx=5)
+        discount_pct_entry.bind('<KeyRelease>', lambda e: self._update_discount())
+        
+        # Discount section - Fixed (Rupiah)
+        discount_rp_inner = ttk.Frame(discount_tax_frame)
+        discount_rp_inner.pack(side='left', padx=10)
+        
+        ttk.Label(discount_rp_inner, text="Diskon (Rp):", font=FONTS['normal']).pack(side='left', padx=5)
+        self.discount_amount_var = tk.StringVar(value="0")
+        discount_rp_entry = ttk.Entry(discount_rp_inner, textvariable=self.discount_amount_var, width=15)
+        discount_rp_entry.pack(side='left', padx=5)
+        discount_rp_entry.bind('<KeyRelease>', lambda e: self._update_discount_amount())
         
         # Tax section
         tax_inner = ttk.Frame(discount_tax_frame)
-        tax_inner.pack(side='left', padx=20)
+        tax_inner.pack(side='left', padx=10)
         
         ttk.Label(tax_inner, text="Pajak - PPN (%):", font=FONTS['normal']).pack(side='left', padx=5)
         self.tax_var = tk.StringVar(value="0")
@@ -2167,6 +2121,9 @@ Kembalian        : {format_rp(trans['kembalian'])}
         
         # Start a new transaction
         self.transaction_handler.start_transaction()
+        self.discount_var.set("0")
+        self.discount_amount_var.set("0")
+        self.tax_var.set("0")
         self._update_cart_display()
     
     def _add_transaction_item(self):
@@ -2295,7 +2252,7 @@ Kembalian        : {format_rp(trans['kembalian'])}
             self.total_label.config(text="Rp 0")
     
     def _update_discount(self):
-        """Update discount and recalculate total."""
+        """Update discount (percentage) and recalculate total."""
         try:
             discount_percent = float(self.discount_var.get() or "0")
             
@@ -2304,6 +2261,9 @@ Kembalian        : {format_rp(trans['kembalian'])}
                 messagebox.showwarning("Peringatan", "Diskon harus antara 0-100%")
                 self.discount_var.set("0")
                 return
+            
+            # Reset discount amount jika menggunakan percentage
+            self.discount_amount_var.set("0")
             
             # Set discount di transaction
             trans = self.transaction_handler.transaction_service.get_current_transaction()
@@ -2314,6 +2274,42 @@ Kembalian        : {format_rp(trans['kembalian'])}
         except ValueError:
             messagebox.showwarning("Peringatan", "Diskon harus berupa angka!")
             self.discount_var.set("0")
+    
+    def _update_discount_amount(self):
+        """Update discount (fixed rupiah amount) and recalculate total."""
+        try:
+            discount_text = self.discount_amount_var.get().strip()
+            
+            if not discount_text or discount_text == "0":
+                # Reset ke diskon percentage jika kosong
+                trans = self.transaction_handler.transaction_service.get_current_transaction()
+                if trans:
+                    trans.discount_type = "percent"
+                    trans.discount_amount = 0
+                    trans.calculate_total()
+                self._update_cart_display()
+                return
+            
+            discount_amount = int(discount_text)
+            
+            # Validasi
+            if discount_amount < 0:
+                messagebox.showwarning("Peringatan", "Diskon tidak boleh negatif!")
+                self.discount_amount_var.set("0")
+                return
+            
+            # Reset discount percentage jika menggunakan fixed amount
+            self.discount_var.set("0")
+            
+            # Set discount di transaction
+            trans = self.transaction_handler.transaction_service.get_current_transaction()
+            if trans:
+                trans.set_discount_amount(discount_amount)
+                self._update_cart_display()
+                logger.info(f"Discount updated: Rp{discount_amount:,}")
+        except ValueError:
+            messagebox.showwarning("Peringatan", "Diskon harus berupa angka!")
+            self.discount_amount_var.set("0")
     
     def _update_tax(self):
         """Update tax and recalculate total."""
@@ -2361,25 +2357,29 @@ Kembalian        : {format_rp(trans['kembalian'])}
             if trans_id:
                 kembalian = bayar - summary['total']
                 
-                # Ask to print receipt
-                print_resi = messagebox.askyesno(
-                    "Transaksi Selesai",
-                    f"✅ Transaksi berhasil!\n\nID: {trans_id}\nTotal: {format_rp(summary['total'])}\nKembalian: {format_rp(kembalian)}\n\n🖨️ Cetak resi?"
+                # Auto-save receipt to file (PENTING: jangan sampai lupa disimpan)
+                self.transaction_handler.print_receipt(
+                    store_name="TOKO UBI BAROKAH IBU AWANG",
+                    store_address="Jl. Desa Mekarbakti, pertigaan Cilembu."
                 )
                 
-                if print_resi:
-                    # Get transaction detail for printing
+                # Ask to view receipt
+                lihat_resi = messagebox.askyesno(
+                    "Transaksi Selesai",
+                    f"✅ Transaksi berhasil!\n\nID: {trans_id}\nTotal: {format_rp(summary['total'])}\nKembalian: {format_rp(kembalian)}\n\n📄 Lihat resi?"
+                )
+                
+                if lihat_resi:
+                    # Get transaction detail for viewing
                     transaction = self.db.get_transaction(trans_id)
                     if transaction:
                         trans_data = transaction.get('transaction', transaction)
                         items = transaction.get('items', [])
                         receipt_text = self._generate_receipt_text(trans_data, items)
                         self._print_report_dialog(receipt_text, f"resi_{trans_id}")
-                        messagebox.showinfo("Resi Dicetak", "✅ Resi berhasil dicetak!")
-                    self.show_transaction()
-                else:
-                    messagebox.showinfo("Resi Tidak Dicetak", "⚠️ Resi tidak dicetak.\nResi dapat diakses dari Dashboard atau Laporan.")
-                    self.show_transaction()
+                
+                messagebox.showinfo("Sukses", f"✅ Resi berhasil disimpan!\n📁 Lokasi: receipts/receipt_{trans_id}.txt")
+                self.show_transaction()
             else:
                 messagebox.showerror("Error", "Gagal memproses transaksi!")
         except ValueError:
@@ -2851,7 +2851,13 @@ RINGKASAN:
         
         # Bind mousewheel for scrolling
         def _on_mousewheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            try:
+                # Check if canvas still exists before scrolling
+                if canvas.winfo_exists():
+                    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            except tk.TclError:
+                # Canvas widget sudah dihapus, ignore error
+                pass
         canvas.bind_all("<MouseWheel>", _on_mousewheel)
         
         # Header
@@ -3607,7 +3613,13 @@ Dikembangkan dengan Python & Tkinter
             
             # Bind mousewheel for scrolling
             def _on_mousewheel(event):
-                canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+                try:
+                    # Check if canvas still exists before scrolling
+                    if canvas.winfo_exists():
+                        canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+                except tk.TclError:
+                    # Canvas widget sudah dihapus, ignore error
+                    pass
             canvas.bind_all("<MouseWheel>", _on_mousewheel)
             
             # Pack canvas and scrollbar

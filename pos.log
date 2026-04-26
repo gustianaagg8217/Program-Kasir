@@ -14216,3 +14216,364 @@ sqlite3.OperationalError: no such column: aktif
 2026-04-26 22:17:49 - INFO     - transaction - Saving transaction to database...
 2026-04-26 22:17:49 - INFO     - database - Transaction created: ID=21, total=Rp22,000, discount=0.0% (Rp0), tax=0.0% (Rp0)
 2026-04-26 22:17:49 - INFO     - transaction - Transaction completed: ID=21, total=Rp22,000, items=1, payment=Rp25,000
+2026-04-26 22:23:34 - INFO     - logger_config - ======================================================================
+2026-04-26 22:23:34 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-26 22:23:34 - INFO     - logger_config - ======================================================================
+2026-04-26 22:23:34 - INFO     - logger_config - Logging initialized at 2026-04-26 22:23:34
+2026-04-26 22:23:35 - INFO     - __main__ - Application initialization started
+2026-04-26 22:23:35 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:23:35 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:23:35 - INFO     - database - Transaction table migration completed
+2026-04-26 22:23:35 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:23:35 - INFO     - __main__ - Database initialized
+2026-04-26 22:23:35 - INFO     - __main__ - Showing login window
+2026-04-26 22:23:41 - INFO     - database - User login successful: shandi
+2026-04-26 22:23:41 - INFO     - __main__ - User login successful: shandi (cashier)
+2026-04-26 22:23:41 - INFO     - __main__ - Launching main application for user shandi
+2026-04-26 22:23:41 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:23:41 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:23:41 - INFO     - database - Transaction table migration completed
+2026-04-26 22:23:41 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:23:42 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-26 22:23:42 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-26 22:23:42 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:23:42 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:23:42 - INFO     - database - Transaction table migration completed
+2026-04-26 22:23:42 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:23:42 - INFO     - backup_manager - Backup already exists for today: backup_20260426.db
+2026-04-26 22:23:42 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-26 22:23:42 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-26 22:23:42 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-26 22:23:42 - INFO     - __main__ -   Enter → Add item
+2026-04-26 22:23:42 - INFO     - __main__ -   F1 → New transaction
+2026-04-26 22:23:42 - INFO     - __main__ -   F2 → Process payment
+2026-04-26 22:23:42 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-26 22:23:43 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 498, 'total_revenue': 7470000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 102, 'total_revenue': 2244000, 'rank': 2}]
+2026-04-26 22:23:43 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:23:43 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:23:43 - INFO     - __main__ - Product 1: Ubi Mentah (qty=498, revenue=7470000)
+2026-04-26 22:23:43 - INFO     - __main__ - Product 2: Ubi Bakar (qty=102, revenue=2244000)
+2026-04-26 22:23:56 - INFO     - __main__ - Product selected: 0002 - Ubi Mentah (9)
+2026-04-26 22:23:59 - INFO     - __main__ - Product selected: 0002 - Ubi Mentah (9)
+2026-04-26 22:23:59 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (3)
+2026-04-26 22:24:07 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (3)
+2026-04-26 22:24:08 - INFO     - __main__ - Product selected: 0003 - Toros uk 1 Kg (1000)
+2026-04-26 22:24:13 - INFO     - models - Discount set: Rp5 (fixed amount)
+2026-04-26 22:24:13 - INFO     - __main__ - Discount updated: Rp5
+2026-04-26 22:24:13 - INFO     - models - Discount set: Rp50 (fixed amount)
+2026-04-26 22:24:13 - INFO     - __main__ - Discount updated: Rp50
+2026-04-26 22:24:22 - INFO     - database - Stock reduced: product_id=8, qty=1, remaining=2
+2026-04-26 22:24:23 - INFO     - httpx - HTTP Request: POST https://api.telegram.org/bot8665091160:AAGiJKj9lqMnM63YnwJAc8SGeQOKVS5s-zw/sendMessage "HTTP/1.1 200 OK"
+2026-04-26 22:24:23 - INFO     - telegram_bot - Low stock notification sent: Ubi Bakar (stok=2)
+2026-04-26 22:24:23 - INFO     - database - Stock reduced: product_id=10, qty=1, remaining=999
+2026-04-26 22:24:23 - INFO     - transaction - Saving transaction to database...
+2026-04-26 22:24:23 - INFO     - database - Transaction created: ID=22, total=Rp22,000, discount=0% (Rp50), tax=0.0% (Rp0)
+2026-04-26 22:24:23 - INFO     - transaction - Transaction completed: ID=22, total=Rp22,000, items=2, payment=Rp25,000
+2026-04-26 22:24:47 - INFO     - __main__ - Product search: 'b' - Found 3 products
+2026-04-26 22:24:48 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-26 22:24:48 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-26 22:24:48 - INFO     - __main__ - Product search: 'baka' - Found 1 products
+2026-04-26 22:24:48 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (2)
+2026-04-26 22:24:48 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (2)
+2026-04-26 22:25:09 - INFO     - __main__ - Product selected: 0003 - Toros uk 1 Kg (999)
+2026-04-26 22:25:09 - INFO     - __main__ - Product selected: 0003 - Toros uk 1 Kg (999)
+2026-04-26 22:25:15 - INFO     - models - Discount set: Rp5 (fixed amount)
+2026-04-26 22:25:15 - INFO     - __main__ - Discount updated: Rp5
+2026-04-26 22:25:15 - INFO     - models - Discount set: Rp50 (fixed amount)
+2026-04-26 22:25:15 - INFO     - __main__ - Discount updated: Rp50
+2026-04-26 22:25:18 - INFO     - models - Discount set: Rp50 (fixed amount)
+2026-04-26 22:25:18 - INFO     - __main__ - Discount updated: Rp50
+2026-04-26 22:25:19 - INFO     - models - Tax set: 0.0% (amount: Rp0)
+2026-04-26 22:25:19 - INFO     - __main__ - Tax updated: 0.0%
+2026-04-26 22:25:27 - INFO     - database - Stock reduced: product_id=8, qty=1, remaining=1
+2026-04-26 22:25:27 - WARNING  - telegram_bot - Failed to send low stock alert: Unknown error in HTTP implementation: RuntimeError('Event loop is closed')
+2026-04-26 22:25:27 - INFO     - database - Stock reduced: product_id=10, qty=1, remaining=998
+2026-04-26 22:25:27 - INFO     - transaction - Saving transaction to database...
+2026-04-26 22:25:27 - INFO     - database - Transaction created: ID=23, total=Rp22,000, discount=0% (Rp50), tax=0.0% (Rp0)
+2026-04-26 22:25:27 - INFO     - transaction - Transaction completed: ID=23, total=Rp22,000, items=2, payment=Rp50,000
+2026-04-26 22:27:21 - INFO     - __main__ - ✅ Async task manager cleaned up
+2026-04-26 22:27:21 - INFO     - logger_config - User logout: shandi
+2026-04-26 22:27:21 - INFO     - __main__ - User shandi logged out - returning to login
+2026-04-26 22:27:21 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:27:21 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:27:21 - INFO     - database - Transaction table migration completed
+2026-04-26 22:27:21 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:27:21 - INFO     - __main__ - Database initialized
+2026-04-26 22:27:21 - INFO     - __main__ - Showing login window
+2026-04-26 22:27:23 - WARNING  - __main__ - User cancelled login, exiting application
+2026-04-26 22:27:28 - INFO     - logger_config - ======================================================================
+2026-04-26 22:27:28 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-26 22:27:28 - INFO     - logger_config - ======================================================================
+2026-04-26 22:27:28 - INFO     - logger_config - Logging initialized at 2026-04-26 22:27:28
+2026-04-26 22:27:29 - INFO     - __main__ - Application initialization started
+2026-04-26 22:27:29 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:27:29 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:27:29 - INFO     - database - Transaction table migration completed
+2026-04-26 22:27:29 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:27:29 - INFO     - __main__ - Database initialized
+2026-04-26 22:27:29 - INFO     - __main__ - Showing login window
+2026-04-26 22:27:32 - INFO     - database - User login successful: shandi
+2026-04-26 22:27:32 - INFO     - __main__ - User login successful: shandi (cashier)
+2026-04-26 22:27:32 - INFO     - __main__ - Launching main application for user shandi
+2026-04-26 22:27:32 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:27:32 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:27:32 - INFO     - database - Transaction table migration completed
+2026-04-26 22:27:32 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:27:33 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-26 22:27:33 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-26 22:27:33 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:27:33 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:27:33 - INFO     - database - Transaction table migration completed
+2026-04-26 22:27:33 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:27:33 - INFO     - backup_manager - Backup already exists for today: backup_20260426.db
+2026-04-26 22:27:33 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-26 22:27:33 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-26 22:27:33 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-26 22:27:33 - INFO     - __main__ -   Enter → Add item
+2026-04-26 22:27:33 - INFO     - __main__ -   F1 → New transaction
+2026-04-26 22:27:33 - INFO     - __main__ -   F2 → Process payment
+2026-04-26 22:27:33 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-26 22:27:33 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 498, 'total_revenue': 7470000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 104, 'total_revenue': 2288000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 2, 'total_revenue': 100, 'rank': 3}]
+2026-04-26 22:27:33 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:27:33 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:27:33 - INFO     - __main__ - Product 1: Ubi Mentah (qty=498, revenue=7470000)
+2026-04-26 22:27:33 - INFO     - __main__ - Product 2: Ubi Bakar (qty=104, revenue=2288000)
+2026-04-26 22:27:33 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=2, revenue=100)
+2026-04-26 22:27:38 - INFO     - __main__ - Product selected: 0002 - Ubi Mentah (9)
+2026-04-26 22:27:47 - INFO     - __main__ - Product selected: 0004 - Toros uk 2 Kg (1000)
+2026-04-26 22:27:55 - INFO     - models - Discount set: Rp7 (fixed amount)
+2026-04-26 22:27:55 - INFO     - __main__ - Discount updated: Rp7
+2026-04-26 22:27:55 - INFO     - models - Discount set: Rp75 (fixed amount)
+2026-04-26 22:27:55 - INFO     - __main__ - Discount updated: Rp75
+2026-04-26 22:28:03 - INFO     - database - Stock reduced: product_id=9, qty=3, remaining=6
+2026-04-26 22:28:03 - INFO     - database - Stock reduced: product_id=11, qty=1, remaining=999
+2026-04-26 22:28:03 - INFO     - transaction - Saving transaction to database...
+2026-04-26 22:28:03 - INFO     - database - Transaction created: ID=24, total=Rp45,000, discount=0% (Rp75), tax=0.0% (Rp0)
+2026-04-26 22:28:03 - INFO     - transaction - Transaction completed: ID=24, total=Rp45,000, items=2, payment=Rp50,000
+2026-04-26 22:29:45 - INFO     - __main__ - ✅ Async task manager cleaned up
+2026-04-26 22:29:45 - INFO     - logger_config - User logout: shandi
+2026-04-26 22:29:45 - INFO     - __main__ - User shandi logged out - returning to login
+2026-04-26 22:29:45 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:29:45 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:29:45 - INFO     - database - Transaction table migration completed
+2026-04-26 22:29:45 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:29:45 - INFO     - __main__ - Database initialized
+2026-04-26 22:29:45 - INFO     - __main__ - Showing login window
+2026-04-26 22:29:51 - INFO     - database - User login successful: gustiana
+2026-04-26 22:29:51 - INFO     - __main__ - User login successful: gustiana (admin)
+2026-04-26 22:29:51 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-26 22:29:52 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:29:52 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:29:52 - INFO     - database - Transaction table migration completed
+2026-04-26 22:29:52 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:29:53 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-26 22:29:53 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-26 22:29:53 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:29:53 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:29:53 - INFO     - database - Transaction table migration completed
+2026-04-26 22:29:53 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:29:53 - INFO     - backup_manager - Backup already exists for today: backup_20260426.db
+2026-04-26 22:29:53 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-26 22:29:53 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-26 22:29:53 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-26 22:29:53 - INFO     - __main__ -   Enter → Add item
+2026-04-26 22:29:53 - INFO     - __main__ -   F1 → New transaction
+2026-04-26 22:29:53 - INFO     - __main__ -   F2 → Process payment
+2026-04-26 22:29:53 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-26 22:29:53 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 501, 'total_revenue': 7515000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 104, 'total_revenue': 2288000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 2, 'total_revenue': 100, 'rank': 3}]
+2026-04-26 22:29:53 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:29:53 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:29:53 - INFO     - __main__ - Product 1: Ubi Mentah (qty=501, revenue=7515000)
+2026-04-26 22:29:53 - INFO     - __main__ - Product 2: Ubi Bakar (qty=104, revenue=2288000)
+2026-04-26 22:29:53 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=2, revenue=100)
+2026-04-26 22:30:02 - INFO     - stok_opname - Stok opname session created: ID=3, by=gustiana
+2026-04-26 22:30:03 - INFO     - __main__ - New stok opname session created: ID=3
+2026-04-26 22:30:19 - INFO     - stok_opname - Stok opname item updated: ID=11, fisik=50, selisih=49
+2026-04-26 22:30:32 - INFO     - stok_opname - Stok opname item updated: ID=12, fisik=500, selisih=494
+2026-04-26 22:30:49 - INFO     - stok_opname - Stok opname item updated: ID=13, fisik=990, selisih=-8
+2026-04-26 22:31:01 - INFO     - stok_opname - Stok opname item updated: ID=14, fisik=995, selisih=-4
+2026-04-26 22:31:14 - INFO     - stok_opname - Stok opname item updated: ID=15, fisik=40, selisih=0
+2026-04-26 22:31:26 - INFO     - stok_opname - Stok opname session completed: ID=3
+2026-04-26 22:31:29 - INFO     - __main__ - Stok opname session completed: 3
+2026-04-26 22:31:32 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 501, 'total_revenue': 7515000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 104, 'total_revenue': 2288000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 2, 'total_revenue': 100, 'rank': 3}]
+2026-04-26 22:31:32 - INFO     - __main__ - Product 1: Ubi Mentah (qty=501, revenue=7515000)
+2026-04-26 22:31:32 - INFO     - __main__ - Product 2: Ubi Bakar (qty=104, revenue=2288000)
+2026-04-26 22:31:32 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=2, revenue=100)
+2026-04-26 22:31:32 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:31:32 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:32:50 - INFO     - logger_config - ======================================================================
+2026-04-26 22:32:50 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-26 22:32:50 - INFO     - logger_config - ======================================================================
+2026-04-26 22:32:50 - INFO     - logger_config - Logging initialized at 2026-04-26 22:32:50
+2026-04-26 22:32:51 - INFO     - __main__ - Application initialization started
+2026-04-26 22:32:51 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:32:51 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:32:51 - INFO     - database - Transaction table migration completed
+2026-04-26 22:32:51 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:32:51 - INFO     - __main__ - Database initialized
+2026-04-26 22:32:51 - INFO     - __main__ - Showing login window
+2026-04-26 22:32:58 - INFO     - database - User login successful: gustiana
+2026-04-26 22:32:58 - INFO     - __main__ - User login successful: gustiana (admin)
+2026-04-26 22:32:58 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-26 22:32:58 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:32:58 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:32:58 - INFO     - database - Transaction table migration completed
+2026-04-26 22:32:58 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:32:59 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-26 22:32:59 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-26 22:32:59 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:32:59 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:32:59 - INFO     - database - Transaction table migration completed
+2026-04-26 22:32:59 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:32:59 - INFO     - backup_manager - Backup already exists for today: backup_20260426.db
+2026-04-26 22:32:59 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-26 22:32:59 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-26 22:32:59 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-26 22:32:59 - INFO     - __main__ -   Enter → Add item
+2026-04-26 22:32:59 - INFO     - __main__ -   F1 → New transaction
+2026-04-26 22:32:59 - INFO     - __main__ -   F2 → Process payment
+2026-04-26 22:32:59 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-26 22:32:59 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 501, 'total_revenue': 7515000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 104, 'total_revenue': 2288000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 2, 'total_revenue': 100, 'rank': 3}]
+2026-04-26 22:32:59 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:32:59 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:32:59 - INFO     - __main__ - Product 1: Ubi Mentah (qty=501, revenue=7515000)
+2026-04-26 22:32:59 - INFO     - __main__ - Product 2: Ubi Bakar (qty=104, revenue=2288000)
+2026-04-26 22:32:59 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=2, revenue=100)
+2026-04-26 22:33:02 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 501, 'total_revenue': 7515000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 104, 'total_revenue': 2288000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 2, 'total_revenue': 100, 'rank': 3}]
+2026-04-26 22:33:02 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:33:02 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:33:02 - INFO     - __main__ - Product 1: Ubi Mentah (qty=501, revenue=7515000)
+2026-04-26 22:33:02 - INFO     - __main__ - Product 2: Ubi Bakar (qty=104, revenue=2288000)
+2026-04-26 22:33:02 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=2, revenue=100)
+2026-04-26 22:33:15 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 501, 'total_revenue': 7515000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 104, 'total_revenue': 2288000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 2, 'total_revenue': 100, 'rank': 3}]
+2026-04-26 22:33:15 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:33:15 - INFO     - __main__ - Product 1: Ubi Mentah (qty=501, revenue=7515000)
+2026-04-26 22:33:15 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:33:15 - INFO     - __main__ - Product 2: Ubi Bakar (qty=104, revenue=2288000)
+2026-04-26 22:33:15 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=2, revenue=100)
+2026-04-26 22:35:41 - INFO     - logger_config - ======================================================================
+2026-04-26 22:35:41 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-26 22:35:41 - INFO     - logger_config - ======================================================================
+2026-04-26 22:35:41 - INFO     - logger_config - Logging initialized at 2026-04-26 22:35:41
+2026-04-26 22:35:41 - INFO     - __main__ - Application initialization started
+2026-04-26 22:35:41 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:35:41 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:35:41 - INFO     - database - Transaction table migration completed
+2026-04-26 22:35:41 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:35:41 - INFO     - __main__ - Database initialized
+2026-04-26 22:35:41 - INFO     - __main__ - Showing login window
+2026-04-26 22:35:54 - INFO     - database - User login successful: gustiana
+2026-04-26 22:35:54 - INFO     - __main__ - User login successful: gustiana (admin)
+2026-04-26 22:35:54 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-26 22:35:54 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:35:54 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:35:54 - INFO     - database - Transaction table migration completed
+2026-04-26 22:35:54 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:35:55 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-26 22:35:55 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-26 22:35:55 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:35:55 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:35:55 - INFO     - database - Transaction table migration completed
+2026-04-26 22:35:55 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:35:55 - INFO     - backup_manager - Backup already exists for today: backup_20260426.db
+2026-04-26 22:35:55 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-26 22:35:55 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-26 22:35:55 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-26 22:35:55 - INFO     - __main__ -   Enter → Add item
+2026-04-26 22:35:55 - INFO     - __main__ -   F1 → New transaction
+2026-04-26 22:35:55 - INFO     - __main__ -   F2 → Process payment
+2026-04-26 22:35:55 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-26 22:35:56 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 501, 'total_revenue': 7515000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 104, 'total_revenue': 2288000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 2, 'total_revenue': 100, 'rank': 3}]
+2026-04-26 22:35:56 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:35:56 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:35:56 - INFO     - __main__ - Product 1: Ubi Mentah (qty=501, revenue=7515000)
+2026-04-26 22:35:56 - INFO     - __main__ - Product 2: Ubi Bakar (qty=104, revenue=2288000)
+2026-04-26 22:35:56 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=2, revenue=100)
+2026-04-26 22:37:47 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 501, 'total_revenue': 7515000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 104, 'total_revenue': 2288000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 2, 'total_revenue': 100, 'rank': 3}]
+2026-04-26 22:37:47 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:37:47 - INFO     - __main__ - Product 1: Ubi Mentah (qty=501, revenue=7515000)
+2026-04-26 22:37:47 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:37:47 - INFO     - __main__ - Product 2: Ubi Bakar (qty=104, revenue=2288000)
+2026-04-26 22:37:47 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=2, revenue=100)
+2026-04-26 22:38:08 - WARNING  - database - Product deleted: TEST003
+2026-04-26 22:38:09 - WARNING  - logger_config - Product deleted: TEST003 = 
+2026-04-26 22:38:38 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 501, 'total_revenue': 7515000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 104, 'total_revenue': 2288000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 2, 'total_revenue': 100, 'rank': 3}]
+2026-04-26 22:38:38 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:38:38 - INFO     - __main__ - Product 1: Ubi Mentah (qty=501, revenue=7515000)
+2026-04-26 22:38:38 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:38:38 - INFO     - __main__ - Product 2: Ubi Bakar (qty=104, revenue=2288000)
+2026-04-26 22:38:38 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=2, revenue=100)
+2026-04-26 22:39:11 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 501, 'total_revenue': 7515000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 104, 'total_revenue': 2288000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 2, 'total_revenue': 100, 'rank': 3}]
+2026-04-26 22:39:11 - INFO     - __main__ - Product 1: Ubi Mentah (qty=501, revenue=7515000)
+2026-04-26 22:39:11 - INFO     - __main__ - Product 2: Ubi Bakar (qty=104, revenue=2288000)
+2026-04-26 22:39:11 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=2, revenue=100)
+2026-04-26 22:39:11 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:39:11 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:41:13 - INFO     - logger_config - ======================================================================
+2026-04-26 22:41:13 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-26 22:41:13 - INFO     - logger_config - ======================================================================
+2026-04-26 22:41:13 - INFO     - logger_config - Logging initialized at 2026-04-26 22:41:13
+2026-04-26 22:41:13 - INFO     - __main__ - Application initialization started
+2026-04-26 22:41:14 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:41:14 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:41:14 - INFO     - database - Transaction table migration completed
+2026-04-26 22:41:14 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:41:14 - INFO     - __main__ - Database initialized
+2026-04-26 22:41:14 - INFO     - __main__ - Showing login window
+2026-04-26 22:41:28 - INFO     - database - User login successful: gustiana
+2026-04-26 22:41:28 - INFO     - __main__ - User login successful: gustiana (admin)
+2026-04-26 22:41:28 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-26 22:41:28 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:41:28 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:41:28 - INFO     - database - Transaction table migration completed
+2026-04-26 22:41:28 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:41:29 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-26 22:41:29 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-26 22:41:29 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:41:29 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:41:29 - INFO     - database - Transaction table migration completed
+2026-04-26 22:41:29 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:41:29 - INFO     - backup_manager - Backup already exists for today: backup_20260426.db
+2026-04-26 22:41:29 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-26 22:41:29 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-26 22:41:29 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-26 22:41:29 - INFO     - __main__ -   Enter → Add item
+2026-04-26 22:41:29 - INFO     - __main__ -   F1 → New transaction
+2026-04-26 22:41:29 - INFO     - __main__ -   F2 → Process payment
+2026-04-26 22:41:29 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-26 22:41:29 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 501, 'total_revenue': 7515000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 104, 'total_revenue': 2288000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 2, 'total_revenue': 100, 'rank': 3}]
+2026-04-26 22:41:30 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:41:30 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:41:30 - INFO     - __main__ - Product 1: Ubi Mentah (qty=501, revenue=7515000)
+2026-04-26 22:41:30 - INFO     - __main__ - Product 2: Ubi Bakar (qty=104, revenue=2288000)
+2026-04-26 22:41:30 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=2, revenue=100)
+2026-04-26 22:41:41 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 501, 'total_revenue': 7515000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 104, 'total_revenue': 2288000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 2, 'total_revenue': 100, 'rank': 3}]
+2026-04-26 22:41:41 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:41:41 - INFO     - __main__ - Product 1: Ubi Mentah (qty=501, revenue=7515000)
+2026-04-26 22:41:41 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:41:41 - INFO     - __main__ - Product 2: Ubi Bakar (qty=104, revenue=2288000)
+2026-04-26 22:41:41 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=2, revenue=100)
+2026-04-26 22:42:08 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 501, 'total_revenue': 7515000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 104, 'total_revenue': 2288000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 2, 'total_revenue': 100, 'rank': 3}]
+2026-04-26 22:42:08 - INFO     - __main__ - Product 1: Ubi Mentah (qty=501, revenue=7515000)
+2026-04-26 22:42:08 - INFO     - __main__ - Product 2: Ubi Bakar (qty=104, revenue=2288000)
+2026-04-26 22:42:08 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=2, revenue=100)
+2026-04-26 22:42:08 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:42:08 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:44:39 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 501, 'total_revenue': 7515000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 104, 'total_revenue': 2288000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 2, 'total_revenue': 100, 'rank': 3}]
+2026-04-26 22:44:39 - INFO     - __main__ - Product 1: Ubi Mentah (qty=501, revenue=7515000)
+2026-04-26 22:44:39 - INFO     - __main__ - Product 2: Ubi Bakar (qty=104, revenue=2288000)
+2026-04-26 22:44:39 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=2, revenue=100)
+2026-04-26 22:44:39 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:44:39 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:45:31 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (50)
+2026-04-26 22:45:36 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (50)
+2026-04-26 22:45:36 - INFO     - __main__ - Product selected: 0003 - Toros uk 1 Kg (990)
+2026-04-26 22:45:42 - INFO     - models - Discount set: Rp50 (fixed amount)
+2026-04-26 22:45:42 - INFO     - __main__ - Discount updated: Rp50
+2026-04-26 22:45:42 - INFO     - models - Discount set: Rp50 (fixed amount)
+2026-04-26 22:45:42 - INFO     - __main__ - Discount updated: Rp50
+2026-04-26 22:45:49 - INFO     - database - Stock reduced: product_id=8, qty=1, remaining=49
+2026-04-26 22:45:49 - INFO     - database - Stock reduced: product_id=10, qty=1, remaining=989
+2026-04-26 22:45:49 - INFO     - transaction - Saving transaction to database...
+2026-04-26 22:45:49 - INFO     - database - Transaction created: ID=25, total=Rp22,000, discount=0% (Rp50), tax=0.0% (Rp0)
+2026-04-26 22:45:49 - INFO     - transaction - Transaction completed: ID=25, total=Rp22,000, items=2, payment=Rp30,000
