@@ -28,6 +28,15 @@ from telegram_bot import POSTelegramBot, TelegramConfigManager, TELEGRAM_AVAILAB
 from stok_opname import StokOpnameService
 from logger_config import get_logger, log_user_login, log_user_logout, log_product_added, log_product_updated, log_product_deleted, log_transaction_completed
 
+# Import Phase 4-5 Integration Services
+try:
+    from app.integration import init_gui_services, get_gui_services
+    from app.gui_components import show_login_dialog
+    PHASE_45_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ Phase 4-5 modules not available: {e}")
+    PHASE_45_AVAILABLE = False
+
 logger = get_logger(__name__)
 
 # ============================================================================
@@ -258,6 +267,22 @@ class POSGUIApplication(tk.Tk):
             self.csv_exporter = CSVExporter()
             self.stok_opname_service = StokOpnameService(self.db)
             
+            # Initialize Phase 4-5 Services (new refactored architecture)
+            self.gui_services = None
+            if PHASE_45_AVAILABLE:
+                try:
+                    logger.info("Initializing Phase 4-5 services...")
+                    self.gui_services = init_gui_services(self.db)
+                    if self.gui_services:
+                        logger.info("✅ Phase 4-5 services initialized")
+                    else:
+                        logger.warning("⚠️ Phase 4-5 services initialization failed")
+                except Exception as e:
+                    logger.warning(f"⚠️ Phase 4-5 services not available: {e}")
+                    self.gui_services = None
+            else:
+                logger.info("ℹ️ Phase 4-5 modules not available (optional)")
+            
             self.current_transaction = None
         except Exception as e:
             messagebox.showerror("Error", f"Gagal inisialisasi sistem: {e}")
@@ -389,6 +414,13 @@ class POSGUIApplication(tk.Tk):
             ("🤖 Telegram Bot", self.show_telegram, True),
         ]
         
+        # Add Phase 4-5 features if available
+        if PHASE_45_AVAILABLE and self.gui_services:
+            menu_items.extend([
+                ("📜 Riwayat Transaksi", self.show_transaction_history, True),
+                ("📋 Restock Rekomendasi", self.show_restock_dashboard, True),
+            ])
+        
         # Add Settings only for admin
         if self.current_user['role'] == 'admin':
             menu_items.append(("⚙️ Settings", self.show_settings, True))
@@ -410,6 +442,15 @@ class POSGUIApplication(tk.Tk):
     def _logout(self):
         """Logout user dan kembali ke login screen."""
         if messagebox.askyesno("Logout", f"Keluar dari akun {self.current_user['username']}?"):
+            # Shutdown Phase 4-5 services gracefully
+            if PHASE_45_AVAILABLE and self.gui_services:
+                try:
+                    self.gui_services.destroy_user_session()
+                    self.gui_services.shutdown()
+                    logger.info("✅ Phase 4-5 services shut down")
+                except Exception as e:
+                    logger.warning(f"⚠️ Error shutting down services: {e}")
+            
             log_user_logout(self.current_user['username'])
             self.destroy()  # Close main application window
     
@@ -2727,6 +2768,101 @@ RINGKASAN:
             command=test_connection
         )
         test_btn.pack(side='left', padx=5)
+    
+    # ========================================================================
+    # PHASE 4-5: TRANSACTION HISTORY & RESTOCK DASHBOARD
+    # ========================================================================
+    
+    def show_transaction_history(self):
+        """Show transaction history viewer (Phase 5)."""
+        if not PHASE_45_AVAILABLE or not self.gui_services:
+            messagebox.showwarning(
+                "Fitur Tidak Tersedia",
+                "Modul Phase 4-5 tidak tersedia. Gunakan laporan standar."
+            )
+            return
+        
+        if not self.gui_services.check_permission('view_reports'):
+            messagebox.showerror("Akses Ditolak", "Anda tidak memiliki akses ke fitur ini")
+            return
+        
+        self._clear_content()
+        
+        # Header
+        header = ttk.Label(
+            self.content_area,
+            text="📜 Riwayat Transaksi",
+            font=FONTS['title'],
+            foreground=COLORS['primary']
+        )
+        header.pack(pady=10)
+        
+        try:
+            # Import TransactionViewer
+            from app.gui_components import TransactionViewer
+            
+            # Create viewer
+            viewer = TransactionViewer(
+                parent=self.content_area,
+                transaction_service=self.gui_services.transaction_service
+            )
+            
+            logger.info("Transaction history viewer displayed")
+            
+        except Exception as e:
+            logger.error(f"Error showing transaction history: {e}", exc_info=True)
+            error_label = ttk.Label(
+                self.content_area,
+                text=f"❌ Gagal membuka transaction viewer: {e}",
+                foreground=COLORS['danger']
+            )
+            error_label.pack(pady=20)
+    
+    def show_restock_dashboard(self):
+        """Show restock recommendations dashboard (Phase 5)."""
+        if not PHASE_45_AVAILABLE or not self.gui_services:
+            messagebox.showwarning(
+                "Fitur Tidak Tersedia",
+                "Modul Phase 4-5 tidak tersedia. Gunakan stok opname standar."
+            )
+            return
+        
+        if not self.gui_services.check_permission('view_inventory'):
+            messagebox.showerror("Akses Ditolak", "Anda tidak memiliki akses ke fitur ini")
+            return
+        
+        self._clear_content()
+        
+        # Header
+        header = ttk.Label(
+            self.content_area,
+            text="📋 Restock Rekomendasi",
+            font=FONTS['title'],
+            foreground=COLORS['primary']
+        )
+        header.pack(pady=10)
+        
+        try:
+            # Import RestockDashboard
+            from app.gui_components import RestockDashboard
+            
+            # Create dashboard
+            dashboard = RestockDashboard(
+                parent=self.content_area,
+                product_service=self.gui_services.product_service,
+                restock_service=self.gui_services.restock_service
+            )
+            
+            logger.info("Restock dashboard displayed")
+            
+        except Exception as e:
+            logger.error(f"Error showing restock dashboard: {e}", exc_info=True)
+            error_label = ttk.Label(
+                self.content_area,
+                text=f"❌ Gagal membuka restock dashboard: {e}",
+                foreground=COLORS['danger']
+            )
+            error_label.pack(pady=20)
     
     # ========================================================================
     # SETTINGS PAGE
