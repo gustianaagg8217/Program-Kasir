@@ -3174,13 +3174,35 @@ Dikembangkan dengan Python & Tkinter
     def _create_active_session_tab(self, parent):
         """Create tab untuk active session stok opname."""
         try:
+            # Create scrollable container
+            canvas = tk.Canvas(parent, highlightthickness=0, bg=COLORS['bg_main'])
+            scrollbar = ttk.Scrollbar(parent, orient='vertical', command=canvas.yview)
+            scrollable_frame = ttk.Frame(canvas)
+            
+            scrollable_frame.bind(
+                "<Configure>",
+                lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+            )
+            
+            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+            canvas.configure(yscrollcommand=scrollbar.set)
+            
+            # Bind mousewheel for scrolling
+            def _on_mousewheel(event):
+                canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            canvas.bind_all("<MouseWheel>", _on_mousewheel)
+            
+            # Pack canvas and scrollbar
+            canvas.pack(side='left', fill='both', expand=True)
+            scrollbar.pack(side='right', fill='y')
+            
             # Get active sessions (status='active')
             all_sessions = self.stok_opname_service.list_sessions(limit=100)
             active_sessions = [s for s in all_sessions if s.status == 'active']
             
             if not active_sessions:
                 empty_label = ttk.Label(
-                    parent,
+                    scrollable_frame,
                     text="Tidak ada session aktif. Buat session baru di tab 'Session Baru'",
                     font=FONTS['normal'],
                     foreground=COLORS['text_secondary']
@@ -3189,7 +3211,7 @@ Dikembangkan dengan Python & Tkinter
                 return
             
             # Session selector
-            selector_frame = ttk.LabelFrame(parent, text="Pilih Session", padding=10)
+            selector_frame = ttk.LabelFrame(scrollable_frame, text="Pilih Session", padding=10)
             selector_frame.pack(fill='x', padx=10, pady=10)
             
             session_var = tk.StringVar()
@@ -3205,7 +3227,7 @@ Dikembangkan dengan Python & Tkinter
             session_combo.set(session_options[0])
             
             # Item input frame
-            input_frame = ttk.LabelFrame(parent, text="Input Stok Fisik", padding=15)
+            input_frame = ttk.LabelFrame(scrollable_frame, text="Input Stok Fisik", padding=15)
             input_frame.pack(fill='x', padx=10, pady=10)
             
             ttk.Label(input_frame, text="Cari Produk (Kode/Nama):", font=FONTS['normal']).pack(anchor='w', pady=5)
@@ -3213,10 +3235,25 @@ Dikembangkan dengan Python & Tkinter
             
             # Get all products for dropdown
             all_products_opname = self.product_manager.list_products()
-            product_options = [f"{p.kode} - {p.nama}" for p in all_products_opname]
+            all_product_options = [f"{p.kode} - {p.nama}" for p in all_products_opname]
             
-            search_combo = ttk.Combobox(input_frame, textvariable=search_var, values=product_options, state='readonly', width=50)
+            search_combo = ttk.Combobox(input_frame, textvariable=search_var, values=all_product_options, width=50)
             search_combo.pack(fill='x', pady=5)
+            
+            # Autocomplete function
+            def on_search_change(*args):
+                """Filter product suggestions as user types."""
+                search_text = search_var.get().lower().strip()
+                
+                if not search_text:
+                    # Show all if empty
+                    search_combo['values'] = all_product_options
+                else:
+                    # Filter products by kode or nama
+                    filtered = [p for p in all_product_options if search_text in p.lower()]
+                    search_combo['values'] = filtered if filtered else all_product_options
+            
+            search_var.trace('w', on_search_change)
             
             ttk.Label(input_frame, text="Stok Fisik (yang dihitung):", font=FONTS['normal']).pack(anchor='w', pady=(15, 5))
             stok_fisik_var = tk.StringVar()
@@ -3228,7 +3265,7 @@ Dikembangkan dengan Python & Tkinter
             catatan_text.pack(fill='both', expand=True, pady=5)
             
             # Items display frame
-            items_frame = ttk.LabelFrame(parent, text="Item dalam Session", padding=10)
+            items_frame = ttk.LabelFrame(scrollable_frame, text="Item dalam Session", padding=10)
             items_frame.pack(fill='both', expand=True, padx=10, pady=10)
             
             columns = ('No', 'Kode', 'Produk', 'Stok Sistem', 'Stok Fisik', 'Selisih', 'Status')
@@ -3360,7 +3397,7 @@ Dikembangkan dengan Python & Tkinter
                         search_var.set("")
                         stok_fisik_var.set("")
                         catatan_text.delete('1.0', 'end')
-                        search_entry.focus()
+                        search_combo.focus()
                         
                         # Refresh items
                         refresh_items()
@@ -3572,6 +3609,92 @@ DETAIL ITEM:
             
             view_btn = ttk.Button(btn_frame, text="👁️ Lihat Detail", command=view_detail)
             view_btn.pack(side='left', padx=5)
+            
+            def print_report():
+                """Print laporan stok opname ke printer."""
+                selection = sessions_tree.selection()
+                if not selection:
+                    messagebox.showwarning("Peringatan", "Pilih session terlebih dahulu!")
+                    return
+                
+                item = sessions_tree.item(selection[0])
+                values = item['values']
+                session_id = int(values[1])
+                
+                report = self.stok_opname_service.get_session_report(session_id)
+                if not report:
+                    messagebox.showerror("Error", "Laporan tidak ditemukan!")
+                    return
+                
+                try:
+                    # Generate report content
+                    content = f"""
+{'='*80}
+LAPORAN STOK OPNAME
+{'='*80}
+
+Session ID       : {report.session_id}
+Tanggal          : {report.tanggal}
+Total Item       : {report.total_items}
+Item Terhitung   : {report.items_counted}
+Item Berbeda     : {report.total_selisih}
+Total Qty Beda   : {report.total_selisih_qty}
+
+{'-'*80}
+DETAIL ITEM:
+{'-'*80}
+"""
+                    
+                    for detail in report.items_details:
+                        selisih_str = f"+{detail['selisih']}" if detail['selisih'] > 0 else str(detail['selisih'])
+                        content += f"""
+{detail['kode']} - {detail['nama']}
+  Stok Sistem : {detail['stok_sistem']} {detail['satuan']}
+  Stok Fisik  : {detail['stok_fisik']} {detail['satuan']}
+  Selisih     : {selisih_str} {detail['satuan']}
+  Status      : {detail['status']}
+  Catatan     : {detail['catatan'] or '—'}
+"""
+                    
+                    content += f"\n{'='*80}\n"
+                    content += f"Dicetak pada: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                    
+                    # Save to temporary file
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+                        f.write(content)
+                        temp_file = f.name
+                    
+                    # Print using Windows print dialog
+                    import subprocess
+                    import os
+                    
+                    try:
+                        # Use notepad to print (Windows)
+                        subprocess.Popen(['notepad', '/p', temp_file])
+                        messagebox.showinfo("Sukses", "Laporan dikirim ke printer!")
+                        logger.info(f"Stok opname report printed: session_id={session_id}")
+                        
+                        # Clean up temp file after a delay
+                        import threading
+                        def cleanup():
+                            import time
+                            time.sleep(3)
+                            try:
+                                os.remove(temp_file)
+                            except:
+                                pass
+                        threading.Thread(daemon=True, target=cleanup).start()
+                    except Exception as e:
+                        messagebox.showerror("Error", f"Gagal print: {str(e)}")
+                        logger.error(f"Print error: {e}")
+                    
+                except Exception as e:
+                    messagebox.showerror("Error", f"Terjadi kesalahan:\n{str(e)}")
+                    logger.error(f"Error printing report: {e}", exc_info=True)
+            
+            print_btn = ttk.Button(btn_frame, text="🖨️ Print", command=print_report)
+            print_btn.pack(side='left', padx=5)
             
         except Exception as e:
             error_label = ttk.Label(

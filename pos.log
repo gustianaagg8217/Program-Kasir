@@ -13697,3 +13697,155 @@ sqlite3.OperationalError: no such column: aktif
 2026-04-26 20:56:25 - INFO     - stok_opname - Stok opname session created: ID=1, by=gustiana
 2026-04-26 20:56:30 - INFO     - __main__ - New stok opname session created: ID=1
 2026-04-26 20:56:51 - INFO     - stok_opname - Stok opname item updated: ID=1, fisik=5, selisih=5
+2026-04-26 20:59:35 - INFO     - logger_config - ======================================================================
+2026-04-26 20:59:35 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-26 20:59:35 - INFO     - logger_config - ======================================================================
+2026-04-26 20:59:35 - INFO     - logger_config - Logging initialized at 2026-04-26 20:59:35
+2026-04-26 20:59:36 - INFO     - __main__ - Application initialization started
+2026-04-26 20:59:36 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 20:59:36 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 20:59:36 - INFO     - database - Transaction table migration completed
+2026-04-26 20:59:36 - INFO     - database - Database tables initialized successfully
+2026-04-26 20:59:36 - INFO     - __main__ - Database initialized
+2026-04-26 20:59:36 - INFO     - __main__ - Showing login window
+2026-04-26 20:59:43 - INFO     - database - User login successful: gustiana
+2026-04-26 20:59:43 - INFO     - __main__ - User login successful: gustiana (admin)
+2026-04-26 20:59:43 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-26 20:59:43 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 20:59:43 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 20:59:43 - INFO     - database - Transaction table migration completed
+2026-04-26 20:59:43 - INFO     - database - Database tables initialized successfully
+2026-04-26 20:59:44 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-26 20:59:44 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-26 20:59:44 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 20:59:44 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 20:59:44 - INFO     - database - Transaction table migration completed
+2026-04-26 20:59:44 - INFO     - database - Database tables initialized successfully
+2026-04-26 20:59:44 - INFO     - backup_manager - Backup already exists for today: backup_20260426.db
+2026-04-26 20:59:44 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-26 20:59:45 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 20:59:45 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 20:59:45 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 498, 'total_revenue': 7470000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 100, 'total_revenue': 2200000, 'rank': 2}]
+2026-04-26 20:59:45 - INFO     - __main__ - Product 1: Ubi Mentah (qty=498, revenue=7470000)
+2026-04-26 20:59:45 - INFO     - __main__ - Product 2: Ubi Bakar (qty=100, revenue=2200000)
+2026-04-26 20:59:45 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-26 20:59:45 - INFO     - __main__ -   Enter → Add item
+2026-04-26 20:59:45 - INFO     - __main__ -   F1 → New transaction
+2026-04-26 20:59:45 - INFO     - __main__ -   F2 → Process payment
+2026-04-26 20:59:45 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-26 21:01:07 - INFO     - stok_opname - Stok opname item updated: ID=2, fisik=9, selisih=7
+2026-04-26 21:05:04 - INFO     - logger_config - ======================================================================
+2026-04-26 21:05:04 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-26 21:05:04 - INFO     - logger_config - ======================================================================
+2026-04-26 21:05:04 - INFO     - logger_config - Logging initialized at 2026-04-26 21:05:04
+2026-04-26 21:05:04 - INFO     - __main__ - Application initialization started
+2026-04-26 21:05:04 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 21:05:04 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 21:05:04 - INFO     - database - Transaction table migration completed
+2026-04-26 21:05:04 - INFO     - database - Database tables initialized successfully
+2026-04-26 21:05:04 - INFO     - __main__ - Database initialized
+2026-04-26 21:05:04 - INFO     - __main__ - Showing login window
+2026-04-26 21:05:11 - INFO     - database - User login successful: gustiana
+2026-04-26 21:05:11 - INFO     - __main__ - User login successful: gustiana (admin)
+2026-04-26 21:05:11 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-26 21:05:11 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 21:05:11 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 21:05:11 - INFO     - database - Transaction table migration completed
+2026-04-26 21:05:11 - INFO     - database - Database tables initialized successfully
+2026-04-26 21:05:12 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-26 21:05:12 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-26 21:05:12 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 21:05:12 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 21:05:12 - INFO     - database - Transaction table migration completed
+2026-04-26 21:05:12 - INFO     - database - Database tables initialized successfully
+2026-04-26 21:05:12 - INFO     - backup_manager - Backup already exists for today: backup_20260426.db
+2026-04-26 21:05:12 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-26 21:05:12 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 21:05:12 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 21:05:12 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 498, 'total_revenue': 7470000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 100, 'total_revenue': 2200000, 'rank': 2}]
+2026-04-26 21:05:12 - INFO     - __main__ - Product 1: Ubi Mentah (qty=498, revenue=7470000)
+2026-04-26 21:05:12 - INFO     - __main__ - Product 2: Ubi Bakar (qty=100, revenue=2200000)
+2026-04-26 21:05:12 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-26 21:05:12 - INFO     - __main__ -   Enter → Add item
+2026-04-26 21:05:12 - INFO     - __main__ -   F1 → New transaction
+2026-04-26 21:05:12 - INFO     - __main__ -   F2 → Process payment
+2026-04-26 21:05:12 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-26 21:07:45 - INFO     - logger_config - ======================================================================
+2026-04-26 21:07:45 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-26 21:07:45 - INFO     - logger_config - ======================================================================
+2026-04-26 21:07:45 - INFO     - logger_config - Logging initialized at 2026-04-26 21:07:45
+2026-04-26 21:07:46 - INFO     - __main__ - Application initialization started
+2026-04-26 21:07:46 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 21:07:46 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 21:07:46 - INFO     - database - Transaction table migration completed
+2026-04-26 21:07:46 - INFO     - database - Database tables initialized successfully
+2026-04-26 21:07:46 - INFO     - __main__ - Database initialized
+2026-04-26 21:07:46 - INFO     - __main__ - Showing login window
+2026-04-26 21:07:51 - INFO     - database - User login successful: gustiana
+2026-04-26 21:07:51 - INFO     - __main__ - User login successful: gustiana (admin)
+2026-04-26 21:07:51 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-26 21:07:51 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 21:07:51 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 21:07:51 - INFO     - database - Transaction table migration completed
+2026-04-26 21:07:51 - INFO     - database - Database tables initialized successfully
+2026-04-26 21:07:52 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-26 21:07:52 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-26 21:07:52 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 21:07:52 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 21:07:52 - INFO     - database - Transaction table migration completed
+2026-04-26 21:07:52 - INFO     - database - Database tables initialized successfully
+2026-04-26 21:07:52 - INFO     - backup_manager - Backup already exists for today: backup_20260426.db
+2026-04-26 21:07:52 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-26 21:07:53 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 21:07:53 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 21:07:53 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 498, 'total_revenue': 7470000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 100, 'total_revenue': 2200000, 'rank': 2}]
+2026-04-26 21:07:53 - INFO     - __main__ - Product 1: Ubi Mentah (qty=498, revenue=7470000)
+2026-04-26 21:07:53 - INFO     - __main__ - Product 2: Ubi Bakar (qty=100, revenue=2200000)
+2026-04-26 21:07:53 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-26 21:07:53 - INFO     - __main__ -   Enter → Add item
+2026-04-26 21:07:53 - INFO     - __main__ -   F1 → New transaction
+2026-04-26 21:07:53 - INFO     - __main__ -   F2 → Process payment
+2026-04-26 21:07:53 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-26 21:08:47 - INFO     - logger_config - ======================================================================
+2026-04-26 21:08:47 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-26 21:08:47 - INFO     - logger_config - ======================================================================
+2026-04-26 21:08:47 - INFO     - logger_config - Logging initialized at 2026-04-26 21:08:47
+2026-04-26 21:08:48 - INFO     - __main__ - Application initialization started
+2026-04-26 21:08:48 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 21:08:48 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 21:08:48 - INFO     - database - Transaction table migration completed
+2026-04-26 21:08:48 - INFO     - database - Database tables initialized successfully
+2026-04-26 21:08:48 - INFO     - __main__ - Database initialized
+2026-04-26 21:08:48 - INFO     - __main__ - Showing login window
+2026-04-26 21:08:52 - INFO     - database - User login successful: gustiana
+2026-04-26 21:08:52 - INFO     - __main__ - User login successful: gustiana (admin)
+2026-04-26 21:08:52 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-26 21:08:52 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 21:08:52 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 21:08:52 - INFO     - database - Transaction table migration completed
+2026-04-26 21:08:52 - INFO     - database - Database tables initialized successfully
+2026-04-26 21:08:53 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-26 21:08:53 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-26 21:08:53 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 21:08:53 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 21:08:53 - INFO     - database - Transaction table migration completed
+2026-04-26 21:08:53 - INFO     - database - Database tables initialized successfully
+2026-04-26 21:08:53 - INFO     - backup_manager - Backup already exists for today: backup_20260426.db
+2026-04-26 21:08:53 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-26 21:08:53 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 21:08:53 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 21:08:53 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 498, 'total_revenue': 7470000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 100, 'total_revenue': 2200000, 'rank': 2}]
+2026-04-26 21:08:53 - INFO     - __main__ - Product 1: Ubi Mentah (qty=498, revenue=7470000)
+2026-04-26 21:08:53 - INFO     - __main__ - Product 2: Ubi Bakar (qty=100, revenue=2200000)
+2026-04-26 21:08:53 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-26 21:08:53 - INFO     - __main__ -   Enter → Add item
+2026-04-26 21:08:53 - INFO     - __main__ -   F1 → New transaction
+2026-04-26 21:08:53 - INFO     - __main__ -   F2 → Process payment
+2026-04-26 21:08:53 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-26 21:09:38 - INFO     - stok_opname - Stok opname item updated: ID=3, fisik=1000, selisih=0
+2026-04-26 21:09:59 - INFO     - stok_opname - Stok opname item updated: ID=4, fisik=1000, selisih=0
+2026-04-26 21:10:13 - INFO     - stok_opname - Stok opname item updated: ID=5, fisik=40, selisih=0
+2026-04-26 21:10:37 - INFO     - stok_opname - Stok opname session completed: ID=1
+2026-04-26 21:10:39 - INFO     - __main__ - Stok opname session completed: 1
+2026-04-26 21:11:09 - INFO     - stok_opname - Stok opname session created: ID=2, by=gustiana
+2026-04-26 21:11:11 - INFO     - __main__ - New stok opname session created: ID=2
