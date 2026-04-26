@@ -404,14 +404,15 @@ class POSGUIApplication(tk.Tk):
         separator = ttk.Separator(sidebar, orient='horizontal')
         separator.pack(fill='x', padx=10)
         
-        # Menu buttons
+        # Menu buttons - dengan role-based visibility
+        is_admin = self.current_user['role'] == 'admin'
         menu_items = [
             ("🏠 Dashboard", self.show_dashboard, True),  # visible for all
-            ("📦 Produk", self.show_products, True),
-            ("� Stok Opname", self.show_stok_opname, True),
+            ("📦 Produk", self.show_products, is_admin),  # admin only
+            ("� Stok Opname", self.show_stok_opname, is_admin),  # admin only
             ("�🛒 Transaksi", self.show_transaction, True),
             ("📊 Laporan", self.show_reports, True),
-            ("🤖 Telegram Bot", self.show_telegram, True),
+            ("🤖 Telegram Bot", self.show_telegram, is_admin),  # admin only
         ]
         
         # Add Phase 4-5 features if available
@@ -422,7 +423,7 @@ class POSGUIApplication(tk.Tk):
             ])
         
         # Add Settings only for admin
-        if self.current_user['role'] == 'admin':
+        if is_admin:
             menu_items.append(("⚙️ Settings", self.show_settings, True))
         
         menu_items.append(("🚪 Logout", self._logout, True))

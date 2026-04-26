@@ -14037,3 +14037,74 @@ sqlite3.OperationalError: no such column: aktif
 2026-04-26 21:55:17 - INFO     - __main__ - Database initialized
 2026-04-26 21:55:17 - INFO     - __main__ - Showing login window
 2026-04-26 21:55:20 - WARNING  - __main__ - User cancelled login, exiting application
+2026-04-26 22:08:14 - INFO     - logger_config - ======================================================================
+2026-04-26 22:08:14 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-26 22:08:14 - INFO     - logger_config - ======================================================================
+2026-04-26 22:08:14 - INFO     - logger_config - Logging initialized at 2026-04-26 22:08:14
+2026-04-26 22:08:14 - INFO     - __main__ - Application initialization started
+2026-04-26 22:08:14 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:08:14 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:08:14 - INFO     - database - Transaction table migration completed
+2026-04-26 22:08:14 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:08:14 - INFO     - __main__ - Database initialized
+2026-04-26 22:08:14 - INFO     - __main__ - Showing login window
+2026-04-26 22:08:18 - INFO     - database - User login successful: shandi
+2026-04-26 22:08:18 - INFO     - __main__ - User login successful: shandi (cashier)
+2026-04-26 22:08:18 - INFO     - __main__ - Launching main application for user shandi
+2026-04-26 22:08:19 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:08:19 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:08:19 - INFO     - database - Transaction table migration completed
+2026-04-26 22:08:19 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:08:19 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-26 22:08:19 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-26 22:08:19 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:08:19 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:08:19 - INFO     - database - Transaction table migration completed
+2026-04-26 22:08:19 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:08:19 - INFO     - backup_manager - Backup already exists for today: backup_20260426.db
+2026-04-26 22:08:19 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-26 22:08:19 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-26 22:08:20 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:08:20 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:08:20 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 498, 'total_revenue': 7470000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 101, 'total_revenue': 2222000, 'rank': 2}]
+2026-04-26 22:08:20 - INFO     - __main__ - Product 1: Ubi Mentah (qty=498, revenue=7470000)
+2026-04-26 22:08:20 - INFO     - __main__ - Product 2: Ubi Bakar (qty=101, revenue=2222000)
+2026-04-26 22:08:20 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-26 22:08:20 - INFO     - __main__ -   Enter → Add item
+2026-04-26 22:08:20 - INFO     - __main__ -   F1 → New transaction
+2026-04-26 22:08:20 - INFO     - __main__ -   F2 → Process payment
+2026-04-26 22:08:20 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-26 22:08:31 - INFO     - logger_config - User logout: shandi
+2026-04-26 22:08:31 - INFO     - __main__ - User shandi logged out - returning to login
+2026-04-26 22:08:31 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:08:31 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:08:31 - INFO     - database - Transaction table migration completed
+2026-04-26 22:08:31 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:08:31 - INFO     - __main__ - Database initialized
+2026-04-26 22:08:31 - INFO     - __main__ - Showing login window
+2026-04-26 22:08:37 - INFO     - database - User login successful: gustiana
+2026-04-26 22:08:37 - INFO     - __main__ - User login successful: gustiana (admin)
+2026-04-26 22:08:37 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-26 22:08:37 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:08:37 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:08:37 - INFO     - database - Transaction table migration completed
+2026-04-26 22:08:37 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:08:38 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-26 22:08:38 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-26 22:08:38 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:08:38 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:08:38 - INFO     - database - Transaction table migration completed
+2026-04-26 22:08:38 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:08:38 - INFO     - backup_manager - Backup already exists for today: backup_20260426.db
+2026-04-26 22:08:38 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-26 22:08:38 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-26 22:08:38 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:08:38 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:08:38 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 498, 'total_revenue': 7470000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 101, 'total_revenue': 2222000, 'rank': 2}]
+2026-04-26 22:08:38 - INFO     - __main__ - Product 1: Ubi Mentah (qty=498, revenue=7470000)
+2026-04-26 22:08:38 - INFO     - __main__ - Product 2: Ubi Bakar (qty=101, revenue=2222000)
+2026-04-26 22:08:38 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-26 22:08:38 - INFO     - __main__ -   Enter → Add item
+2026-04-26 22:08:38 - INFO     - __main__ -   F1 → New transaction
+2026-04-26 22:08:38 - INFO     - __main__ -   F2 → Process payment
+2026-04-26 22:08:38 - INFO     - __main__ -   Escape → Cancel transaction
