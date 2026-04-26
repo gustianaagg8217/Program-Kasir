@@ -37,6 +37,9 @@ except ImportError as e:
     print(f"⚠️ Phase 4-5 modules not available: {e}")
     PHASE_45_AVAILABLE = False
 
+# Import Async Helper for non-blocking operations
+from async_helper import AsyncOperation, UIThreadSafeUpdater, get_global_task_manager, cleanup_global_task_manager, LoadingIndicator
+
 logger = get_logger(__name__)
 
 # ============================================================================
@@ -443,6 +446,13 @@ class POSGUIApplication(tk.Tk):
     def _logout(self):
         """Logout user dan kembali ke login screen."""
         if messagebox.askyesno("Logout", f"Keluar dari akun {self.current_user['username']}?"):
+            # Cleanup async task manager
+            try:
+                cleanup_global_task_manager()
+                logger.info("✅ Async task manager cleaned up")
+            except Exception as e:
+                logger.warning(f"⚠️ Error cleaning up task manager: {e}")
+            
             # Shutdown Phase 4-5 services gracefully
             if PHASE_45_AVAILABLE and self.gui_services:
                 try:
@@ -465,7 +475,7 @@ class POSGUIApplication(tk.Tk):
     # ========================================================================
     
     def show_dashboard(self):
-        """Show dashboard page."""
+        """Show dashboard page with async loading."""
         self._clear_content()
         
         # Create scrollable content area with canvas and scrollbar
@@ -490,7 +500,6 @@ class POSGUIApplication(tk.Tk):
         canvas.pack(side='left', fill='both', expand=True)
         scrollbar.pack(side='right', fill='y')
         
-        # Use scrollable_frame as the content container instead of self.content_area
         # Header
         header = ttk.Label(
             scrollable_frame,
@@ -500,56 +509,128 @@ class POSGUIApplication(tk.Tk):
         )
         header.pack(pady=10)
         
-        # Stats cards container
+        # Stats cards container (will be filled asynchronously)
         stats_frame = ttk.Frame(scrollable_frame)
         stats_frame.pack(fill='x', pady=10)
         
-        # Get stats
-        stats = self.db.get_database_stats()
-        dashboard_data = self.report_generator.get_dashboard_summary()
+        # Show loading indicator for stats
+        loading_label = ttk.Label(
+            stats_frame,
+            text="⏳ Loading statistics...",
+            font=FONTS['normal'],
+            foreground=COLORS['info']
+        )
+        loading_label.pack(pady=20)
         
-        # Create stat cards
-        cards_data = [
-            ("📦 Total Produk", str(stats['total_products']), COLORS['info']),
-            ("💰 Penjualan Hari Ini", format_rp(dashboard_data['hari_ini']['total_penjualan']), COLORS['success']),
-            ("🔢 Transaksi Hari Ini", str(dashboard_data['hari_ini']['total_transaksi']), COLORS['warning']),
-            ("📈 Rata-rata Transaksi", format_rp(int(dashboard_data['hari_ini']['rata_rata'])), COLORS['secondary']),
-        ]
+        # Load stats in background
+        def load_stats():
+            """Load dashboard stats in background thread."""
+            try:
+                stats = self.db.get_database_stats()
+                dashboard_data = self.report_generator.get_dashboard_summary()
+                return {
+                    'stats': stats,
+                    'dashboard_data': dashboard_data
+                }
+            except Exception as e:
+                logger.error(f"Error loading dashboard stats: {e}")
+                return None
         
-        for title, value, color in cards_data:
-            self._create_stat_card(stats_frame, title, value, color)
-        
-        # Daily sales chart (last 7 days)
-        chart_frame = ttk.Frame(scrollable_frame)
-        chart_frame.pack(fill='both', expand=True, pady=10)
-        
-        self._create_daily_sales_chart(chart_frame)
-        
-        # AI Recommendations section (top 3 products)
-        # NOTE: If dashboard loads slowly, comment out this line:
-        self._create_ai_recommendations_section(scrollable_frame)
-        
-        # Recent transactions section
-        self._create_recent_transactions_section(scrollable_frame)
-        
-        # Action buttons
-        actions_frame = ttk.Frame(scrollable_frame)
-        actions_frame.pack(fill='x', pady=20)
-        
-        action_btns = [
-            ("🛒 Proses Transaksi Baru", self.show_transaction),
-            ("📦 Tambah Produk", self.show_add_product),
-            ("📊 Lihat Laporan", self.show_reports),
-        ]
-        
-        for label, command in action_btns:
-            btn = ttk.Button(
-                actions_frame,
-                text=label,
-                command=command,
-                width=30
+        def on_stats_loaded(result):
+            """Callback when stats are loaded."""
+            if result is None:
+                loading_label.config(text="❌ Error loading statistics")
+                return
+            
+            loading_label.destroy()
+            
+            # Create stat cards
+            stats = result['stats']
+            dashboard_data = result['dashboard_data']
+            
+            cards_data = [
+                ("📦 Total Produk", str(stats['total_products']), COLORS['info']),
+                ("💰 Penjualan Hari Ini", format_rp(dashboard_data['hari_ini']['total_penjualan']), COLORS['success']),
+                ("🔢 Transaksi Hari Ini", str(dashboard_data['hari_ini']['total_transaksi']), COLORS['warning']),
+                ("📈 Rata-rata Transaksi", format_rp(int(dashboard_data['hari_ini']['rata_rata'])), COLORS['secondary']),
+            ]
+            
+            for title, value, color in cards_data:
+                self._create_stat_card(stats_frame, title, value, color)
+            
+            # Load chart section
+            chart_frame = ttk.Frame(scrollable_frame)
+            chart_frame.pack(fill='both', expand=True, pady=10)
+            
+            loading_chart_label = ttk.Label(
+                chart_frame,
+                text="⏳ Loading chart...",
+                font=FONTS['normal'],
+                foreground=COLORS['info']
             )
-            btn.pack(side='left', padx=5)
+            loading_chart_label.pack(pady=20)
+            
+            # Load chart asynchronously
+            def load_chart():
+                try:
+                    self._create_daily_sales_chart(chart_frame)
+                    return True
+                except Exception as e:
+                    logger.error(f"Error loading chart: {e}")
+                    return False
+            
+            def on_chart_loaded(success):
+                if success:
+                    loading_chart_label.destroy()
+                    # Load AI recommendations asynchronously
+                    load_recommendations()
+                else:
+                    loading_chart_label.config(text="❌ Error loading chart")
+            
+            # Execute chart loading
+            chart_operation = AsyncOperation(
+                scrollable_frame,
+                load_chart,
+                on_complete=on_chart_loaded,
+                show_loading=False
+            )
+            chart_operation.start()
+            
+            # Load other sections
+            self._create_ai_recommendations_section(scrollable_frame)
+            self._create_recent_transactions_section(scrollable_frame)
+            
+            # Action buttons
+            actions_frame = ttk.Frame(scrollable_frame)
+            actions_frame.pack(fill='x', pady=20)
+            
+            action_btns = [
+                ("🛒 Proses Transaksi Baru", self.show_transaction),
+                ("📦 Tambah Produk", self.show_add_product),
+                ("📊 Lihat Laporan", self.show_reports),
+            ]
+            
+            for label, command in action_btns:
+                btn = ttk.Button(
+                    actions_frame,
+                    text=label,
+                    command=command,
+                    width=30
+                )
+                btn.pack(pady=5)
+        
+        def load_recommendations():
+            """Load recommendations asynchronously."""
+            pass  # Can be implemented if needed
+        
+        # Start loading stats asynchronously
+        stats_operation = AsyncOperation(
+            scrollable_frame,
+            load_stats,
+            on_complete=on_stats_loaded,
+            show_loading=False
+        )
+        stats_operation.start()
     
     def _create_stat_card(self, parent, title, value, color):
         """Create a stat card."""
@@ -1218,7 +1299,7 @@ Kembalian        : {format_rp(trans['kembalian'])}
     # ========================================================================
     
     def show_products(self):
-        """Show products management page."""
+        """Show products management page with async loading."""
         self._clear_content()
         
         # Header with action button
@@ -1240,21 +1321,151 @@ Kembalian        : {format_rp(trans['kembalian'])}
         )
         add_btn.pack(side='right')
         
-        # Products table
-        products = self.product_manager.list_products()
+        # Show loading indicator while fetching products
+        loading_frame = ttk.Frame(self.content_area)
+        loading_frame.pack(fill='both', expand=True, pady=50)
         
-        if not products:
-            empty_label = ttk.Label(
-                self.content_area,
-                text="Belum ada produk. Klik 'Tambah Produk' untuk menambahkan.",
-                font=FONTS['normal'],
-                foreground=COLORS['text_secondary']
+        loading_label = ttk.Label(
+            loading_frame,
+            text="⏳ Loading produk...",
+            font=FONTS['normal'],
+            foreground=COLORS['info']
+        )
+        loading_label.pack()
+        
+        # Load products in background thread
+        def load_products():
+            """Load products from database."""
+            try:
+                products = self.product_manager.list_products()
+                return products
+            except Exception as e:
+                logger.error(f"Error loading products: {e}")
+                return None
+        
+        def on_products_loaded(products):
+            """Callback when products are loaded."""
+            loading_frame.destroy()
+            
+            if products is None:
+                error_label = ttk.Label(
+                    self.content_area,
+                    text="❌ Error loading products",
+                    font=FONTS['normal'],
+                    foreground=COLORS['danger']
+                )
+                error_label.pack(pady=20)
+                return
+            
+            if not products:
+                empty_label = ttk.Label(
+                    self.content_area,
+                    text="Belum ada produk. Klik 'Tambah Produk' untuk menambahkan.",
+                    font=FONTS['normal'],
+                    foreground=COLORS['text_secondary']
+                )
+                empty_label.pack(pady=20)
+                return
+            
+            # ====== SEARCH BAR ======
+            search_frame = ttk.Frame(self.content_area)
+            search_frame.pack(fill='x', pady=10, padx=5)
+            
+            search_label = ttk.Label(search_frame, text="🔍 Cari Produk:", font=FONTS['normal'])
+            search_label.pack(side='left', padx=5)
+            
+            search_var = tk.StringVar()
+            
+            search_entry = ttk.Entry(search_frame, textvariable=search_var, width=40)
+            search_entry.pack(side='left', padx=5, fill='x', expand=True)
+            
+            clear_btn = ttk.Button(
+                search_frame,
+                text="✕ Hapus",
+                command=lambda: search_var.set("")
             )
-            empty_label.pack(pady=20)
-            return
+            clear_btn.pack(side='right', padx=5)
+            
+            # Create treeview with scrollbar
+            tree_frame = ttk.Frame(self.content_area)
+            tree_frame.pack(fill='both', expand=True, pady=10)
+            
+            columns = ('No', 'Kode', 'Nama', 'Harga', 'Stok', 'Satuan', 'Aksi')
+            tree = ttk.Treeview(tree_frame, columns=columns, height=15, show='headings')
+            
+            # Define column headings
+            tree.heading('No', text='No')
+            tree.heading('Kode', text='Kode Produk')
+            tree.heading('Nama', text='Nama Produk')
+            tree.heading('Harga', text='Harga')
+            tree.heading('Stok', text='Stok')
+            tree.heading('Satuan', text='Satuan')
+            tree.heading('Aksi', text='Aksi')
+            
+            tree.column('No', width=30)
+            tree.column('Kode', width=80)
+            tree.column('Nama', width=250)
+            tree.column('Harga', width=100)
+            tree.column('Stok', width=60)
+            tree.column('Satuan', width=60)
+            tree.column('Aksi', width=120)
+            
+            # Add scrollbar
+            scrollbar = ttk.Scrollbar(tree_frame, orient='vertical', command=tree.yview)
+            tree.configure(yscroll=scrollbar.set)
+            scrollbar.pack(side='right', fill='y')
+            tree.pack(fill='both', expand=True)
+            
+            # Store reference to original products for filtering
+            self._product_list = products
+            self._product_tree = tree
+            self._all_products = products
+            
+            def update_product_list(*args):
+                """Update product list based on search input."""
+                search_term = search_var.get().lower().strip()
+                
+                # Clear existing items
+                for item in tree.get_children():
+                    tree.delete(item)
+                
+                # Filter and display products
+                filtered_products = [p for p in products if 
+                                    search_term in (p.get('nama', '') or '').lower() or
+                                    search_term in (p.get('kode', '') or '').lower()]
+                
+                for i, product in enumerate(filtered_products, 1):
+                    tree.insert('', 'end', values=(
+                        str(i),
+                        product.get('kode', 'N/A'),
+                        product.get('nama', 'N/A'),
+                        format_rp(product.get('harga', 0)),
+                        f"{product.get('stok', 0)} {product.get('satuan', '')}",
+                        product.get('satuan', 'N/A'),
+                        "✏️ Edit | 🗑️ Hapus"
+                    ))
+                
+                # Store filtered list for click handler
+                self._current_filtered_products = filtered_products
+            
+            # Bind search input to update function
+            search_var.trace('w', update_product_list)
+            
+            # Initial population of tree
+            self._current_filtered_products = products
+            update_product_list()
+            
+            # Add click handler for edit/delete
+            tree.bind('<Double-1>', lambda e: self._handle_product_click(tree, self._current_filtered_products))
         
-        # ====== SEARCH BAR ======
-        search_frame = ttk.Frame(self.content_area)
+        # Start async loading
+        product_operation = AsyncOperation(
+            self.content_area,
+            load_products,
+            on_complete=on_products_loaded,
+            show_loading=False
+        )
+        product_operation.start()
         search_frame.pack(fill='x', pady=10, padx=5)
         
         search_label = ttk.Label(search_frame, text="🔍 Cari Produk:", font=FONTS['normal'])
@@ -2185,7 +2396,7 @@ Kembalian        : {format_rp(trans['kembalian'])}
     # ========================================================================
     
     def show_reports(self):
-        """Show reports page."""
+        """Show reports page with lazy loading for tabs."""
         self._clear_content()
         
         # Header
@@ -2197,29 +2408,99 @@ Kembalian        : {format_rp(trans['kembalian'])}
         )
         header.pack(pady=10)
         
-        # Tabs for different reports
+        # Tabs for different reports (with lazy loading)
         notebook = ttk.Notebook(self.content_area)
         notebook.pack(fill='both', expand=True, pady=10, padx=10)
         
-        # Tab 1: Daily Report
-        daily_frame = ttk.Frame(notebook)
-        notebook.add(daily_frame, text="📅 Laporan Harian")
-        self._create_daily_report_tab(daily_frame)
+        # Store frames for lazy loading
+        tab_frames = {}
+        tab_loaded = {}
         
-        # Tab 2: Period Report
-        period_frame = ttk.Frame(notebook)
-        notebook.add(period_frame, text="📆 Laporan Periode")
-        self._create_period_report_tab(period_frame)
+        # Create tab frames (initially empty)
+        tab_configs = [
+            ("📅 Laporan Harian", "daily", self._create_daily_report_tab),
+            ("📆 Laporan Periode", "period", self._create_period_report_tab),
+            ("🏆 Produk Terlaris", "bestselling", self._create_bestselling_tab),
+            ("📦 Informasi Stok", "stock", self._create_stock_info_tab),
+        ]
         
-        # Tab 3: Best Selling
-        bestselling_frame = ttk.Frame(notebook)
-        notebook.add(bestselling_frame, text="🏆 Produk Terlaris")
-        self._create_bestselling_tab(bestselling_frame)
+        for tab_label, tab_id, tab_func in tab_configs:
+            frame = ttk.Frame(notebook)
+            notebook.add(frame, text=tab_label)
+            tab_frames[tab_id] = frame
+            tab_loaded[tab_id] = False
         
-        # Tab 4: Stock Info
-        stock_frame = ttk.Frame(notebook)
-        notebook.add(stock_frame, text="📦 Informasi Stok")
-        self._create_stock_info_tab(stock_frame)
+        def on_tab_changed(event):
+            """Load tab content when tab is selected."""
+            selected_tab_id = notebook.tabs()[notebook.index(notebook.select())]
+            selected_tab_name = notebook.tab(selected_tab_id, "text")
+            
+            # Find which tab was selected
+            for tab_label, tab_id, tab_func in tab_configs:
+                if tab_label == selected_tab_name and not tab_loaded[tab_id]:
+                    # Load this tab asynchronously
+                    frame = tab_frames[tab_id]
+                    
+                    loading_label = ttk.Label(
+                        frame,
+                        text="⏳ Loading...",
+                        font=FONTS['normal'],
+                        foreground=COLORS['info']
+                    )
+                    loading_label.pack(pady=50)
+                    
+                    def load_tab_data():
+                        try:
+                            return True
+                        except Exception as e:
+                            logger.error(f"Error loading tab {tab_id}: {e}")
+                            return False
+                    
+                    def on_tab_data_loaded(success):
+                        if success:
+                            loading_label.destroy()
+                            # Call the tab creation function
+                            try:
+                                tab_func(frame)
+                                tab_loaded[tab_id] = True
+                            except Exception as e:
+                                error_label = ttk.Label(
+                                    frame,
+                                    text=f"❌ Error: {str(e)}",
+                                    font=FONTS['normal'],
+                                    foreground=COLORS['danger']
+                                )
+                                error_label.pack(pady=20)
+                        else:
+                            loading_label.config(text="❌ Error loading data")
+                    
+                    # Load asynchronously
+                    tab_operation = AsyncOperation(
+                        frame,
+                        load_tab_data,
+                        on_complete=on_tab_data_loaded,
+                        show_loading=False
+                    )
+                    tab_operation.start()
+        
+        # Bind tab change event
+        notebook.bind("<<NotebookTabChanged>>", on_tab_changed)
+        
+        # Load first tab automatically
+        if tab_configs:
+            first_frame = tab_frames[tab_configs[0][1]]
+            try:
+                tab_configs[0][2](first_frame)
+                tab_loaded[tab_configs[0][1]] = True
+            except Exception as e:
+                logger.error(f"Error loading first tab: {e}")
+                error_label = ttk.Label(
+                    first_frame,
+                    text=f"❌ Error: {str(e)}",
+                    font=FONTS['normal'],
+                    foreground=COLORS['danger']
+                )
+                error_label.pack(pady=20)
     
     def _create_daily_report_tab(self, parent):
         """Create daily report tab."""

@@ -14108,3 +14108,111 @@ sqlite3.OperationalError: no such column: aktif
 2026-04-26 22:08:38 - INFO     - __main__ -   F1 → New transaction
 2026-04-26 22:08:38 - INFO     - __main__ -   F2 → Process payment
 2026-04-26 22:08:38 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-26 22:10:07 - INFO     - __main__ - Product selected: 0003 - Toros uk 1 Kg (1000)
+2026-04-26 22:10:13 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (4)
+2026-04-26 22:10:27 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (4)
+2026-04-26 22:10:27 - INFO     - __main__ - Product selected: 0003 - Toros uk 1 Kg (1000)
+2026-04-26 22:10:38 - INFO     - models - Discount set: 1.0% (amount: Rp220)
+2026-04-26 22:10:38 - INFO     - __main__ - Discount updated: 1.0%
+2026-04-26 22:10:41 - INFO     - models - Discount set: 0.0% (amount: Rp0)
+2026-04-26 22:10:41 - INFO     - __main__ - Discount updated: 0.0%
+2026-04-26 22:10:43 - INFO     - models - Discount set: 0.0% (amount: Rp0)
+2026-04-26 22:10:43 - INFO     - __main__ - Discount updated: 0.0%
+2026-04-26 22:10:44 - INFO     - models - Discount set: 0.0% (amount: Rp0)
+2026-04-26 22:10:44 - INFO     - __main__ - Discount updated: 0.0%
+2026-04-26 22:10:44 - INFO     - models - Discount set: 0.2% (amount: Rp44)
+2026-04-26 22:10:44 - INFO     - __main__ - Discount updated: 0.2%
+2026-04-26 22:10:45 - INFO     - models - Discount set: 0.0% (amount: Rp0)
+2026-04-26 22:10:45 - INFO     - __main__ - Discount updated: 0.0%
+2026-04-26 22:10:47 - INFO     - models - Discount set: 0.3% (amount: Rp66)
+2026-04-26 22:10:47 - INFO     - __main__ - Discount updated: 0.3%
+2026-04-26 22:11:25 - INFO     - models - Discount set: 0.0% (amount: Rp0)
+2026-04-26 22:11:25 - INFO     - __main__ - Discount updated: 0.0%
+2026-04-26 22:11:26 - INFO     - models - Discount set: 0.0% (amount: Rp0)
+2026-04-26 22:11:26 - INFO     - __main__ - Discount updated: 0.0%
+2026-04-26 22:11:27 - INFO     - models - Discount set: 0.0% (amount: Rp0)
+2026-04-26 22:11:27 - INFO     - __main__ - Discount updated: 0.0%
+2026-04-26 22:11:27 - INFO     - models - Discount set: 0.0% (amount: Rp0)
+2026-04-26 22:11:27 - INFO     - __main__ - Discount updated: 0.0%
+2026-04-26 22:11:27 - INFO     - models - Discount set: 0.2% (amount: Rp44)
+2026-04-26 22:11:27 - INFO     - __main__ - Discount updated: 0.2%
+2026-04-26 22:11:28 - INFO     - models - Discount set: 0.25% (amount: Rp55)
+2026-04-26 22:11:28 - INFO     - __main__ - Discount updated: 0.25%
+2026-04-26 22:11:31 - INFO     - models - Discount set: 0.2% (amount: Rp44)
+2026-04-26 22:11:31 - INFO     - __main__ - Discount updated: 0.2%
+2026-04-26 22:11:32 - INFO     - models - Discount set: 0.26% (amount: Rp57)
+2026-04-26 22:11:32 - INFO     - __main__ - Discount updated: 0.26%
+2026-04-26 22:11:40 - INFO     - models - Discount set: 0.2% (amount: Rp44)
+2026-04-26 22:11:40 - INFO     - __main__ - Discount updated: 0.2%
+2026-04-26 22:11:40 - INFO     - models - Discount set: 0.0% (amount: Rp0)
+2026-04-26 22:11:40 - INFO     - __main__ - Discount updated: 0.0%
+2026-04-26 22:11:41 - INFO     - models - Discount set: 0.3% (amount: Rp66)
+2026-04-26 22:11:41 - INFO     - __main__ - Discount updated: 0.3%
+2026-04-26 22:11:44 - INFO     - models - Discount set: 0.0% (amount: Rp0)
+2026-04-26 22:11:44 - INFO     - __main__ - Discount updated: 0.0%
+2026-04-26 22:11:45 - INFO     - models - Discount set: 0.1% (amount: Rp22)
+2026-04-26 22:11:45 - INFO     - __main__ - Discount updated: 0.1%
+2026-04-26 22:12:35 - ERROR    - __main__ - Product validation error: Harga harus lebih dari 0
+2026-04-26 22:15:49 - INFO     - logger_config - User logout: gustiana
+2026-04-26 22:15:49 - INFO     - __main__ - User gustiana logged out - returning to login
+2026-04-26 22:15:49 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:15:49 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:15:50 - INFO     - database - Transaction table migration completed
+2026-04-26 22:15:50 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:15:50 - INFO     - __main__ - Database initialized
+2026-04-26 22:15:50 - INFO     - __main__ - Showing login window
+2026-04-26 22:15:55 - WARNING  - __main__ - User cancelled login, exiting application
+2026-04-26 22:16:17 - INFO     - logger_config - ======================================================================
+2026-04-26 22:16:17 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-26 22:16:17 - INFO     - logger_config - ======================================================================
+2026-04-26 22:16:17 - INFO     - logger_config - Logging initialized at 2026-04-26 22:16:17
+2026-04-26 22:16:17 - INFO     - __main__ - Application initialization started
+2026-04-26 22:16:17 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:16:17 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:16:17 - INFO     - database - Transaction table migration completed
+2026-04-26 22:16:17 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:16:17 - INFO     - __main__ - Database initialized
+2026-04-26 22:16:17 - INFO     - __main__ - Showing login window
+2026-04-26 22:16:31 - INFO     - database - User login successful: gustiana
+2026-04-26 22:16:31 - INFO     - __main__ - User login successful: gustiana (admin)
+2026-04-26 22:16:31 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-26 22:16:31 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:16:31 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:16:31 - INFO     - database - Transaction table migration completed
+2026-04-26 22:16:31 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:16:32 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-26 22:16:32 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-26 22:16:32 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:16:32 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:16:32 - INFO     - database - Transaction table migration completed
+2026-04-26 22:16:32 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:16:32 - INFO     - backup_manager - Backup already exists for today: backup_20260426.db
+2026-04-26 22:16:32 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-26 22:16:32 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-26 22:16:32 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-26 22:16:32 - INFO     - __main__ -   Enter → Add item
+2026-04-26 22:16:32 - INFO     - __main__ -   F1 → New transaction
+2026-04-26 22:16:32 - INFO     - __main__ -   F2 → Process payment
+2026-04-26 22:16:32 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-26 22:16:33 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 498, 'total_revenue': 7470000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 101, 'total_revenue': 2222000, 'rank': 2}]
+2026-04-26 22:16:33 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:16:33 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:16:33 - INFO     - __main__ - Product 1: Ubi Mentah (qty=498, revenue=7470000)
+2026-04-26 22:16:33 - INFO     - __main__ - Product 2: Ubi Bakar (qty=101, revenue=2222000)
+2026-04-26 22:17:34 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 498, 'total_revenue': 7470000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 101, 'total_revenue': 2222000, 'rank': 2}]
+2026-04-26 22:17:34 - INFO     - __main__ - Product 1: Ubi Mentah (qty=498, revenue=7470000)
+2026-04-26 22:17:34 - INFO     - __main__ - Product 2: Ubi Bakar (qty=101, revenue=2222000)
+2026-04-26 22:17:34 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:17:34 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:17:39 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 498, 'total_revenue': 7470000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 101, 'total_revenue': 2222000, 'rank': 2}]
+2026-04-26 22:17:39 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:17:39 - INFO     - __main__ - Product 1: Ubi Mentah (qty=498, revenue=7470000)
+2026-04-26 22:17:39 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-26 22:17:39 - INFO     - __main__ - Product 2: Ubi Bakar (qty=101, revenue=2222000)
+2026-04-26 22:17:42 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (4)
+2026-04-26 22:17:49 - INFO     - database - Stock reduced: product_id=8, qty=1, remaining=3
+2026-04-26 22:17:49 - INFO     - httpx - HTTP Request: POST https://api.telegram.org/bot8665091160:AAGiJKj9lqMnM63YnwJAc8SGeQOKVS5s-zw/sendMessage "HTTP/1.1 200 OK"
+2026-04-26 22:17:49 - INFO     - telegram_bot - Low stock notification sent: Ubi Bakar (stok=3)
+2026-04-26 22:17:49 - INFO     - transaction - Saving transaction to database...
+2026-04-26 22:17:49 - INFO     - database - Transaction created: ID=21, total=Rp22,000, discount=0.0% (Rp0), tax=0.0% (Rp0)
+2026-04-26 22:17:49 - INFO     - transaction - Transaction completed: ID=21, total=Rp22,000, items=1, payment=Rp25,000
