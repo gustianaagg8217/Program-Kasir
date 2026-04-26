@@ -75,10 +75,20 @@ class ReportGenerator:
         
         report = self.db.get_laporan_harian(date_str)
         
-        # Hitung rata-rata
+        # Hitung rata-rata dan tambahkan product names
         total_transaksi = report['total_transaksi']
-        total_item = sum(len(self.db.get_transaction(t['id'])['items']) 
-                        for t in report['transactions'])
+        total_item = 0
+        transactions_with_products = []
+        
+        for t in report['transactions']:
+            trans_detail = self.db.get_transaction(t['id'])
+            if trans_detail:
+                items = trans_detail['items']
+                total_item += len(items)
+                # Ambil nama produk dari semua items
+                product_names = ', '.join([item['nama'] for item in items])
+                t['product_names'] = product_names
+            transactions_with_products.append(t)
         
         return {
             'tanggal': date_str,
@@ -90,7 +100,7 @@ class ReportGenerator:
             'rata_rata_item_per_transaksi': (total_item / total_transaksi 
                                              if total_transaksi > 0 else 0),
             'produk_laris': report['produk_laris'],
-            'transactions': report['transactions']
+            'transactions': transactions_with_products
         }
     
     def get_laporan_periode(self, start_date: str, end_date: str) -> Dict:

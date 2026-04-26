@@ -147,10 +147,25 @@ class DatabaseManager:
                     nama TEXT NOT NULL,
                     harga INTEGER NOT NULL,
                     stok INTEGER NOT NULL,
+                    satuan TEXT DEFAULT 'pcs',
                     foto_path TEXT DEFAULT NULL,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             """)
+            
+            # Migration: Add missing columns if they don't exist
+            try:
+                cursor.execute("PRAGMA table_info(products)")
+                columns = [col[1] for col in cursor.fetchall()]
+                
+                if 'foto_path' not in columns:
+                    cursor.execute("ALTER TABLE products ADD COLUMN foto_path TEXT DEFAULT NULL")
+                    logger.info("Added foto_path column to products table")
+                if 'satuan' not in columns:
+                    cursor.execute("ALTER TABLE products ADD COLUMN satuan TEXT DEFAULT 'pcs'")
+                    logger.info("Added satuan column to products table")
+            except Exception as e:
+                logger.warning(f"Migration warning for products table: {e}")
             
             # ================================================================
             # TABEL 2: TRANSACTIONS - Header transaksi penjualan dengan discount/tax
@@ -220,6 +235,25 @@ class DatabaseManager:
                 )
             """)
             
+            # ================================================================
+            # TABEL 5: STOCK_OPNAME - Riwayat stock count dan adjustment
+            # ================================================================
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS stock_opname (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    opname_date DATE NOT NULL,
+                    product_id INTEGER NOT NULL,
+                    stok_sistem INTEGER NOT NULL,
+                    stok_fisik INTEGER NOT NULL,
+                    selisih INTEGER NOT NULL,
+                    user_id INTEGER NOT NULL,
+                    catatan TEXT DEFAULT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (product_id) REFERENCES products(id),
+                    FOREIGN KEY (user_id) REFERENCES users(id)
+                )
+            """)
+            
             conn.commit()
             logger.info("Database tables initialized successfully")
     
@@ -271,7 +305,7 @@ class DatabaseManager:
     # PRODUCT OPERATIONS - CRUD operasi untuk tabel products
     # ========================================================================
     
-    def add_product(self, kode: str, nama: str, harga: int, stok: int, foto_path: str = None) -> bool:
+    def add_product(self, kode: str, nama: str, harga: int, stok: int, satuan: str = 'pcs', foto_path: str = None) -> bool:
         """
         Tambah produk baru ke database.
         
@@ -280,6 +314,7 @@ class DatabaseManager:
             nama (str): Nama produk
             harga (int): Harga dalam Rupiah
             stok (int): Jumlah stok awal
+            satuan (str): Satuan produk (contoh: 'pcs', 'Kg', 'L')
             foto_path (str, optional): Path file foto produk
             
         Returns:
@@ -291,15 +326,16 @@ class DatabaseManager:
         try:
             with self.get_connection() as conn:
                 cursor = conn.cursor()
+                logger.debug(f"Adding product: kode={kode}, nama={nama}, harga={harga}, stok={stok}, satuan={satuan}, foto_path={foto_path}")
                 cursor.execute("""
-                    INSERT INTO products (kode, nama, harga, stok, foto_path)
-                    VALUES (?, ?, ?, ?, ?)
-                """, (kode, nama, harga, stok, foto_path))
+                    INSERT INTO products (kode, nama, harga, stok, satuan, foto_path)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (kode, nama, harga, stok, satuan, foto_path))
                 conn.commit()
-                logger.info(f"Product added: {kode} = {nama} (foto: {foto_path})")
+                logger.info(f"Product added: {kode} = {nama} ({satuan}) (foto: {foto_path})")
                 return True
-        except sqlite3.IntegrityError:
-            logger.warning(f"Product code '{kode}' already exists")
+        except sqlite3.IntegrityError as e:
+            logger.warning(f"Product code '{kode}' already exists: {e}")
             return False
         except Exception as e:
             logger.error(f"Error adding product: {e}", exc_info=True)
@@ -355,6 +391,34 @@ class DatabaseManager:
             cursor.execute("SELECT * FROM products WHERE id = ?", (product_id,))
             result = cursor.fetchone()
             return dict(result) if result else None
+    
+    def get_product_by_nama(self, nama: str) -> dict or None:
+        """
+        Ambil data produk berdasarkan nama (case-insensitive).
+        
+        Args:
+            nama (str): Nama produk
+            
+        Returns:
+            dict: Data produk jika ditemukan
+            None: Jika tidak ditemukan
+        """
+        try:
+            nama = str(nama).strip()
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM products WHERE LOWER(TRIM(nama)) = LOWER(TRIM(?))", (nama,))
+                result = cursor.fetchone()
+                
+                if result:
+                    logger.debug(f"Product found by nama: {nama}")
+                    return dict(result)
+                else:
+                    logger.debug(f"Product not found by nama: {nama}")
+                    return None
+        except Exception as e:
+            logger.error(f"Error getting product by nama '{nama}': {e}", exc_info=True)
+            return None
     
     def get_all_products(self) -> list:
         """
@@ -412,7 +476,7 @@ class DatabaseManager:
             logger.error(f"Error generating next product code: {e}", exc_info=True)
             return "0001"
     
-    def update_product(self, kode: str, nama: str = None, harga: int = None, stok: int = None, foto_path: str = None) -> bool:
+    def update_product(self, kode: str, nama: str = None, harga: int = None, stok: int = None, satuan: str = None, foto_path: str = None) -> bool:
         """
         Update data produk. Hanya field yang diberikan yang akan diupdate.
         
@@ -421,6 +485,7 @@ class DatabaseManager:
             nama (str): Nama produk baru (opsional)
             harga (int): Harga baru (opsional)
             stok (int): Stok baru (opsional)
+            satuan (str): Satuan produk baru (opsional)
             foto_path (str): Path to product photo (opsional)
             
         Returns:
@@ -443,6 +508,9 @@ class DatabaseManager:
                 if stok is not None:
                     fields.append("stok = ?")
                     values.append(stok)
+                if satuan is not None:
+                    fields.append("satuan = ?")
+                    values.append(satuan)
                 if foto_path is not None:
                     fields.append("foto_path = ?")
                     values.append(foto_path)

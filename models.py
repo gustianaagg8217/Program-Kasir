@@ -47,6 +47,7 @@ def validate_harga(harga: int) -> int:
 def validate_qty(qty: int) -> int:
     """
     Validasi dan konversi quantity.
+    Qty boleh 0 untuk produk out of stock.
     
     Args:
         qty (int): Jumlah item
@@ -61,8 +62,8 @@ def validate_qty(qty: int) -> int:
         raise ValidationError(f"Qty harus angka, bukan {type(qty)}")
     
     qty = int(qty)
-    if qty <= 0:
-        raise ValidationError("Qty harus lebih dari 0")
+    if qty < 0:
+        raise ValidationError("Qty tidak boleh negatif")
     
     return qty
 
@@ -138,6 +139,25 @@ def format_rp(amount: int) -> str:
         return f"-Rp {abs(amount):,.0f}".replace(',', '.')
     return f"Rp {amount:,.0f}".replace(',', '.')
 
+def format_satuan(satuan: str) -> str:
+    """
+    Format satuan untuk display dengan capitalize first letter.
+    
+    Args:
+        satuan (str): Satuan dalam lowercase (kg, pcs, ltr, dll)
+        
+    Returns:
+        str: Satuan dengan capital first letter (Kg, Pcs, Ltr, dll)
+        
+    Contoh:
+        format_satuan('kg') → 'Kg'
+        format_satuan('pcs') → 'Pcs'
+        format_satuan('ltr') → 'Ltr'
+    """
+    if not satuan:
+        return 'Pcs'
+    return satuan.lower().capitalize()
+
 # ============================================================================
 # PRODUCT MODEL - Class untuk produk
 # ============================================================================
@@ -153,6 +173,7 @@ class Product:
         nama (str): Nama produk
         harga (int): Harga dalam Rupiah
         stok (int): Jumlah stok
+        satuan (str): Satuan produk (contoh: 'pcs', 'Kg', 'L')
         foto_path (str): Path ke foto produk (opsional)
         
     Methods:
@@ -167,6 +188,7 @@ class Product:
     nama: str = None
     harga: int = None
     stok: int = None
+    satuan: str = 'pcs'
     foto_path: Optional[str] = None
     
     def __post_init__(self):
@@ -201,6 +223,7 @@ class Product:
             nama=data.get('nama'),
             harga=data.get('harga'),
             stok=data.get('stok'),
+            satuan=data.get('satuan', 'pcs'),
             foto_path=data.get('foto_path')
         )
     
@@ -217,6 +240,7 @@ class Product:
             'nama': self.nama,
             'harga': self.harga,
             'stok': self.stok,
+            'satuan': self.satuan,
             'foto_path': self.foto_path
         }
     
@@ -692,7 +716,7 @@ class ProductManager:
         """
         self.db = db
     
-    def add_product(self, kode: str, nama: str, harga: int, stok: int) -> bool:
+    def add_product(self, kode: str, nama: str, harga: int, stok: int, satuan: str = 'pcs', foto_path: str = None) -> bool:
         """
         Tambah produk baru ke sistem.
         
@@ -701,22 +725,29 @@ class ProductManager:
             nama (str): Nama produk
             harga (int): Harga dalam Rupiah
             stok (int): Jumlah stok awal
+            satuan (str): Satuan produk (default: 'pcs')
+            foto_path (str): Path ke foto produk (opsional)
             
         Returns:
             bool: True jika berhasil
-        """
-        try:
-            # Validasi menggunakan Product class
-            product = Product(kode=kode, nama=nama, harga=harga, stok=stok)
             
-            # Simpan ke database
-            result = self.db.add_product(product.kode, product.nama, product.harga, product.stok)
-            if result:
-                logger.info(f"Product added via ProductManager: {kode} = {nama}")
-            return result
-        except ValidationError as e:
-            logger.error(f"Product validation error: {e}")
-            return False
+        Raises:
+            ValidationError: Jika ada field yang tidak valid atau nama sudah ada
+        """
+        # Validasi menggunakan Product class
+        # ValidationError akan di-raise jika ada yang tidak valid
+        product = Product(kode=kode, nama=nama, harga=harga, stok=stok, satuan=satuan, foto_path=foto_path)
+        
+        # Cek apakah nama produk sudah ada (case-insensitive)
+        existing_product = self.db.get_product_by_nama(product.nama)
+        if existing_product:
+            raise ValidationError(f"Nama produk '{product.nama}' sudah ada!")
+        
+        # Simpan ke database
+        result = self.db.add_product(product.kode, product.nama, product.harga, product.stok, satuan=product.satuan, foto_path=product.foto_path)
+        if result:
+            logger.info(f"Product added via ProductManager: {kode} = {nama}")
+        return result
     
     def get_product(self, kode: str) -> Optional[Product]:
         """
@@ -767,11 +798,39 @@ class ProductManager:
         
         Args:
             kode (str): Kode produk
-            **kwargs: Field yang ingin diupdate (nama, harga, stok)
+            **kwargs: Field yang ingin diupdate (nama, harga, stok, satuan)
             
         Returns:
             bool: True jika berhasil
+            
+        Raises:
+            ValidationError: Jika ada field yang tidak valid atau nama sudah ada
         """
+        # Get current product
+        current_product = self.db.get_product_by_kode(kode)
+        if not current_product:
+            raise ValidationError(f"Produk dengan kode '{kode}' tidak ditemukan!")
+        
+        # Validate new nama if provided
+        if 'nama' in kwargs:
+            new_nama = kwargs['nama']
+            # Validate format
+            new_nama = validate_nama(new_nama)
+            kwargs['nama'] = new_nama
+            
+            # Check for duplicate nama (case-insensitive)
+            # Only check if the new name is different from current name
+            if new_nama.lower() != current_product['nama'].lower():
+                existing_product = self.db.get_product_by_nama(new_nama)
+                if existing_product:
+                    raise ValidationError(f"Nama produk '{new_nama}' sudah ada!")
+        
+        # Validate other fields
+        if 'harga' in kwargs:
+            kwargs['harga'] = validate_harga(kwargs['harga'])
+        if 'stok' in kwargs:
+            kwargs['stok'] = validate_qty(kwargs['stok'])
+        
         return self.db.update_product(kode, **kwargs)
     
     def delete_product(self, kode: str) -> bool:

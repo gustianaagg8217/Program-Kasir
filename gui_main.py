@@ -21,10 +21,11 @@ from matplotlib.figure import Figure
 
 # Import semua modules dari sistem POS
 from database import DatabaseManager
-from models import ProductManager, ValidationError, format_rp
+from models import ProductManager, ValidationError, Product, format_rp, format_satuan
 from transaction import TransactionService, TransactionHandler, ReceiptManager
 from laporan import ReportGenerator, ReportFormatter, CSVExporter
 from telegram_bot import POSTelegramBot, TelegramConfigManager, TELEGRAM_AVAILABLE
+from stok_opname import StokOpnameService
 from logger_config import get_logger, log_user_login, log_user_logout, log_product_added, log_product_updated, log_product_deleted, log_transaction_completed
 
 logger = get_logger(__name__)
@@ -255,6 +256,7 @@ class POSGUIApplication(tk.Tk):
             self.report_generator = ReportGenerator(self.db)
             self.report_formatter = ReportFormatter()
             self.csv_exporter = CSVExporter()
+            self.stok_opname_service = StokOpnameService(self.db)
             
             self.current_transaction = None
         except Exception as e:
@@ -381,7 +383,8 @@ class POSGUIApplication(tk.Tk):
         menu_items = [
             ("🏠 Dashboard", self.show_dashboard, True),  # visible for all
             ("📦 Produk", self.show_products, True),
-            ("🛒 Transaksi", self.show_transaction, True),
+            ("� Stok Opname", self.show_stok_opname, True),
+            ("�🛒 Transaksi", self.show_transaction, True),
             ("📊 Laporan", self.show_reports, True),
             ("🤖 Telegram Bot", self.show_telegram, True),
         ]
@@ -407,8 +410,8 @@ class POSGUIApplication(tk.Tk):
     def _logout(self):
         """Logout user dan kembali ke login screen."""
         if messagebox.askyesno("Logout", f"Keluar dari akun {self.current_user['username']}?"):
-            self.quit()  # Close aplikasi
-            # Note: main() akan show login window lagi
+            log_user_logout(self.current_user['username'])
+            self.destroy()  # Close main application window
     
     def _clear_content(self):
         """Clear content area."""
@@ -423,9 +426,32 @@ class POSGUIApplication(tk.Tk):
         """Show dashboard page."""
         self._clear_content()
         
+        # Create scrollable content area with canvas and scrollbar
+        canvas = tk.Canvas(self.content_area, bg=COLORS['bg_main'], highlightthickness=0)
+        scrollbar = ttk.Scrollbar(self.content_area, orient='vertical', command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Add mouse wheel scrolling support
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        
+        canvas.pack(side='left', fill='both', expand=True)
+        scrollbar.pack(side='right', fill='y')
+        
+        # Use scrollable_frame as the content container instead of self.content_area
         # Header
         header = ttk.Label(
-            self.content_area,
+            scrollable_frame,
             text="📊 Dashboard",
             font=FONTS['title'],
             foreground=COLORS['primary']
@@ -433,7 +459,7 @@ class POSGUIApplication(tk.Tk):
         header.pack(pady=10)
         
         # Stats cards container
-        stats_frame = ttk.Frame(self.content_area)
+        stats_frame = ttk.Frame(scrollable_frame)
         stats_frame.pack(fill='x', pady=10)
         
         # Get stats
@@ -452,20 +478,20 @@ class POSGUIApplication(tk.Tk):
             self._create_stat_card(stats_frame, title, value, color)
         
         # Daily sales chart (last 7 days)
-        chart_frame = ttk.Frame(self.content_area)
+        chart_frame = ttk.Frame(scrollable_frame)
         chart_frame.pack(fill='both', expand=True, pady=10)
         
         self._create_daily_sales_chart(chart_frame)
         
         # AI Recommendations section (top 3 products)
         # NOTE: If dashboard loads slowly, comment out this line:
-        self._create_ai_recommendations_section()
+        self._create_ai_recommendations_section(scrollable_frame)
         
         # Recent transactions section
-        self._create_recent_transactions_section()
+        self._create_recent_transactions_section(scrollable_frame)
         
         # Action buttons
-        actions_frame = ttk.Frame(self.content_area)
+        actions_frame = ttk.Frame(scrollable_frame)
         actions_frame.pack(fill='x', pady=20)
         
         action_btns = [
@@ -510,9 +536,9 @@ class POSGUIApplication(tk.Tk):
         )
         value_label.pack()
     
-    def _create_recent_transactions_section(self):
+    def _create_recent_transactions_section(self, parent):
         """Create recent transactions display."""
-        section_frame = tk.Frame(self.content_area, bg=COLORS['bg_card'], relief='flat', bd=1)
+        section_frame = tk.Frame(parent, bg=COLORS['bg_card'], relief='flat', bd=1)
         section_frame.pack(fill='both', expand=True, pady=10)
         
         # Header
@@ -540,11 +566,27 @@ class POSGUIApplication(tk.Tk):
             return
         
         # Create treeview
-        columns = ('No', 'ID', 'Waktu', 'Total', 'Kembalian')
-        tree = ttk.Treeview(section_frame, columns=columns, height=8, show='headings')
+        columns = ('No', 'Produk', 'Waktu', 'Total', 'Kembalian')
+        
+        # Create frame for treeview with scrollbar
+        tree_frame = ttk.Frame(section_frame)
+        tree_frame.pack(fill='both', expand=True, padx=15, pady=10)
+        
+        # Scrollbar for treeview
+        scrollbar = ttk.Scrollbar(tree_frame, orient='vertical')
+        scrollbar.pack(side='right', fill='y')
+        
+        tree = ttk.Treeview(
+            tree_frame, 
+            columns=columns, 
+            height=8, 
+            show='headings',
+            yscrollcommand=scrollbar.set
+        )
+        scrollbar.config(command=tree.yview)
         
         # Define column headings and widths
-        widths = [30, 60, 150, 100, 100]
+        widths = [30, 250, 150, 100, 100]
         for col, width in zip(columns, widths):
             tree.heading(col, text=col)
             tree.column(col, width=width)
@@ -553,9 +595,12 @@ class POSGUIApplication(tk.Tk):
         trans_list = recent_trans.get('transactions', [])
         self._trans_id_map = {}  # Store mapping for click handler
         for i, trans in enumerate(trans_list[-10:], 1):
+            # Get product names from transaction
+            product_names = trans.get('product_names', 'N/A')
+            
             item_id = tree.insert('', 'end', values=(
                 str(i),
-                trans['id'],
+                product_names,
                 trans['tanggal'],
                 format_rp(trans['total']),
                 format_rp(trans['kembalian'])
@@ -564,6 +609,8 @@ class POSGUIApplication(tk.Tk):
         
         # Add click handler
         tree.bind('<Double-1>', lambda e: self._show_transaction_detail(tree, e))
+        
+        tree.pack(fill='both', expand=True, side='left')
         
         # Add hint label
         hint_label = tk.Label(
@@ -574,16 +621,17 @@ class POSGUIApplication(tk.Tk):
             fg=COLORS['text_secondary']
         )
         hint_label.pack(anchor='w', padx=15, pady=5)
-        
-        tree.pack(fill='both', expand=True, padx=15, pady=10)
     
-    def _create_ai_recommendations_section(self):
+    def _create_ai_recommendations_section(self, parent):
         """Create AI recommendations section showing top 3 best-selling products."""
         try:
             # Try to get top 3 products - with error handling and simple queries
             try:
                 # Test if we can even access the database quickly
                 top_products = self.report_generator.get_produk_terlaris(limit=3)
+                
+                # Debug: log what we got
+                logger.info(f"Top products data: {top_products}")
                 
                 # If no products, skip this section entirely for performance
                 if not top_products:
@@ -594,13 +642,13 @@ class POSGUIApplication(tk.Tk):
                 return
             
             # Create container
-            rec_frame = tk.Frame(self.content_area, bg=COLORS['bg_main'], relief='flat')
+            rec_frame = tk.Frame(parent, bg=COLORS['bg_main'], relief='flat')
             rec_frame.pack(fill='x', pady=5)
             
             # Header - simple text without emoji
             header = tk.Label(
                 rec_frame,
-                text="Top 3 Produk Terlaris",
+                text="🏆 Top 3 Produk Terlaris",
                 font=FONTS['subheading'],
                 bg=COLORS['bg_main'],
                 fg=COLORS['primary']
@@ -609,58 +657,73 @@ class POSGUIApplication(tk.Tk):
             
             # Create cards for top 3 products
             cards_container = tk.Frame(rec_frame, bg=COLORS['bg_main'])
-            cards_container.pack(fill='x', padx=15, pady=3)
+            cards_container.pack(fill='both', expand=True, padx=15, pady=3)
             
             # Colors for ranking (gold, silver, bronze)
             rank_colors = ['#FFD700', '#C0C0C0', '#CD7F32']
             
             for idx, product in enumerate(top_products):
                 try:
-                    # Simple card without complex styling
+                    # Card with LARGER height for proper display (increased from 110 to 160)
                     card = tk.Frame(
                         cards_container,
                         bg=COLORS['bg_card'],
                         relief='solid',
-                        bd=1
+                        bd=1,
+                        height=160
                     )
                     card.pack(side='left', padx=8, pady=3, fill='both', expand=True)
+                    card.pack_propagate(False)  # Respect the fixed height
                     
-                    # Rank label - keep it simple
+                    # Rank label - with medal emoji
+                    rank_emoji = ['🥇', '🥈', '🥉'][idx]
                     rank_text = ['#1', '#2', '#3'][idx]
                     rank_label = tk.Label(
                         card,
-                        text=f"Rank {rank_text}",
-                        font=FONTS['small'],
+                        text=f"{rank_emoji} Rank {rank_text}",
+                        font=(FONTS['small'][0], FONTS['small'][1], 'bold'),
                         bg=COLORS['bg_card'],
                         fg=rank_colors[idx]
                     )
-                    rank_label.pack(anchor='nw', padx=8, pady=4)
+                    rank_label.pack(anchor='w', padx=8, pady=4, fill='x')
                     
-                    # Product name - keep it short
-                    name = product.get('nama', 'Unknown')[:30]  # Limit length
+                    # Product name - ensure it's visible and properly formatted
+                    product_name = product.get('nama') or product.get('name') or 'Unknown Product'
+                    name = str(product_name)[:45]  # Limit length
                     name_label = tk.Label(
                         card,
                         text=name,
-                        font=FONTS['normal'],
+                        font=(FONTS['normal'][0], 10, 'bold'),
                         bg=COLORS['bg_card'],
                         fg=COLORS['text_primary'],
-                        wraplength=140
+                        wraplength=145,
+                        justify='left'
                     )
-                    name_label.pack(anchor='w', padx=8, pady=3)
+                    name_label.pack(anchor='w', padx=8, pady=3, fill='both', expand=True)
                     
-                    # Simple stats
+                    # Quantity sold
                     qty = product.get('total_qty', 0)
-                    revenue = product.get('total_revenue', 0)
-                    
-                    stats_text = f"Qty: {qty} | {format_rp(revenue)}"
-                    stats_label = tk.Label(
+                    qty_label = tk.Label(
                         card,
-                        text=stats_text,
+                        text=f"📦 {qty} unit",
                         font=FONTS['small'],
-                        bg=COLORS['bg_main'],
-                        fg=COLORS['secondary']
+                        bg=COLORS['bg_card'],
+                        fg=COLORS['text_secondary']
                     )
-                    stats_label.pack(anchor='w', padx=8, pady=3)
+                    qty_label.pack(anchor='w', padx=8, pady=2)
+                    
+                    # Revenue
+                    revenue = product.get('total_revenue', 0)
+                    revenue_label = tk.Label(
+                        card,
+                        text=f"💰 {format_rp(revenue)}",
+                        font=(FONTS['small'][0], 9, 'bold'),
+                        bg=COLORS['bg_card'],
+                        fg=COLORS['success']
+                    )
+                    revenue_label.pack(anchor='w', padx=8, pady=2)
+                    
+                    logger.info(f"Product {idx+1}: {product_name} (qty={qty}, revenue={revenue})")
                     
                 except Exception as e:
                     logger.warning(f"Error rendering product card {idx}: {e}")
@@ -798,8 +861,8 @@ Kembalian        : {format_rp(trans['kembalian'])}
         
         # Load store config
         store_config = self._load_store_config()
-        store_name = store_config.get('store', {}).get('name', 'TOKO ACCESSORIES G-LIES')
-        store_address = store_config.get('store', {}).get('address', 'Jl. Majalaya, Solokanjeruk, Bandung')
+        store_name = store_config.get('store', {}).get('name', 'TOKO UBI BAROKAH IBU AWANG')
+        store_address = store_config.get('store', {}).get('address', 'Jl. Desa Mekarbakti, pertigaan Cilembu.')
         store_phone = store_config.get('store', {}).get('phone', '')
         receipt_width = store_config.get('receipt', {}).get('width', 40)
         show_phone = store_config.get('receipt', {}).get('show_phone', True)
@@ -908,8 +971,8 @@ Kembalian        : {format_rp(trans['kembalian'])}
         # Return default config
         return {
             'store': {
-                'name': 'TOKO ACCESSORIES G-LIES',
-                'address': 'Jl. Majalaya, Solokanjeruk, Bandung',
+                'name': 'TOKO UBI BAROKAH IBU AWANG',
+                'address': 'Jl. Desa Mekarbakti, pertigaan Cilembu.',
                 'phone': ''
             },
             'receipt': {
@@ -1148,11 +1211,30 @@ Kembalian        : {format_rp(trans['kembalian'])}
             empty_label.pack(pady=20)
             return
         
+        # ====== SEARCH BAR ======
+        search_frame = ttk.Frame(self.content_area)
+        search_frame.pack(fill='x', pady=10, padx=5)
+        
+        search_label = ttk.Label(search_frame, text="🔍 Cari Produk:", font=FONTS['normal'])
+        search_label.pack(side='left', padx=5)
+        
+        search_var = tk.StringVar()
+        
+        search_entry = ttk.Entry(search_frame, textvariable=search_var, width=40)
+        search_entry.pack(side='left', padx=5, fill='x', expand=True)
+        
+        clear_btn = ttk.Button(
+            search_frame,
+            text="✕ Hapus",
+            command=lambda: search_var.set("")
+        )
+        clear_btn.pack(side='right', padx=5)
+        
         # Create treeview with scrollbar
         tree_frame = ttk.Frame(self.content_area)
         tree_frame.pack(fill='both', expand=True, pady=10)
         
-        columns = ('No', 'Kode', 'Nama', 'Harga', 'Stok', 'Aksi')
+        columns = ('No', 'Kode', 'Nama', 'Harga', 'Stok', 'Satuan', 'Aksi')
         tree = ttk.Treeview(tree_frame, columns=columns, height=15, show='headings')
         
         # Define column headings
@@ -1161,6 +1243,7 @@ Kembalian        : {format_rp(trans['kembalian'])}
         tree.heading('Nama', text='Nama Produk')
         tree.heading('Harga', text='Harga')
         tree.heading('Stok', text='Stok')
+        tree.heading('Satuan', text='Satuan')
         tree.heading('Aksi', text='Aksi')
         
         tree.column('No', width=30)
@@ -1168,6 +1251,7 @@ Kembalian        : {format_rp(trans['kembalian'])}
         tree.column('Nama', width=250)
         tree.column('Harga', width=100)
         tree.column('Stok', width=60)
+        tree.column('Satuan', width=60)
         tree.column('Aksi', width=120)
         
         # Add scrollbar
@@ -1176,19 +1260,53 @@ Kembalian        : {format_rp(trans['kembalian'])}
         scrollbar.pack(side='right', fill='y')
         tree.pack(fill='both', expand=True)
         
-        # Add products to table
-        for i, prod in enumerate(products, 1):
-            tree.insert('', 'end', values=(
-                str(i),
-                prod.kode,
-                prod.nama,
-                format_rp(prod.harga),
-                f"{prod.stok} pcs",
-                "✏️ Edit | 🗑️ Hapus"
-            ))
+        # Store reference to original products for filtering
+        self._product_list = products
+        self._product_tree = tree
+        self._all_products = products
+        
+        def update_product_list(*args):
+            """Update product list based on search input."""
+            search_term = search_var.get().lower().strip()
+            
+            # Clear existing items
+            for item in tree.get_children():
+                tree.delete(item)
+            
+            # Filter products
+            filtered_products = []
+            if search_term:
+                for prod in products:
+                    if (search_term in str(prod.kode).lower() or 
+                        search_term in prod.nama.lower()):
+                        filtered_products.append(prod)
+            else:
+                filtered_products = products
+            
+            # Add filtered products to table
+            for i, prod in enumerate(filtered_products, 1):
+                tree.insert('', 'end', values=(
+                    str(i),
+                    prod.kode,
+                    prod.nama,
+                    format_rp(prod.harga),
+                    f"{prod.stok} {format_satuan(prod.satuan)}",
+                    format_satuan(prod.satuan),
+                    "✏️ Edit | 🗑️ Hapus"
+                ))
+            
+            # Store filtered list for click handler
+            self._current_filtered_products = filtered_products
+        
+        # Bind search input to update function
+        search_var.trace('w', update_product_list)
+        
+        # Initial population of tree
+        self._current_filtered_products = products
+        update_product_list()
         
         # Add click handler for edit/delete
-        tree.bind('<Double-1>', lambda e: self._handle_product_click(tree, products))
+        tree.bind('<Double-1>', lambda e: self._handle_product_click(tree, self._current_filtered_products))
     
     def show_add_product(self):
         """Show add product dialog dengan opsi foto produk."""
@@ -1247,6 +1365,21 @@ Kembalian        : {format_rp(trans['kembalian'])}
             entry.pack(fill='x', pady=5)
             fields[field_name] = entry
         
+        # Satuan dropdown field
+        ttk.Label(form_frame, text="Satuan:", font=FONTS['normal']).pack(anchor='w', pady=5)
+        
+        satuan_options = ["kg", "pcs", "ltr"]
+        satuan_var = tk.StringVar(value="pcs")
+        satuan_combo = ttk.Combobox(
+            form_frame,
+            textvariable=satuan_var,
+            values=satuan_options,
+            state='readonly',
+            width=27
+        )
+        satuan_combo.pack(fill='x', pady=5)
+        fields['satuan'] = satuan_var
+        
         # Foto field (OPSIONAL)
         ttk.Label(form_frame, text="📸 Foto Produk (Opsional):", font=FONTS['normal']).pack(anchor='w', pady=(15, 5))
         
@@ -1288,6 +1421,7 @@ Kembalian        : {format_rp(trans['kembalian'])}
                 nama = fields['nama'].get().strip()
                 harga = int(fields['harga'].get().strip())
                 stok = int(fields['stok'].get().strip())
+                satuan = fields['satuan'].get().strip() or 'pcs'
                 
                 if not all([kode, nama, harga, stok]):
                     messagebox.showwarning("Peringatan", "Semua field harus diisi!")
@@ -1312,16 +1446,24 @@ Kembalian        : {format_rp(trans['kembalian'])}
                         messagebox.showwarning("Peringatan", f"Gagal menyimpan foto: {e}")
                         foto_path = None
                 
-                if self.product_manager.add_product(kode, nama, harga, stok, foto_path=foto_path):
+                logger.info(f"Attempting to add product: kode={kode}, nama={nama}, harga={harga}, stok={stok}, satuan={satuan}")
+                
+                if self.product_manager.add_product(kode, nama, harga, stok, satuan=satuan, foto_path=foto_path):
                     foto_status = "dengan foto" if foto_path else "tanpa foto"
                     messagebox.showinfo("Sukses", f"Produk '{nama}' (Kode: {kode}) berhasil ditambahkan! ({foto_status})")
                     log_product_added(kode, nama)
                     dialog.destroy()
                     self.show_products()
                 else:
-                    messagebox.showerror("Error", "Gagal menambahkan produk (mungkin kode sudah ada)")
-            except ValueError:
-                messagebox.showerror("Error", "Harga dan Stok harus berupa angka!")
+                    messagebox.showerror("Error", "Gagal menambahkan produk. Periksa logs untuk detail error.")
+            except ValueError as e:
+                messagebox.showerror("Error", f"Input tidak valid: {e}\n\nHarga dan Stok harus berupa angka!")
+            except ValidationError as e:
+                messagebox.showerror("❌ Error Validasi", str(e))
+                logger.error(f"Product validation error: {e}")
+            except Exception as e:
+                logger.error(f"Unexpected error in save_product: {e}", exc_info=True)
+                messagebox.showerror("Error", f"Terjadi kesalahan: {e}")
         
         save_btn = ttk.Button(
             btn_frame,
@@ -1439,6 +1581,23 @@ Kembalian        : {format_rp(trans['kembalian'])}
             entry.pack(fill='x', pady=5)
             fields[field_name] = entry
         
+        # Satuan dropdown field
+        ttk.Label(form_frame, text="Satuan:", font=FONTS['normal']).pack(anchor='w', pady=5)
+        
+        satuan_options = ["kg", "pcs", "ltr"]
+        # Normalize product satuan to lowercase for proper selection
+        current_satuan = (product.satuan or "pcs").lower()
+        satuan_var = tk.StringVar(value=current_satuan)
+        satuan_combo = ttk.Combobox(
+            form_frame,
+            textvariable=satuan_var,
+            values=satuan_options,
+            state='readonly',
+            width=27
+        )
+        satuan_combo.pack(fill='x', pady=5)
+        fields['satuan'] = satuan_var
+        
         # Foto field (OPSIONAL)
         ttk.Label(form_frame, text="📸 Foto Produk (Opsional):", font=FONTS['normal']).pack(anchor='w', pady=(15, 5))
         
@@ -1488,7 +1647,11 @@ Kembalian        : {format_rp(trans['kembalian'])}
                     'nama': fields['nama'].get().strip(),
                     'harga': int(fields['harga'].get().strip()),
                     'stok': int(fields['stok'].get().strip()),
+                    'satuan': fields['satuan'].get().strip(),
                 }
+                
+                # Validate using Product model
+                Product(kode=kode, nama=update_data['nama'], harga=update_data['harga'], stok=update_data['stok'], satuan=update_data['satuan'])
                 
                 # Handle foto upload
                 foto_file = foto_path_var.get()
@@ -1517,6 +1680,9 @@ Kembalian        : {format_rp(trans['kembalian'])}
                     messagebox.showerror("Error", "Gagal mengupdate produk")
             except ValueError:
                 messagebox.showerror("Error", "Input tidak valid! Harga dan Stok harus berupa angka!")
+            except ValidationError as e:
+                messagebox.showerror("❌ Error Validasi", str(e))
+                logger.error(f"Product validation error: {e}")
         
         save_btn = ttk.Button(
             btn_frame,
@@ -1798,7 +1964,7 @@ Kembalian        : {format_rp(trans['kembalian'])}
         # If no keyword, show all products
         if not keyword:
             for product in self.all_products:
-                display_text = f"{product.kode} - {product.nama}"
+                display_text = f"{product.kode} - {product.nama} ({product.stok})"
                 self.product_listbox.insert(tk.END, display_text)
             return
         
@@ -1813,7 +1979,7 @@ Kembalian        : {format_rp(trans['kembalian'])}
         
         # Display filtered products with highlighting
         for product in filtered:
-            display_text = f"{product.kode} - {product.nama}"
+            display_text = f"{product.kode} - {product.nama} ({product.stok})"
             self.product_listbox.insert(tk.END, display_text)
         
         # If only one match, select it automatically
@@ -1935,8 +2101,8 @@ Kembalian        : {format_rp(trans['kembalian'])}
             # Complete transaction
             trans_id = self.transaction_handler.complete_transaction(
                 bayar,
-                store_name="TOKO ACCESSORIES G-LIES",
-                store_address="Jl. Majalaya, Solokanjeruk, Bandung"
+                store_name="TOKO UBI BAROKAH IBU AWANG",
+                store_address="Jl. Desa Mekarbakti, pertigaan Cilembu."
             )
             
             if trans_id:
@@ -1952,8 +2118,9 @@ Kembalian        : {format_rp(trans['kembalian'])}
                     # Get transaction detail for printing
                     transaction = self.db.get_transaction(trans_id)
                     if transaction:
+                        trans_data = transaction.get('transaction', transaction)
                         items = transaction.get('items', [])
-                        receipt_text = self._generate_receipt_text(transaction, items)
+                        receipt_text = self._generate_receipt_text(trans_data, items)
                         self._print_report_dialog(receipt_text, f"resi_{trans_id}")
                         messagebox.showinfo("Resi Dicetak", "✅ Resi berhasil dicetak!")
                     self.show_transaction()
@@ -2040,25 +2207,28 @@ Total Item          : {laporan.get('total_item', 0)}
         trans_frame = ttk.LabelFrame(parent, text="📋 Daftar Transaksi", padding=10)
         trans_frame.pack(fill='both', expand=True, padx=10, pady=10)
         
-        columns = ('No', 'ID', 'Total', 'Pembayaran', 'Kembalian')
+        columns = ('No', 'ID', 'Produk', 'Total', 'Pembayaran', 'Kembalian')
         tree = ttk.Treeview(trans_frame, columns=columns, height=15, show='headings')
         
         tree.heading('No', text='No')
         tree.heading('ID', text='ID')
+        tree.heading('Produk', text='Produk')
         tree.heading('Total', text='Total')
         tree.heading('Pembayaran', text='Pembayaran')
         tree.heading('Kembalian', text='Kembalian')
         
         tree.column('No', width=30)
         tree.column('ID', width=60)
-        tree.column('Total', width=120)
-        tree.column('Pembayaran', width=120)
-        tree.column('Kembalian', width=120)
+        tree.column('Produk', width=250)
+        tree.column('Total', width=100)
+        tree.column('Pembayaran', width=100)
+        tree.column('Kembalian', width=100)
         
         for i, trans in enumerate(laporan.get('transactions', []), 1):
             tree.insert('', 'end', values=(
                 str(i),
                 trans['id'],
+                trans.get('product_names', ''),
                 format_rp(trans['total']),
                 format_rp(trans['bayar']),
                 format_rp(trans['kembalian'])
@@ -2093,6 +2263,7 @@ DAFTAR TRANSAKSI:
             for i, trans in enumerate(laporan.get('transactions', []), 1):
                 report_text += f"""
 {i}. Transaksi ID: {trans['id']}
+   Produk     : {trans.get('product_names', 'N/A')}
    Total      : {format_rp(trans['total'])}
    Pembayaran : {format_rp(trans['bayar'])}
    Kembalian  : {format_rp(trans['kembalian'])}
@@ -2334,9 +2505,35 @@ RINGKASAN:
             msg.pack(pady=20)
             return
         
+        # Load config manager
+        from telegram_bot import TelegramConfigManager
+        config_manager = TelegramConfigManager()
+        
+        # Create scrollable canvas for telegram content
+        canvas = tk.Canvas(self.content_area, bg=COLORS['bg_main'], highlightthickness=0)
+        scrollbar = ttk.Scrollbar(self.content_area, orient='vertical', command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Pack canvas and scrollbar
+        canvas.pack(side='left', fill='both', expand=True)
+        scrollbar.pack(side='right', fill='y')
+        
+        # Bind mousewheel for scrolling
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        
         # Header
         header = ttk.Label(
-            self.content_area,
+            scrollable_frame,
             text="🤖 Manajemen Telegram Bot",
             font=FONTS['title'],
             foreground=COLORS['primary']
@@ -2344,15 +2541,15 @@ RINGKASAN:
         header.pack(pady=10)
         
         # Status info
-        status_frame = ttk.LabelFrame(self.content_area, text="Status Bot", padding=10)
+        status_frame = ttk.LabelFrame(scrollable_frame, text="Status Bot", padding=10)
         status_frame.pack(fill='x', padx=10, pady=10)
         
         if self.telegram_bot and self.telegram_bot.available:
             status_text = "✅ Bot siap digunakan"
             status_color = COLORS['success']
         else:
-            status_text = "❌ Bot belum dikonfigurasi"
-            status_color = COLORS['danger']
+            status_text = "⚠️ Bot belum dikonfigurasi" if not config_manager.is_enabled() else "❌ Konfigurasi tidak lengkap"
+            status_color = COLORS['warning'] if not config_manager.is_enabled() else COLORS['danger']
         
         status_label = tk.Label(
             status_frame,
@@ -2364,33 +2561,170 @@ RINGKASAN:
         status_label.pack(pady=10)
         
         # Device Token & Settings
-        config_frame = ttk.LabelFrame(self.content_area, text="⚙️ Konfigurasi", padding=10)
-        config_frame.pack(fill='both', expand=True, padx=10, pady=10)
+        config_frame = ttk.LabelFrame(scrollable_frame, text="⚙️ Konfigurasi", padding=10)
+        config_frame.pack(fill='x', padx=10, pady=10)
         
         ttk.Label(config_frame, text="Bot Token:", font=FONTS['normal']).pack(anchor='w', pady=5)
-        token_entry = ttk.Entry(config_frame, width=50)
+        token_entry = ttk.Entry(config_frame, width=50, show='*')
+        token_entry.insert(0, config_manager.config.get('bot_token', ''))
         token_entry.pack(fill='x', pady=5)
         
-        # Add more config fields here
         ttk.Label(config_frame, text="Admin Chat ID:", font=FONTS['normal']).pack(anchor='w', pady=5)
         admin_id_entry = ttk.Entry(config_frame, width=50)
+        admin_id_entry.insert(0, str(config_manager.config.get('admin_chat_id', '')))
         admin_id_entry.pack(fill='x', pady=5)
+        
+        # Status toggles
+        notify_frame = ttk.LabelFrame(config_frame, text="📢 Notifikasi", padding=5)
+        notify_frame.pack(fill='x', pady=10)
+        
+        enabled_var = tk.BooleanVar(value=config_manager.config.get('enabled', False))
+        ttk.Checkbutton(
+            notify_frame,
+            text="Aktifkan Bot",
+            variable=enabled_var
+        ).pack(anchor='w', pady=5)
+        
+        notify_trans_var = tk.BooleanVar(value=config_manager.config.get('notify_transaction', True))
+        ttk.Checkbutton(
+            notify_frame,
+            text="Notifikasi Transaksi",
+            variable=notify_trans_var
+        ).pack(anchor='w', pady=5)
+        
+        notify_stock_var = tk.BooleanVar(value=config_manager.config.get('notify_low_stock', True))
+        ttk.Checkbutton(
+            notify_frame,
+            text="Notifikasi Stok Minim",
+            variable=notify_stock_var
+        ).pack(anchor='w', pady=5)
+        
+        ttk.Label(notify_frame, text="Batas Stok Minim:", font=FONTS['small']).pack(anchor='w', pady=5)
+        stock_threshold_entry = ttk.Entry(notify_frame, width=20)
+        stock_threshold_entry.insert(0, str(config_manager.config.get('low_stock_threshold', 20)))
+        stock_threshold_entry.pack(anchor='w', pady=5)
         
         # Buttons
         btn_frame = ttk.Frame(config_frame)
         btn_frame.pack(fill='x', pady=15)
         
+        def save_config():
+            """Save Telegram configuration."""
+            try:
+                token = token_entry.get().strip()
+                admin_id_str = admin_id_entry.get().strip()
+                
+                if not token:
+                    messagebox.showerror("Error", "Bot Token tidak boleh kosong!")
+                    return
+                
+                if not admin_id_str:
+                    messagebox.showerror("Error", "Admin Chat ID tidak boleh kosong!")
+                    return
+                
+                try:
+                    admin_id = int(admin_id_str)
+                except ValueError:
+                    messagebox.showerror("Error", "Admin Chat ID harus berupa angka!")
+                    return
+                
+                # Validate threshold
+                try:
+                    threshold = int(stock_threshold_entry.get().strip())
+                    if threshold < 1:
+                        messagebox.showerror("Error", "Batas stok harus lebih besar dari 0!")
+                        return
+                except ValueError:
+                    messagebox.showerror("Error", "Batas stok harus berupa angka!")
+                    return
+                
+                # Update config
+                config_manager.config['bot_token'] = token
+                config_manager.config['admin_chat_id'] = admin_id
+                config_manager.config['enabled'] = enabled_var.get()
+                config_manager.config['notify_transaction'] = notify_trans_var.get()
+                config_manager.config['notify_low_stock'] = notify_stock_var.get()
+                config_manager.config['low_stock_threshold'] = threshold
+                
+                if admin_id not in config_manager.config.get('allowed_chat_ids', []):
+                    if 'allowed_chat_ids' not in config_manager.config:
+                        config_manager.config['allowed_chat_ids'] = []
+                    config_manager.config['allowed_chat_ids'].append(admin_id)
+                
+                # Save config
+                config_manager.save_config()
+                messagebox.showinfo("Sukses", "✅ Konfigurasi berhasil disimpan!")
+                logger.info("Telegram configuration saved from GUI")
+                
+            except Exception as e:
+                messagebox.showerror("Error", f"Gagal menyimpan konfigurasi:\n{str(e)}")
+                logger.error(f"Error saving telegram config: {e}")
+        
+        def test_connection():
+            """Test Telegram bot connection."""
+            try:
+                token = token_entry.get().strip()
+                
+                if not token:
+                    messagebox.showerror("Error", "Bot Token tidak boleh kosong!")
+                    return
+                
+                import requests
+                
+                # Test token with Telegram API
+                url = f"https://api.telegram.org/bot{token}/getMe"
+                
+                try:
+                    response = requests.get(url, timeout=5)
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        if data.get('ok'):
+                            bot_info = data.get('result', {})
+                            bot_name = bot_info.get('first_name', 'Unknown')
+                            bot_username = bot_info.get('username', 'Unknown')
+                            
+                            messagebox.showinfo(
+                                "✅ Sukses",
+                                f"Bot berhasil terhubung!\n\n"
+                                f"Bot Name: {bot_name}\n"
+                                f"Username: @{bot_username}\n\n"
+                                f"Bot siap menerima command."
+                            )
+                            logger.info(f"Telegram bot test successful: {bot_name}")
+                        else:
+                            error_msg = data.get('description', 'Unknown error')
+                            messagebox.showerror("Error", f"❌ Error dari Telegram API:\n{error_msg}")
+                            logger.error(f"Telegram API error: {error_msg}")
+                    else:
+                        messagebox.showerror("Error", f"❌ Gagal terhubung ke Telegram API\nStatus Code: {response.status_code}")
+                        logger.error(f"Telegram API connection failed: {response.status_code}")
+                        
+                except requests.exceptions.Timeout:
+                    messagebox.showerror("Error", "❌ Connection timeout.\nPeriksa koneksi internet Anda.")
+                    logger.error("Telegram API connection timeout")
+                except requests.exceptions.ConnectionError:
+                    messagebox.showerror("Error", "❌ Gagal terhubung ke internet.\nPastikan koneksi internet aktif.")
+                    logger.error("Telegram API connection error")
+                except Exception as e:
+                    messagebox.showerror("Error", f"❌ Error: {str(e)}")
+                    logger.error(f"Error in test_connection: {e}")
+                    
+            except Exception as e:
+                messagebox.showerror("Error", f"❌ Error menguji koneksi:\n{str(e)}")
+                logger.error(f"Error testing telegram connection: {e}")
+        
         save_btn = ttk.Button(
             btn_frame,
             text="💾 Simpan Konfigurasi",
-            command=lambda: messagebox.showinfo("Info", "Konfigurasi disimpan!")
+            command=save_config
         )
         save_btn.pack(side='left', padx=5)
         
         test_btn = ttk.Button(
             btn_frame,
             text="🧪 Test Koneksi",
-            command=lambda: messagebox.showinfo("Info", "Testing connection...")
+            command=test_connection
         )
         test_btn.pack(side='left', padx=5)
     
@@ -2749,6 +3083,506 @@ Dikembangkan dengan Python & Tkinter
         )
         danger_btn.pack(fill='x', pady=10)
     
+    # ========================================================================
+    # STOK OPNAME PAGE
+    # ========================================================================
+    
+    def show_stok_opname(self):
+        """Show stok opname (inventory count) page."""
+        self._clear_content()
+        
+        # Header
+        header = ttk.Label(
+            self.content_area,
+            text="📋 Stok Opname",
+            font=FONTS['title'],
+            foreground=COLORS['primary']
+        )
+        header.pack(pady=10)
+        
+        # Create notebook tabs
+        notebook = ttk.Notebook(self.content_area)
+        notebook.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        # Tab 1: Active Session
+        active_frame = ttk.Frame(notebook)
+        notebook.add(active_frame, text="📊 Session Aktif")
+        self._create_active_session_tab(active_frame)
+        
+        # Tab 2: Create New Session
+        new_session_frame = ttk.Frame(notebook)
+        notebook.add(new_session_frame, text="➕ Session Baru")
+        self._create_new_session_tab(new_session_frame)
+        
+        # Tab 3: Session History
+        history_frame = ttk.Frame(notebook)
+        notebook.add(history_frame, text="📜 Riwayat")
+        self._create_session_history_tab(history_frame)
+    
+    def _create_new_session_tab(self, parent):
+        """Create tab untuk membuat session stok opname baru."""
+        # Form frame
+        form_frame = ttk.LabelFrame(parent, text="Buat Session Stok Opname Baru", padding=15)
+        form_frame.pack(fill='x', padx=10, pady=10)
+        
+        # Date picker
+        ttk.Label(form_frame, text="Tanggal Opname:", font=FONTS['normal']).pack(anchor='w', pady=5)
+        from tkcalendar import DateEntry
+        date_entry = DateEntry(form_frame, width=20)
+        date_entry.pack(anchor='w', pady=5, fill='x')
+        
+        # Keterangan/Notes
+        ttk.Label(form_frame, text="Keterangan:", font=FONTS['normal']).pack(anchor='w', pady=(15, 5))
+        keterangan_text = tk.Text(form_frame, height=5, width=50)
+        keterangan_text.pack(fill='both', expand=True, pady=5)
+        
+        # Buttons
+        btn_frame = ttk.Frame(form_frame)
+        btn_frame.pack(fill='x', pady=15)
+        
+        def create_session():
+            """Create a new stok opname session."""
+            try:
+                tanggal = date_entry.get_date().strftime('%Y-%m-%d')
+                keterangan = keterangan_text.get('1.0', 'end').strip()
+                created_by = self.current_user['username']
+                
+                session_id = self.stok_opname_service.create_session(tanggal, keterangan, created_by)
+                
+                messagebox.showinfo(
+                    "✅ Sukses",
+                    f"Session stok opname berhasil dibuat!\n\n"
+                    f"ID Session: {session_id}\n"
+                    f"Tanggal: {tanggal}\n\n"
+                    f"Session siap digunakan."
+                )
+                
+                logger.info(f"New stok opname session created: ID={session_id}")
+                self.show_stok_opname()
+                
+            except Exception as e:
+                messagebox.showerror("Error", f"Gagal membuat session:\n{str(e)}")
+                logger.error(f"Error creating stok opname session: {e}", exc_info=True)
+        
+        create_btn = ttk.Button(
+            btn_frame,
+            text="✅ Buat Session",
+            command=create_session
+        )
+        create_btn.pack(side='left', padx=5)
+    
+    def _create_active_session_tab(self, parent):
+        """Create tab untuk active session stok opname."""
+        try:
+            # Get active sessions (status='active')
+            all_sessions = self.stok_opname_service.list_sessions(limit=100)
+            active_sessions = [s for s in all_sessions if s.status == 'active']
+            
+            if not active_sessions:
+                empty_label = ttk.Label(
+                    parent,
+                    text="Tidak ada session aktif. Buat session baru di tab 'Session Baru'",
+                    font=FONTS['normal'],
+                    foreground=COLORS['text_secondary']
+                )
+                empty_label.pack(pady=20)
+                return
+            
+            # Session selector
+            selector_frame = ttk.LabelFrame(parent, text="Pilih Session", padding=10)
+            selector_frame.pack(fill='x', padx=10, pady=10)
+            
+            session_var = tk.StringVar()
+            session_options = [f"Session {s.id} - {s.tanggal}" for s in active_sessions]
+            session_combo = ttk.Combobox(
+                selector_frame,
+                textvariable=session_var,
+                values=session_options,
+                state='readonly',
+                width=50
+            )
+            session_combo.pack(fill='x', pady=5)
+            session_combo.set(session_options[0])
+            
+            # Item input frame
+            input_frame = ttk.LabelFrame(parent, text="Input Stok Fisik", padding=15)
+            input_frame.pack(fill='x', padx=10, pady=10)
+            
+            ttk.Label(input_frame, text="Cari Produk (Kode/Nama):", font=FONTS['normal']).pack(anchor='w', pady=5)
+            search_var = tk.StringVar()
+            
+            # Get all products for dropdown
+            all_products_opname = self.product_manager.list_products()
+            product_options = [f"{p.kode} - {p.nama}" for p in all_products_opname]
+            
+            search_combo = ttk.Combobox(input_frame, textvariable=search_var, values=product_options, state='readonly', width=50)
+            search_combo.pack(fill='x', pady=5)
+            
+            ttk.Label(input_frame, text="Stok Fisik (yang dihitung):", font=FONTS['normal']).pack(anchor='w', pady=(15, 5))
+            stok_fisik_var = tk.StringVar()
+            stok_fisik_entry = ttk.Entry(input_frame, textvariable=stok_fisik_var, width=20)
+            stok_fisik_entry.pack(anchor='w', pady=5)
+            
+            ttk.Label(input_frame, text="Catatan (opsional):", font=FONTS['normal']).pack(anchor='w', pady=(15, 5))
+            catatan_text = tk.Text(input_frame, height=3, width=50)
+            catatan_text.pack(fill='both', expand=True, pady=5)
+            
+            # Items display frame
+            items_frame = ttk.LabelFrame(parent, text="Item dalam Session", padding=10)
+            items_frame.pack(fill='both', expand=True, padx=10, pady=10)
+            
+            columns = ('No', 'Kode', 'Produk', 'Stok Sistem', 'Stok Fisik', 'Selisih', 'Status')
+            items_tree = ttk.Treeview(items_frame, columns=columns, height=12, show='headings')
+            
+            items_tree.heading('No', text='No')
+            items_tree.column('No', width=30, anchor='center')
+            items_tree.heading('Kode', text='Kode')
+            items_tree.column('Kode', width=80)
+            items_tree.heading('Produk', text='Produk')
+            items_tree.column('Produk', width=150)
+            items_tree.heading('Stok Sistem', text='Stok Sistem')
+            items_tree.column('Stok Sistem', width=80, anchor='center')
+            items_tree.heading('Stok Fisik', text='Stok Fisik')
+            items_tree.column('Stok Fisik', width=80, anchor='center')
+            items_tree.heading('Selisih', text='Selisih')
+            items_tree.column('Selisih', width=80, anchor='center')
+            items_tree.heading('Status', text='Status')
+            items_tree.column('Status', width=80, anchor='center')
+            
+            scrollbar = ttk.Scrollbar(items_frame, orient='vertical', command=items_tree.yview)
+            items_tree.configure(yscroll=scrollbar.set)
+            scrollbar.pack(side='right', fill='y')
+            items_tree.pack(fill='both', expand=True)
+            
+            def refresh_items():
+                """Refresh items display for selected session."""
+                session_text = session_var.get()
+                if not session_text:
+                    return
+                
+                session_id = int(session_text.split()[1]) 
+                
+                # Clear tree
+                for item in items_tree.get_children():
+                    items_tree.delete(item)
+                
+                # Get items
+                items = self.stok_opname_service.get_session_items(session_id)
+                
+                for i, item in enumerate(items, 1):
+                    status_display = item.status
+                    if item.status == 'pending':
+                        status_display = "⏳ Pending"
+                    elif item.status == 'counted':
+                        status_display = "✅ Counted"
+                    elif item.status == 'verified':
+                        status_display = "✔️ Verified"
+                    
+                    selisih_display = str(item.selisih)
+                    if item.selisih > 0:
+                        selisih_display = f"+{item.selisih}"
+                    elif item.selisih < 0:
+                        selisih_display = f"{item.selisih}"
+                    
+                    items_tree.insert('', 'end', values=(
+                        str(i),
+                        item.kode_produk,
+                        item.nama_produk,
+                        item.stok_sistem,
+                        item.stok_fisik if item.stok_fisik > 0 else "—",
+                        selisih_display,
+                        status_display
+                    ))
+            
+            refresh_items()
+            
+            def add_item_count():
+                """Add counted item to session."""
+                try:
+                    session_text = session_var.get()
+                    if not session_text:
+                        messagebox.showwarning("Peringatan", "Pilih session terlebih dahulu!")
+                        return
+                    
+                    search_term = search_var.get().strip()
+                    if not search_term:
+                        messagebox.showwarning("Peringatan", "Cari produk terlebih dahulu!")
+                        return
+                    
+                    stok_fisik_str = stok_fisik_var.get().strip()
+                    if not stok_fisik_str:
+                        messagebox.showwarning("Peringatan", "Masukkan stok fisik!")
+                        return
+                    
+                    try:
+                        stok_fisik = int(stok_fisik_str)
+                    except ValueError:
+                        messagebox.showerror("Error", "Stok fisik harus berupa angka!")
+                        return
+                    
+                    if stok_fisik < 0:
+                        messagebox.showerror("Error", "Stok fisik tidak boleh negatif!")
+                        return
+                    
+                    # Extract kode from dropdown selection (format: "KODE - NAMA")
+                    if ' - ' not in search_term:
+                        messagebox.showerror("Error", "Pilih produk dari dropdown!")
+                        return
+                    
+                    kode = search_term.split(' - ')[0].strip()
+                    found_product = self.product_manager.get_product(kode)
+                    
+                    if not found_product:
+                        messagebox.showerror("Error", "Produk tidak ditemukan!")
+                        return
+                    
+                    session_id = int(session_text.split()[1])
+                    items = self.stok_opname_service.get_session_items(session_id)
+                    
+                    # Find the item in session
+                    item_in_session = None
+                    for item in items:
+                        if item.product_id == found_product.id:
+                            item_in_session = item
+                            break
+                    
+                    if not item_in_session:
+                        messagebox.showerror("Error", "Produk tidak ada dalam session ini!")
+                        return
+                    
+                    # Update item
+                    catatan = catatan_text.get('1.0', 'end').strip()
+                    
+                    if self.stok_opname_service.update_item(item_in_session.id, stok_fisik, catatan, 'counted'):
+                        messagebox.showinfo("✅ Sukses", f"Stok untuk {found_product.nama} berhasil diinput!")
+                        
+                        # Clear inputs
+                        search_var.set("")
+                        stok_fisik_var.set("")
+                        catatan_text.delete('1.0', 'end')
+                        search_entry.focus()
+                        
+                        # Refresh items
+                        refresh_items()
+                    else:
+                        messagebox.showerror("Error", "Gagal menyimpan data!")
+                    
+                except Exception as e:
+                    messagebox.showerror("Error", f"Terjadi kesalahan:\n{str(e)}")
+                    logger.error(f"Error adding item count: {e}", exc_info=True)
+            
+            def complete_session():
+                """Complete the stok opname session."""
+                session_text = session_var.get()
+                if not session_text:
+                    messagebox.showwarning("Peringatan", "Pilih session terlebih dahulu!")
+                    return
+                
+                session_id = int(session_text.split()[1])
+                items = self.stok_opname_service.get_session_items(session_id)
+                
+                # Check if all items are counted
+                pending_items = [i for i in items if i.status == 'pending']
+                if pending_items:
+                    count = len(pending_items)
+                    result = messagebox.askyesnocancel(
+                        "Peringatan",
+                        f"Masih ada {count} item yang belum dihitung.\n\n"
+                        f"Apakah Anda ingin menyelesaikan session sekarang?\n\n"
+                        f"Item yang belum dihitung akan tetap menggunakan stok sistem."
+                    )
+                    if result is None:
+                        return
+                    elif result is False:
+                        return
+                
+                # Show summary
+                items_with_diff = self.stok_opname_service.get_items_with_differences(session_id)
+                
+                summary_msg = f"""
+RINGKASAN STOK OPNAME
+
+Session ID: {session_id}
+Total Item: {len(items)}
+Item Berbeda: {len(items_with_diff)}
+
+Apakah Anda ingin menyelesaikan session ini?
+Stok produk akan diperbarui berdasarkan hasil opname.
+"""
+                
+                if messagebox.askyesno("Konfirmasi", summary_msg):
+                    if self.stok_opname_service.complete_session(session_id):
+                        messagebox.showinfo("✅ Sukses", "Session stok opname selesai!\nStok produk telah diperbarui.")
+                        logger.info(f"Stok opname session completed: {session_id}")
+                        self.show_stok_opname()
+                    else:
+                        messagebox.showerror("Error", "Gagal menyelesaikan session!")
+            
+            # Action buttons
+            action_frame = ttk.Frame(input_frame)
+            action_frame.pack(fill='x', pady=15)
+            
+            add_btn = ttk.Button(
+                action_frame,
+                text="➕ Tambah Item",
+                command=add_item_count
+            )
+            add_btn.pack(side='left', padx=5)
+            
+            complete_btn = ttk.Button(
+                action_frame,
+                text="✅ Selesaikan Session",
+                command=complete_session
+            )
+            complete_btn.pack(side='left', padx=5)
+            
+            refresh_btn = ttk.Button(
+                action_frame,
+                text="🔄 Refresh",
+                command=refresh_items
+            )
+            refresh_btn.pack(side='left', padx=5)
+            
+        except Exception as e:
+            error_label = ttk.Label(
+                parent,
+                text=f"⚠️ Error: {str(e)}",
+                font=FONTS['normal'],
+                foreground=COLORS['danger']
+            )
+            error_label.pack(pady=20)
+            logger.error(f"Error in active session tab: {e}", exc_info=True)
+    
+    def _create_session_history_tab(self, parent):
+        """Create tab untuk history stok opname sessions."""
+        try:
+            # Get all sessions
+            all_sessions = self.stok_opname_service.list_sessions(limit=100)
+            
+            if not all_sessions:
+                empty_label = ttk.Label(
+                    parent,
+                    text="Belum ada history stok opname",
+                    font=FONTS['normal'],
+                    foreground=COLORS['text_secondary']
+                )
+                empty_label.pack(pady=20)
+                return
+            
+            # Sessions table
+            columns = ('No', 'ID', 'Tanggal', 'Status', 'Keterangan', 'Dibuat Oleh')
+            sessions_tree = ttk.Treeview(parent, columns=columns, height=15, show='headings')
+            
+            sessions_tree.heading('No', text='No')
+            sessions_tree.column('No', width=30, anchor='center')
+            sessions_tree.heading('ID', text='ID')
+            sessions_tree.column('ID', width=50, anchor='center')
+            sessions_tree.heading('Tanggal', text='Tanggal')
+            sessions_tree.column('Tanggal', width=100)
+            sessions_tree.heading('Status', text='Status')
+            sessions_tree.column('Status', width=100, anchor='center')
+            sessions_tree.heading('Keterangan', text='Keterangan')
+            sessions_tree.column('Keterangan', width=200)
+            sessions_tree.heading('Dibuat Oleh', text='Dibuat Oleh')
+            sessions_tree.column('Dibuat Oleh', width=100)
+            
+            scrollbar = ttk.Scrollbar(parent, orient='vertical', command=sessions_tree.yview)
+            sessions_tree.configure(yscroll=scrollbar.set)
+            scrollbar.pack(side='right', fill='y')
+            sessions_tree.pack(fill='both', expand=True, padx=10, pady=10)
+            
+            for i, session in enumerate(all_sessions, 1):
+                status_display = "✅ Selesai" if session.status == 'completed' else "⏳ Aktif" if session.status == 'active' else "❌ Dibatalkan"
+                
+                sessions_tree.insert('', 'end', values=(
+                    str(i),
+                    session.id,
+                    session.tanggal,
+                    status_display,
+                    session.keterangan or "—",
+                    session.created_by
+                ))
+            
+            # Action buttons
+            btn_frame = ttk.Frame(parent)
+            btn_frame.pack(fill='x', padx=10, pady=10)
+            
+            def view_detail():
+                """View detail of selected session."""
+                selection = sessions_tree.selection()
+                if not selection:
+                    messagebox.showwarning("Peringatan", "Pilih session terlebih dahulu!")
+                    return
+                
+                item = sessions_tree.item(selection[0])
+                values = item['values']
+                session_id = int(values[1])
+                
+                report = self.stok_opname_service.get_session_report(session_id)
+                if not report:
+                    messagebox.showerror("Error", "Laporan tidak ditemukan!")
+                    return
+                
+                # Create report window
+                report_window = tk.Toplevel(self)
+                report_window.title(f"Detail Stok Opname - Session {session_id}")
+                report_window.geometry("700x600")
+                
+                # Report content
+                report_text = tk.Text(report_window, font=FONTS['mono'], height=30, width=90)
+                report_text.pack(fill='both', expand=True, padx=10, pady=10)
+                
+                # Generate report text
+                content = f"""
+{'='*80}
+LAPORAN STOK OPNAME
+{'='*80}
+
+Session ID       : {report.session_id}
+Tanggal          : {report.tanggal}
+Total Item       : {report.total_items}
+Item Terhitung   : {report.items_counted}
+Item Berbeda     : {report.total_selisih}
+Total Qty Beda   : {report.total_selisih_qty}
+
+{'-'*80}
+DETAIL ITEM:
+{'-'*80}
+"""
+                
+                for detail in report.items_details:
+                    selisih_str = f"+{detail['selisih']}" if detail['selisih'] > 0 else str(detail['selisih'])
+                    content += f"""
+{detail['kode']} - {detail['nama']}
+  Stok Sistem : {detail['stok_sistem']} {detail['satuan']}
+  Stok Fisik  : {detail['stok_fisik']} {detail['satuan']}
+  Selisih     : {selisih_str} {detail['satuan']}
+  Status      : {detail['status']}
+  Catatan     : {detail['catatan'] or '—'}
+"""
+                
+                content += f"\n{'='*80}\n"
+                
+                report_text.insert('1.0', content)
+                report_text.config(state='disabled')
+                
+                # Close button
+                close_btn = ttk.Button(report_window, text="Tutup", command=report_window.destroy)
+                close_btn.pack(pady=10)
+            
+            view_btn = ttk.Button(btn_frame, text="👁️ Lihat Detail", command=view_detail)
+            view_btn.pack(side='left', padx=5)
+            
+        except Exception as e:
+            error_label = ttk.Label(
+                parent,
+                text=f"⚠️ Error: {str(e)}",
+                font=FONTS['normal'],
+                foreground=COLORS['danger']
+            )
+            error_label.pack(pady=20)
+            logger.error(f"Error in session history tab: {e}", exc_info=True)
+    
     def _reset_database(self):
         """Reset database with enhanced safety (admin only)."""
         # Check role
@@ -2924,53 +3758,57 @@ def main():
     """Main entry point with login system."""
     logger.info("Application initialization started")
     
-    # Create root window for login
-    root = tk.Tk()
-    root.withdraw()  # Hide root window temporarily
-    
-    # Ensure root is properly initialized
-    root.update_idletasks()
-    
-    # Initialize database
-    db = DatabaseManager()
-    logger.info("Database initialized")
-    
-    # Create default admin user if no users exist
-    if not db.user_exists():
-        logger.info("Creating default users on first run")
-        db.create_user("admin", "admin123", "admin")
-        db.create_user("cashier", "cashier123", "cashier")
-        logger.info("Default users created: admin and cashier")
-    
-    logger.info("Showing login window")
-    
-    try:
-        # Show login window
-        login_window = LoginWindow(root, db)
-        root.wait_window(login_window)
+    # Loop untuk multiple login/logout sessions
+    while True:
+        # Create root window for login
+        root = tk.Tk()
+        root.withdraw()  # Hide root window temporarily
         
-        # Get logged-in user
-        user = login_window.get_user()
+        # Ensure root is properly initialized
+        root.update_idletasks()
         
-        # If login failed or user clicked exit
-        if not user:
-            logger.warning("User cancelled login, exiting application")
+        # Initialize database
+        db = DatabaseManager()
+        logger.info("Database initialized")
+        
+        # Create default admin user if no users exist
+        if not db.user_exists():
+            logger.info("Creating default users on first run")
+            db.create_user("admin", "admin123", "admin")
+            db.create_user("cashier", "cashier123", "cashier")
+            logger.info("Default users created: admin and cashier")
+        
+        logger.info("Showing login window")
+        
+        try:
+            # Show login window
+            login_window = LoginWindow(root, db)
+            root.wait_window(login_window)
+            
+            # Get logged-in user
+            user = login_window.get_user()
+            
+            # If login failed or user clicked exit
+            if not user:
+                logger.warning("User cancelled login, exiting application")
+                root.destroy()
+                return  # Exit application completely
+            
+            # Destroy temporary root
             root.destroy()
-            return
-        
-        # Destroy temporary root
-        root.destroy()
-        
-        # Create main application with logged-in user
-        logger.info(f"Launching main application for user {user['username']}")
-        app = POSGUIApplication(user=user)
-        app.mainloop()
-        
-        logger.info(f"User {user['username']} logged out")
-    except Exception as e:
-        logger.error(f"Error in main: {e}", exc_info=True)
-        root.destroy()
-        raise
+            
+            # Create main application with logged-in user
+            logger.info(f"Launching main application for user {user['username']}")
+            app = POSGUIApplication(user=user)
+            app.mainloop()
+            
+            logger.info(f"User {user['username']} logged out - returning to login")
+            # Loop akan repeat, menampilkan login window lagi
+            
+        except Exception as e:
+            logger.error(f"Error in main: {e}", exc_info=True)
+            root.destroy()
+            raise
 
 
 if __name__ == "__main__":
