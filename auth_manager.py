@@ -8,6 +8,7 @@
 from typing import Optional
 from logger_config import get_logger
 from database import DatabaseManager
+from auth_security import LoginAttemptTracker, PasswordValidator
 
 logger = get_logger(__name__)
 
@@ -112,18 +113,27 @@ class AuthManager:
         """
         self.db = db
         self.current_user: Optional[User] = None
+        
+        # Initialize login attempt tracker untuk security
+        self.login_tracker = LoginAttemptTracker(db)
     
     # ========================================================================
     # AUTHENTICATION
     # ========================================================================
     
-    def login(self, username: str, password: str) -> tuple[bool, str]:
+    def login(self, username: str, password: str, ip_address: str = None) -> tuple[bool, str]:
         """
-        Attempt user login.
+        Attempt user login dengan rate limiting dan attempt logging.
+        
+        Security features:
+        - Rate limiting: Maximum 5 failed attempts per 15 minutes
+        - Login attempt tracking: Semua attempts di-log (success dan failed)
+        - Account lockout: Otomatis lock setelah 5 failed attempts
         
         Args:
             username (str): Username
             password (str): Password (plain text)
+            ip_address (str): IP address dari login attempt (optional)
             
         Returns:
             tuple: (success: bool, message: str)
@@ -131,12 +141,31 @@ class AuthManager:
                    (False, "error message") jika gagal
         """
         try:
+            # Check if account is locked due to too many failed attempts
+            lockout_status = self.db.check_login_lockout(username)
+            if lockout_status['is_locked']:
+                remaining_mins = lockout_status['remaining_minutes']
+                msg = f"❌ Akun terkunci karena terlalu banyak login gagal. Coba lagi dalam {remaining_mins} menit."
+                logger.warning(f"Login blocked (account locked): {username} from {ip_address}")
+                self.login_tracker.record_attempt(username, success=False, ip_address=ip_address)
+                return False, msg
+            
             # Verify user credentials
             user_data = self.db.verify_user_login(username, password)
             
             if user_data is None:
-                logger.warning(f"Failed login attempt: {username}")
-                return False, "❌ Username atau password salah"
+                # Record failed attempt
+                failed_count = self.db.get_failed_attempts_count(username)
+                self.login_tracker.record_attempt(username, success=False, ip_address=ip_address)
+                
+                attempts_left = 5 - (failed_count + 1)
+                if attempts_left <= 0:
+                    msg = f"❌ Username atau password salah. Akun akan terkunci."
+                else:
+                    msg = f"❌ Username atau password salah. Sisa {attempts_left} percobaan."
+                
+                logger.warning(f"Failed login attempt: {username} from {ip_address} (Total failed: {failed_count + 1})")
+                return False, msg
             
             # Create User object
             self.current_user = User(
@@ -148,10 +177,17 @@ class AuthManager:
             
             if not self.current_user.is_active:
                 self.current_user = None
+                self.login_tracker.record_attempt(username, success=False, ip_address=ip_address)
                 logger.warning(f"Login attempt with inactive user: {username}")
                 return False, "❌ User tidak aktif. Hubungi administrator."
             
-            logger.info(f"User logged in: {username} (role: {self.current_user.role})")
+            # Record successful login
+            self.login_tracker.record_attempt(username, success=True, ip_address=ip_address)
+            
+            # Reset failed attempts counter after successful login
+            self.db.reset_login_attempts(username)
+            
+            logger.info(f"User logged in successfully: {username} (role: {self.current_user.role}) from {ip_address}")
             return True, f"✅ Selamat datang, {username}!"
             
         except Exception as e:
@@ -328,6 +364,121 @@ class AuthManager:
                 return False, "❌ Gagal deactivate user"
         except Exception as e:
             logger.error(f"Error deactivating user: {e}")
+            return False, f"❌ Error: {e}"
+    
+    # ========================================================================
+    # SECURITY & MONITORING (Admin only)
+    # ========================================================================
+    
+    def get_user_login_history(self, username: str, limit: int = 10) -> tuple[bool, list]:
+        """
+        Get login attempt history untuk specific user (admin only).
+        
+        Args:
+            username (str): Username
+            limit (int): Maksimal records (default: 10)
+            
+        Returns:
+            tuple: (success, history_list)
+        """
+        if not self.require_admin():
+            return False, []
+        
+        try:
+            history = self.db.get_login_history(username, limit)
+            logger.info(f"Login history retrieved for: {username} (admin: {self.get_username()})")
+            return True, history
+        except Exception as e:
+            logger.error(f"Error getting login history: {e}")
+            return False, []
+    
+    def get_security_summary(self, username: str) -> tuple[bool, dict]:
+        """
+        Get security summary untuk specific user (admin only).
+        
+        Includes:
+        - Account lockout status
+        - Failed attempts count
+        - Recent login history
+        - Last successful login
+        
+        Args:
+            username (str): Username
+            
+        Returns:
+            tuple: (success, summary_dict)
+        """
+        if not self.require_admin():
+            return False, {}
+        
+        try:
+            summary = self.db.get_security_summary(username)
+            logger.info(f"Security summary retrieved for: {username}")
+            return True, summary
+        except Exception as e:
+            logger.error(f"Error getting security summary: {e}")
+            return False, {}
+    
+    def get_all_failed_attempts(self, limit: int = 50) -> tuple[bool, list]:
+        """
+        Get all recent failed login attempts across all users (admin only).
+        
+        Useful untuk security monitoring dan threat detection.
+        
+        Args:
+            limit (int): Maksimal records (default: 50)
+            
+        Returns:
+            tuple: (success, attempts_list)
+        """
+        if not self.require_admin():
+            return False, []
+        
+        try:
+            with self.db.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT username, ip_address, attempted_at, success
+                    FROM login_attempts
+                    WHERE success = 0
+                    ORDER BY attempted_at DESC
+                    LIMIT ?
+                """, (limit,))
+                
+                attempts = [dict(row) for row in cursor.fetchall()]
+                logger.info(f"Failed attempts retrieved: {len(attempts)} records (admin: {self.get_username()})")
+                return True, attempts
+        except Exception as e:
+            logger.error(f"Error getting failed attempts: {e}")
+            return False, []
+    
+    def unlock_account(self, username: str) -> tuple[bool, str]:
+        """
+        Manually unlock user account (admin only).
+        
+        Args:
+            username (str): Username
+            
+        Returns:
+            tuple: (success, message)
+        """
+        if not self.require_admin():
+            return False, "❌ Hanya admin yang bisa unlock account"
+        
+        try:
+            # Delete failed attempts untuk user
+            with self.db.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    DELETE FROM login_attempts
+                    WHERE username = ? AND success = 0
+                """, (username,))
+                conn.commit()
+            
+            logger.info(f"Account unlocked by admin {self.get_username()}: {username}")
+            return True, f"✅ Account '{username}' berhasil di-unlock"
+        except Exception as e:
+            logger.error(f"Error unlocking account: {e}")
             return False, f"❌ Error: {e}"
 
 

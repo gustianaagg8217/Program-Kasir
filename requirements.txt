@@ -12,6 +12,9 @@
 
 # OPTIONAL DEPENDENCIES:
 
+# Security & Authentication
+bcrypt>=4.0  # Secure password hashing with bcrypt
+
 # Telegram Bot (untuk Telegram integration)
 python-telegram-bot>=20.0  # Telegram bot API wrapper
 requests>=2.28  # HTTP library untuk Telegram

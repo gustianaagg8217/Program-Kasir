@@ -21,6 +21,7 @@ from matplotlib.figure import Figure
 
 # Import semua modules dari sistem POS
 from database import DatabaseManager
+from auth_manager import AuthManager
 from models import ProductManager, ValidationError, Product, format_rp, format_satuan
 from transaction import TransactionService, TransactionHandler, ReceiptManager
 from laporan import ReportGenerator, ReportFormatter, CSVExporter
@@ -89,6 +90,7 @@ class LoginWindow(tk.Toplevel):
         """
         super().__init__(parent)
         self.db = db
+        self.auth_manager = AuthManager(db)  # Initialize AuthManager untuk security
         self.result = None
         
         # Window settings
@@ -179,7 +181,7 @@ class LoginWindow(tk.Toplevel):
         info_label.pack(pady=10)
     
     def _login(self):
-        """Process login."""
+        """Process login dengan security features (rate limiting, attempt tracking)."""
         username = self.username_var.get().strip()
         password = self.password_var.get()
         
@@ -188,16 +190,19 @@ class LoginWindow(tk.Toplevel):
             logger.warning(f"Login attempt with empty credentials")
             return
         
-        # Verify login
-        user = self.db.verify_user_login(username, password)
+        # Use AuthManager untuk security features (rate limiting, attempt tracking)
+        success, message = self.auth_manager.login(username, password)
         
-        if user:
+        if success:
+            # Get user data untuk return
+            user = self.db.get_user_by_username(username)
             self.result = user
-            logger.info(f"User login successful: {username} ({user['role']})")
+            logger.info(f"User login successful: {username} (role: {user['role']})")
             self.destroy()
         else:
-            messagebox.showerror("Login Gagal", "Username atau password salah!")
-            logger.warning(f"Failed login attempt for user: {username}")
+            # Show error message (includes rate limiting info)
+            messagebox.showerror("Login Gagal", message)
+            logger.warning(f"Failed login: {message}")
             self.password_var.set("")
     
     def get_user(self):
@@ -341,16 +346,13 @@ class POSGUIApplication(tk.Tk):
         try:
             # Check if product_listbox exists (means we're on transaction page)
             if hasattr(self, 'product_listbox'):
-                # Check if any product is selected in listbox
-                selection = self.product_listbox.curselection()
-                if selection:
-                    # If listbox has selection, select from list
-                    self._select_from_list()
-                    self._add_transaction_item()
-                elif hasattr(self, 'product_search_var'):
-                    # If product_search field has value, add the item
-                    if self.product_search_var.get().strip():
-                        self._add_transaction_item()
+                # Check if focus is on qty_entry - let specific handler deal with it
+                if hasattr(self, 'qty_entry') and self.focus_get() == self.qty_entry:
+                    return 'break'  # Stop propagation, let qty_entry handler process it
+                
+                # Check if focus is on search_entry - let specific handler deal with it
+                if hasattr(self, 'search_entry') and self.focus_get() == self.search_entry:
+                    return 'break'  # Stop propagation, let search_entry handler process it
         except Exception as e:
             logger.debug(f"Enter key handler: {e}")
     
@@ -1938,18 +1940,18 @@ Kembalian        : {format_rp(trans['kembalian'])}
         ttk.Label(left_frame, text="Cari Produk (Kode/Nama):", font=FONTS['normal']).pack(anchor='w', pady=5)
         
         self.product_search_var = tk.StringVar()
-        search_entry = ttk.Entry(
+        self.search_entry = ttk.Entry(
             left_frame,
             textvariable=self.product_search_var,
             width=30
         )
-        search_entry.pack(fill='x', pady=5)
-        search_entry.focus()
+        self.search_entry.pack(fill='x', pady=5)
+        self.search_entry.focus()
         
         # Bind KeyRelease event for dynamic filtering
-        search_entry.bind('<KeyRelease>', lambda e: self._filter_product_list())
-        search_entry.bind('<Down>', lambda e: self._focus_product_list())
-        search_entry.bind('<Return>', lambda e: self._select_from_list())
+        self.search_entry.bind('<KeyRelease>', lambda e: self._filter_product_list())
+        self.search_entry.bind('<Down>', lambda e: self._focus_product_list())
+        self.search_entry.bind('<Return>', self._on_product_search_enter)
         
         # Create frame for product suggestions
         suggestion_frame = ttk.Frame(left_frame)
@@ -1981,8 +1983,11 @@ Kembalian        : {format_rp(trans['kembalian'])}
         
         ttk.Label(left_frame, text="Jumlah (qty):", font=FONTS['normal']).pack(anchor='w', pady=5)
         self.qty_var = tk.StringVar(value="1")
-        qty_entry = ttk.Entry(left_frame, textvariable=self.qty_var, width=30)
-        qty_entry.pack(fill='x', pady=5)
+        self.qty_entry = ttk.Entry(left_frame, textvariable=self.qty_var, width=30)
+        self.qty_entry.pack(fill='x', pady=5)
+        
+        # Bind Enter key to add item and move focus back to search entry
+        self.qty_entry.bind('<Return>', self._on_qty_enter)
         
         add_item_btn = ttk.Button(
             left_frame,
@@ -2163,6 +2168,44 @@ Kembalian        : {format_rp(trans['kembalian'])}
             messagebox.showerror("Error", "Jumlah harus berupa angka!")
         except Exception as e:
             messagebox.showerror("Error", f"Error: {e}")
+    
+    def _on_product_search_enter(self, event):
+        """Handle Enter key press in product search field - select product and move to quantity field."""
+        try:
+            # First, try to select from listbox if a product is highlighted
+            selection = self.product_listbox.curselection()
+            if selection:
+                self._select_from_list()
+            else:
+                # If no selection, select the first item if available
+                if self.product_listbox.size() > 0:
+                    self.product_listbox.selection_set(0)
+                    self._select_from_list()
+                else:
+                    messagebox.showwarning("Peringatan", "Produk tidak ditemukan!")
+                    return 'break'
+            
+            # Move focus to quantity entry
+            self.qty_entry.focus()
+            self.qty_entry.select_range(0, tk.END)  # Select all text in qty field
+            return 'break'  # Stop event propagation
+        except Exception as e:
+            logger.debug(f"Error in product search enter handler: {e}")
+            return 'break'
+    
+    def _on_qty_enter(self, event):
+        """Handle Enter key press in quantity field - add item to transaction."""
+        try:
+            # Add the transaction item
+            self._add_transaction_item()
+            
+            # Move focus back to search entry for next product
+            self.search_entry.focus()
+            self.search_entry.select_range(0, tk.END)  # Select all text
+            return 'break'  # Stop event propagation
+        except Exception as e:
+            logger.debug(f"Error in quantity enter handler: {e}")
+            return 'break'
     
     def _filter_product_list(self):
         """Filter product list based on search keyword (kode or nama)."""

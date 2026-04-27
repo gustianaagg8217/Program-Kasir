@@ -9,10 +9,17 @@
 import sqlite3
 import os
 import hashlib
-from datetime import datetime
+from datetime import datetime, timedelta
 from contextlib import contextmanager
 from logger_config import get_logger
 from backup_manager import BackupManager
+
+# Import secure password manager
+try:
+    from auth_security import PasswordManager
+except ImportError:
+    # Fallback if auth_security not available yet
+    PasswordManager = None
 
 logger = get_logger(__name__)
 
@@ -89,35 +96,55 @@ class DatabaseManager:
                 connection.close()
     
     # ========================================================================
-    # PASSWORD HASHING - Secure password management dengan hashlib
+    # PASSWORD HASHING - Secure password management dengan Bcrypt
     # ========================================================================
     
     @staticmethod
     def hash_password(password: str) -> str:
         """
-        Hash password menggunakan SHA256.
+        Hash password menggunakan Bcrypt (secure & salted).
+        
+        NOTE: Ini menggantikan old SHA256 hashing untuk security yang lebih baik.
+        Backward compatibility: verify_password() masih support SHA256 hashes lama.
         
         Args:
             password (str): Password plain text
             
         Returns:
-            str: Hashed password
+            str: Bcrypt hashed password
+            
+        Raises:
+            ValueError: Jika password kosong atau bukan string
         """
-        return hashlib.sha256(password.encode()).hexdigest()
+        if PasswordManager:
+            return PasswordManager.hash_password(password)
+        else:
+            # Fallback ke SHA256 jika bcrypt tidak tersedia
+            logger.warning("PasswordManager not available, falling back to SHA256")
+            return hashlib.sha256(password.encode()).hexdigest()
     
     @staticmethod
     def verify_password(password: str, hashed_password: str) -> bool:
         """
-        Verifikasi password dengan hash.
+        Verify password dengan hashnya (bcrypt atau legacy SHA256).
+        
+        Automatically support both:
+        - New bcrypt hashes ($2b$12$...)
+        - Legacy SHA256 hashes (backward compatibility)
         
         Args:
             password (str): Password plain text
-            hashed_password (str): Password yang di-hash
+            hashed_password (str): Password yang di-hash (bcrypt atau SHA256)
             
         Returns:
             bool: True jika cocok, False jika tidak
         """
-        return DatabaseManager.hash_password(password) == hashed_password
+        if PasswordManager:
+            return PasswordManager.verify_password(password, hashed_password)
+        else:
+            # Fallback ke SHA256 jika bcrypt tidak tersedia
+            logger.warning("PasswordManager not available, falling back to SHA256")
+            return hashlib.sha256(password.encode()).hexdigest() == hashed_password
     
     # ========================================================================
     # INIT DATABASE - Buat struktur tabel jika belum ada
@@ -234,6 +261,34 @@ class DatabaseManager:
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             """)
+            
+            # ================================================================
+            # TABEL 4B: LOGIN_ATTEMPTS - Track login attempts untuk security
+            # ================================================================
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS login_attempts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL,
+                    success BOOLEAN NOT NULL,
+                    ip_address TEXT DEFAULT NULL,
+                    user_agent TEXT DEFAULT NULL,
+                    attempted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (username) REFERENCES users(username)
+                )
+            """)
+            
+            # Create index untuk faster queries
+            try:
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_login_attempts_username 
+                    ON login_attempts(username)
+                """)
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_login_attempts_timestamp 
+                    ON login_attempts(attempted_at)
+                """)
+            except Exception as e:
+                logger.warning(f"Index creation warning: {e}")
             
             # ================================================================
             # TABEL 5: STOCK_OPNAME - Riwayat stock count dan adjustment
@@ -632,13 +687,17 @@ class DatabaseManager:
             None: Jika gagal
         """
         try:
+            from datetime import datetime
+            # Use local time instead of database DEFAULT CURRENT_TIMESTAMP (which uses UTC)
+            tanggal_sekarang = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
             with self.get_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute("""
                     INSERT INTO transactions 
-                    (total, bayar, kembalian, discount_percent, discount_amount, tax_percent, tax_amount)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (total, bayar, kembalian, discount_percent, discount_amount, tax_percent, tax_amount))
+                    (tanggal, total, bayar, kembalian, discount_percent, discount_amount, tax_percent, tax_amount)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (tanggal_sekarang, total, bayar, kembalian, discount_percent, discount_amount, tax_percent, tax_amount))
                 transaction_id = cursor.lastrowid
                 conn.commit()
                 logger.info(f"Transaction created: ID={transaction_id}, total=Rp{total:,}, discount={discount_percent}% (Rp{discount_amount:,}), tax={tax_percent}% (Rp{tax_amount:,})")
@@ -1148,6 +1207,221 @@ class DatabaseManager:
             bool: True jika berhasil, False jika gagal
         """
         return self.update_user(user_id, is_active=True)
+    
+    # ========================================================================
+    # LOGIN ATTEMPT TRACKING & RATE LIMITING
+    # ========================================================================
+    
+    def record_login_attempt(self, username: str, success: bool, ip_address: str = None) -> dict:
+        """
+        Record login attempt ke database untuk audit trail dan rate limiting.
+        
+        Args:
+            username (str): Username yang dicoba login
+            success (bool): True jika login berhasil, False jika gagal
+            ip_address (str): IP address dari login attempt (optional)
+            
+        Returns:
+            dict: Info attempt yang direcord
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO login_attempts (username, success, ip_address, attempted_at)
+                    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                """, (username, success, ip_address))
+                
+                attempt_id = cursor.lastrowid
+                conn.commit()
+                
+                log_type = "SUCCESS" if success else "FAILED"
+                logger.info(f"Login attempt recorded: {username} - {log_type} (ID: {attempt_id})")
+                
+                return {
+                    'id': attempt_id,
+                    'username': username,
+                    'success': success,
+                    'ip_address': ip_address,
+                    'timestamp': datetime.now().isoformat()
+                }
+        except Exception as e:
+            logger.error(f"Error recording login attempt: {e}", exc_info=True)
+            return {}
+    
+    def get_failed_attempts_count(self, username: str, minutes: int = 15) -> int:
+        """
+        Get jumlah failed login attempts dalam periode tertentu.
+        
+        Args:
+            username (str): Username
+            minutes (int): Time window dalam menit (default: 15)
+            
+        Returns:
+            int: Jumlah failed attempts
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Use SQLite datetime functions untuk proper comparison
+                cursor.execute(f"""
+                    SELECT COUNT(*) as count FROM login_attempts
+                    WHERE username = ? AND success = 0 
+                    AND attempted_at > datetime('now', '-{minutes} minutes')
+                """, (username,))
+                
+                result = cursor.fetchone()
+                count = result['count'] if result else 0
+                return count
+        except Exception as e:
+            logger.error(f"Error counting failed attempts: {e}", exc_info=True)
+            return 0
+    
+    def check_login_lockout(self, username: str, max_attempts: int = 5, lockout_minutes: int = 3) -> dict:
+        """
+        Check apakah account dikunci karena terlalu banyak failed attempts.
+        
+        Args:
+            username (str): Username
+            max_attempts (int): Maximum allowed failed attempts (default: 5)
+            lockout_minutes (int): Lockout duration dalam menit (default: 3)
+            
+        Returns:
+            dict: {'is_locked': bool, 'remaining_minutes': int, 'failed_count': int}
+        """
+        try:
+            failed_count = self.get_failed_attempts_count(username, lockout_minutes)
+            
+            if failed_count >= max_attempts:
+                # Get timestamp of first failed attempt in window
+                with self.get_connection() as conn:
+                    cursor = conn.cursor()
+                    
+                    # Use SQLite datetime functions for proper comparison
+                    cursor.execute(f"""
+                        SELECT MIN(attempted_at) as first_attempt FROM login_attempts
+                        WHERE username = ? AND success = 0 
+                        AND attempted_at > datetime('now', '-{lockout_minutes} minutes')
+                    """, (username,))
+                    
+                    result = cursor.fetchone()
+                    if result and result['first_attempt']:
+                        first_attempt = datetime.fromisoformat(result['first_attempt'])
+                        lockout_until = first_attempt + timedelta(minutes=lockout_minutes)
+                        remaining = lockout_until - datetime.now()
+                        remaining_minutes = max(0, remaining.total_seconds() / 60)
+                        
+                        return {
+                            'is_locked': True,
+                            'remaining_minutes': int(remaining_minutes),
+                            'failed_count': failed_count,
+                            'max_attempts': max_attempts
+                        }
+            
+            return {
+                'is_locked': False,
+                'remaining_minutes': 0,
+                'failed_count': failed_count,
+                'max_attempts': max_attempts
+            }
+        except Exception as e:
+            logger.error(f"Error checking login lockout: {e}", exc_info=True)
+            return {'is_locked': False, 'remaining_minutes': 0, 'failed_count': 0, 'max_attempts': max_attempts}
+    
+    def reset_login_attempts(self, username: str) -> bool:
+        """
+        Reset failed attempts counter untuk user (biasanya setelah successful login).
+        
+        Args:
+            username (str): Username
+            
+        Returns:
+            bool: True jika berhasil
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                # Mark old failed attempts as cleared (no data loss)
+                # atau bisa delete, tapi lebih aman untuk audit trail
+                cursor.execute("""
+                    DELETE FROM login_attempts
+                    WHERE username = ? AND success = 0 AND attempted_at < datetime('now', '-1 day')
+                """, (username,))
+                
+                conn.commit()
+                logger.info(f"Login attempts reset for user: {username}")
+                return True
+        except Exception as e:
+            logger.error(f"Error resetting login attempts: {e}", exc_info=True)
+            return False
+    
+    def get_login_history(self, username: str, limit: int = 10) -> list:
+        """
+        Get login attempt history untuk user.
+        
+        Args:
+            username (str): Username
+            limit (int): Maksimal records (default: 10)
+            
+        Returns:
+            list: List of login attempts dengan details
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT id, username, success, ip_address, attempted_at
+                    FROM login_attempts
+                    WHERE username = ?
+                    ORDER BY attempted_at DESC
+                    LIMIT ?
+                """, (username, limit))
+                
+                rows = cursor.fetchall()
+                history = [dict(row) for row in rows]
+                return history
+        except Exception as e:
+            logger.error(f"Error getting login history: {e}", exc_info=True)
+            return []
+    
+    def get_security_summary(self, username: str) -> dict:
+        """
+        Get security summary untuk user (untuk monitoring purposes).
+        
+        Args:
+            username (str): Username
+            
+        Returns:
+            dict: Security metrics
+        """
+        try:
+            lockout_status = self.check_login_lockout(username)
+            history = self.get_login_history(username, limit=5)
+            
+            # Count successful logins dalam 24 jam
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Use SQLite datetime functions for proper comparison
+                cursor.execute("""
+                    SELECT COUNT(*) as count FROM login_attempts
+                    WHERE username = ? AND success = 1 
+                    AND attempted_at > datetime('now', '-24 hours')
+                """, (username,))
+                
+                successful_24h = cursor.fetchone()['count']
+            
+            return {
+                'username': username,
+                'lockout_status': lockout_status,
+                'recent_attempts': history,
+                'successful_logins_24h': successful_24h,
+                'last_login': history[0]['attempted_at'] if history else None
+            }
+        except Exception as e:
+            logger.error(f"Error getting security summary: {e}", exc_info=True)
+            return {}
 
 
 # ============================================================================

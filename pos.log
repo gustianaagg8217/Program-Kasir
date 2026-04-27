@@ -14577,3 +14577,1057 @@ sqlite3.OperationalError: no such column: aktif
 2026-04-26 22:45:49 - INFO     - transaction - Saving transaction to database...
 2026-04-26 22:45:49 - INFO     - database - Transaction created: ID=25, total=Rp22,000, discount=0% (Rp50), tax=0.0% (Rp0)
 2026-04-26 22:45:49 - INFO     - transaction - Transaction completed: ID=25, total=Rp22,000, items=2, payment=Rp30,000
+2026-04-26 22:46:48 - INFO     - __main__ - User gustiana logged out - returning to login
+2026-04-26 22:46:48 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-26 22:46:48 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-26 22:46:48 - INFO     - database - Transaction table migration completed
+2026-04-26 22:46:48 - INFO     - database - Database tables initialized successfully
+2026-04-26 22:46:48 - INFO     - __main__ - Database initialized
+2026-04-26 22:46:48 - INFO     - __main__ - Showing login window
+2026-04-26 22:46:50 - WARNING  - __main__ - User cancelled login, exiting application
+2026-04-27 06:43:53 - INFO     - logger_config - ======================================================================
+2026-04-27 06:43:53 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-27 06:43:53 - INFO     - logger_config - ======================================================================
+2026-04-27 06:43:53 - INFO     - logger_config - Logging initialized at 2026-04-27 06:43:53
+2026-04-27 06:43:53 - INFO     - __main__ - Application initialization started
+2026-04-27 06:43:54 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 06:43:54 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 06:43:54 - INFO     - database - Transaction table migration completed
+2026-04-27 06:43:54 - INFO     - database - Database tables initialized successfully
+2026-04-27 06:43:54 - INFO     - __main__ - Database initialized
+2026-04-27 06:43:54 - INFO     - __main__ - Showing login window
+2026-04-27 06:44:08 - INFO     - database - User login successful: gustiana
+2026-04-27 06:44:08 - INFO     - __main__ - User login successful: gustiana (admin)
+2026-04-27 06:44:08 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-27 06:44:08 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 06:44:08 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 06:44:08 - INFO     - database - Transaction table migration completed
+2026-04-27 06:44:08 - INFO     - database - Database tables initialized successfully
+2026-04-27 06:44:09 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-27 06:44:09 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-27 06:44:09 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 06:44:09 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 06:44:09 - INFO     - database - Transaction table migration completed
+2026-04-27 06:44:09 - INFO     - database - Database tables initialized successfully
+2026-04-27 06:44:09 - INFO     - backup_manager - Database backup created: backup_20260427.db
+2026-04-27 06:44:09 - INFO     - __main__ - Daily backup created successfully
+2026-04-27 06:44:09 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-27 06:44:09 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-27 06:44:10 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-27 06:44:10 - INFO     - __main__ -   Enter → Add item
+2026-04-27 06:44:10 - INFO     - __main__ -   F1 → New transaction
+2026-04-27 06:44:10 - INFO     - __main__ -   F2 → Process payment
+2026-04-27 06:44:10 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-27 06:44:10 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 501, 'total_revenue': 7515000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 105, 'total_revenue': 2310000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 3, 'total_revenue': 150, 'rank': 3}]
+2026-04-27 06:44:10 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 06:44:10 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 06:44:10 - INFO     - __main__ - Product 1: Ubi Mentah (qty=501, revenue=7515000)
+2026-04-27 06:44:10 - INFO     - __main__ - Product 2: Ubi Bakar (qty=105, revenue=2310000)
+2026-04-27 06:44:10 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=3, revenue=150)
+2026-04-27 06:44:28 - INFO     - __main__ - Product search: 'b' - Found 2 products
+2026-04-27 06:44:28 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-27 06:44:29 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-27 06:44:29 - INFO     - __main__ - Product search: 'baka' - Found 1 products
+2026-04-27 06:44:29 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (49)
+2026-04-27 06:44:29 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (49)
+2026-04-27 06:48:36 - INFO     - logger_config - ======================================================================
+2026-04-27 06:48:36 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-27 06:48:36 - INFO     - logger_config - ======================================================================
+2026-04-27 06:48:36 - INFO     - logger_config - Logging initialized at 2026-04-27 06:48:36
+2026-04-27 06:48:37 - INFO     - __main__ - Application initialization started
+2026-04-27 06:48:37 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 06:48:37 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 06:48:37 - INFO     - database - Transaction table migration completed
+2026-04-27 06:48:37 - INFO     - database - Database tables initialized successfully
+2026-04-27 06:48:37 - INFO     - __main__ - Database initialized
+2026-04-27 06:48:37 - INFO     - __main__ - Showing login window
+2026-04-27 06:48:47 - INFO     - database - User login successful: shandi
+2026-04-27 06:48:47 - INFO     - __main__ - User login successful: shandi (cashier)
+2026-04-27 06:48:47 - INFO     - __main__ - Launching main application for user shandi
+2026-04-27 06:48:47 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 06:48:47 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 06:48:47 - INFO     - database - Transaction table migration completed
+2026-04-27 06:48:47 - INFO     - database - Database tables initialized successfully
+2026-04-27 06:48:48 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-27 06:48:48 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-27 06:48:48 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 06:48:48 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 06:48:48 - INFO     - database - Transaction table migration completed
+2026-04-27 06:48:48 - INFO     - database - Database tables initialized successfully
+2026-04-27 06:48:48 - INFO     - backup_manager - Backup already exists for today: backup_20260427.db
+2026-04-27 06:48:48 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-27 06:48:48 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-27 06:48:48 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-27 06:48:48 - INFO     - __main__ -   Enter → Add item
+2026-04-27 06:48:48 - INFO     - __main__ -   F1 → New transaction
+2026-04-27 06:48:48 - INFO     - __main__ -   F2 → Process payment
+2026-04-27 06:48:48 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-27 06:48:48 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 501, 'total_revenue': 7515000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 105, 'total_revenue': 2310000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 3, 'total_revenue': 150, 'rank': 3}]
+2026-04-27 06:48:48 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 06:48:48 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 06:48:48 - INFO     - __main__ - Product 1: Ubi Mentah (qty=501, revenue=7515000)
+2026-04-27 06:48:48 - INFO     - __main__ - Product 2: Ubi Bakar (qty=105, revenue=2310000)
+2026-04-27 06:48:48 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=3, revenue=150)
+2026-04-27 06:48:53 - INFO     - __main__ - Product search: 'b' - Found 2 products
+2026-04-27 06:48:53 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-27 06:48:53 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-27 06:48:53 - INFO     - __main__ - Product search: 'baka' - Found 1 products
+2026-04-27 06:48:53 - INFO     - __main__ - Product search: 'bakar' - Found 1 products
+2026-04-27 06:48:54 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (49)
+2026-04-27 06:49:18 - INFO     - __main__ - Product search: 'b' - Found 2 products
+2026-04-27 06:49:18 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-27 06:49:18 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-27 06:49:18 - INFO     - __main__ - Product search: 'baka' - Found 1 products
+2026-04-27 06:49:21 - INFO     - __main__ - Product search: 'baka' - Found 1 products
+2026-04-27 06:49:29 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (49)
+2026-04-27 06:50:39 - INFO     - __main__ - Product search: 'm' - Found 1 products
+2026-04-27 06:50:40 - INFO     - __main__ - Product search: 'me' - Found 1 products
+2026-04-27 06:50:40 - INFO     - __main__ - Product search: 'men' - Found 1 products
+2026-04-27 06:50:41 - INFO     - __main__ - Product search: 'me' - Found 1 products
+2026-04-27 06:50:41 - INFO     - __main__ - Product search: 'm' - Found 1 products
+2026-04-27 06:50:43 - INFO     - __main__ - Product search: 'm' - Found 1 products
+2026-04-27 06:50:44 - INFO     - __main__ - Product search: 'me' - Found 1 products
+2026-04-27 06:50:44 - INFO     - __main__ - Product search: 'men' - Found 1 products
+2026-04-27 06:50:45 - INFO     - __main__ - Product search: 'ment' - Found 1 products
+2026-04-27 06:50:45 - INFO     - __main__ - Product search: 'menta' - Found 1 products
+2026-04-27 06:53:54 - INFO     - logger_config - ======================================================================
+2026-04-27 06:53:54 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-27 06:53:54 - INFO     - logger_config - ======================================================================
+2026-04-27 06:53:54 - INFO     - logger_config - Logging initialized at 2026-04-27 06:53:54
+2026-04-27 06:53:55 - INFO     - __main__ - Application initialization started
+2026-04-27 06:53:55 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 06:53:55 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 06:53:55 - INFO     - database - Transaction table migration completed
+2026-04-27 06:53:55 - INFO     - database - Database tables initialized successfully
+2026-04-27 06:53:55 - INFO     - __main__ - Database initialized
+2026-04-27 06:53:55 - INFO     - __main__ - Showing login window
+2026-04-27 06:54:06 - INFO     - database - User login successful: shandi
+2026-04-27 06:54:06 - INFO     - __main__ - User login successful: shandi (cashier)
+2026-04-27 06:54:06 - INFO     - __main__ - Launching main application for user shandi
+2026-04-27 06:54:06 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 06:54:06 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 06:54:06 - INFO     - database - Transaction table migration completed
+2026-04-27 06:54:06 - INFO     - database - Database tables initialized successfully
+2026-04-27 06:54:07 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-27 06:54:07 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-27 06:54:07 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 06:54:07 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 06:54:07 - INFO     - database - Transaction table migration completed
+2026-04-27 06:54:07 - INFO     - database - Database tables initialized successfully
+2026-04-27 06:54:07 - INFO     - backup_manager - Backup already exists for today: backup_20260427.db
+2026-04-27 06:54:07 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-27 06:54:07 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-27 06:54:07 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-27 06:54:07 - INFO     - __main__ -   Enter → Add item
+2026-04-27 06:54:07 - INFO     - __main__ -   F1 → New transaction
+2026-04-27 06:54:07 - INFO     - __main__ -   F2 → Process payment
+2026-04-27 06:54:07 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-27 06:54:07 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 501, 'total_revenue': 7515000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 105, 'total_revenue': 2310000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 3, 'total_revenue': 150, 'rank': 3}]
+2026-04-27 06:54:07 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 06:54:07 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 06:54:07 - INFO     - __main__ - Product 1: Ubi Mentah (qty=501, revenue=7515000)
+2026-04-27 06:54:07 - INFO     - __main__ - Product 2: Ubi Bakar (qty=105, revenue=2310000)
+2026-04-27 06:54:07 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=3, revenue=150)
+2026-04-27 06:54:12 - INFO     - __main__ - Product search: 'b' - Found 2 products
+2026-04-27 06:54:12 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-27 06:54:12 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-27 06:54:12 - INFO     - __main__ - Product search: 'baka' - Found 1 products
+2026-04-27 06:54:13 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (49)
+2026-04-27 06:54:27 - INFO     - __main__ - Product search: 'm' - Found 1 products
+2026-04-27 06:54:27 - INFO     - __main__ - Product search: 'men' - Found 1 products
+2026-04-27 06:54:27 - INFO     - __main__ - Product search: 'men' - Found 1 products
+2026-04-27 06:54:28 - INFO     - __main__ - Product search: 'ment' - Found 1 products
+2026-04-27 06:54:28 - INFO     - __main__ - Product selected: 0002 - Ubi Mentah (500)
+2026-04-27 06:54:34 - INFO     - __main__ - Product search: 't' - Found 3 products
+2026-04-27 06:54:34 - INFO     - __main__ - Product search: 'to' - Found 2 products
+2026-04-27 06:54:34 - INFO     - __main__ - Product search: 'toro' - Found 2 products
+2026-04-27 06:54:34 - INFO     - __main__ - Product search: 'toro' - Found 2 products
+2026-04-27 06:54:38 - INFO     - __main__ - Product selected: 0004 - Toros uk 2 Kg (995)
+2026-04-27 06:54:42 - INFO     - __main__ - Product selected: 0004 - Toros uk 2 Kg (995)
+2026-04-27 06:54:45 - INFO     - __main__ - Product selected: 0004 - Toros uk 2 Kg (995)
+2026-04-27 06:54:45 - INFO     - __main__ - Product selected: 0004 - Toros uk 2 Kg (995)
+2026-04-27 06:54:51 - INFO     - __main__ - Product selected: 0004 - Toros uk 2 Kg (995)
+2026-04-27 06:54:52 - INFO     - __main__ - Product selected: 0003 - Toros uk 1 Kg (989)
+2026-04-27 06:54:54 - INFO     - __main__ - Product selected: 0004 - Toros uk 2 Kg (995)
+2026-04-27 06:55:18 - INFO     - models - Discount set: 0.0% (amount: Rp0)
+2026-04-27 06:55:18 - INFO     - __main__ - Discount updated: 0.0%
+2026-04-27 06:55:19 - INFO     - models - Discount set: 0.0% (amount: Rp0)
+2026-04-27 06:55:19 - INFO     - __main__ - Discount updated: 0.0%
+2026-04-27 06:55:19 - INFO     - models - Discount set: 0.0% (amount: Rp0)
+2026-04-27 06:55:19 - INFO     - __main__ - Discount updated: 0.0%
+2026-04-27 06:55:19 - INFO     - models - Discount set: 0.0% (amount: Rp0)
+2026-04-27 06:55:19 - INFO     - __main__ - Discount updated: 0.0%
+2026-04-27 06:55:20 - INFO     - models - Discount set: 0.0% (amount: Rp0)
+2026-04-27 06:55:20 - INFO     - __main__ - Discount updated: 0.0%
+2026-04-27 06:55:20 - INFO     - models - Discount set: 0.0% (amount: Rp0)
+2026-04-27 06:55:20 - INFO     - __main__ - Discount updated: 0.0%
+2026-04-27 06:55:21 - INFO     - models - Tax set: 0.0% (amount: Rp0)
+2026-04-27 06:55:21 - INFO     - __main__ - Tax updated: 0.0%
+2026-04-27 06:55:29 - INFO     - models - Discount set: Rp7 (fixed amount)
+2026-04-27 06:55:29 - INFO     - __main__ - Discount updated: Rp7
+2026-04-27 06:55:30 - INFO     - models - Discount set: Rp75 (fixed amount)
+2026-04-27 06:55:30 - INFO     - __main__ - Discount updated: Rp75
+2026-04-27 06:55:32 - INFO     - models - Tax set: 0.0% (amount: Rp0)
+2026-04-27 06:55:32 - INFO     - __main__ - Tax updated: 0.0%
+2026-04-27 06:55:42 - INFO     - models - Tax set: 2.0% (amount: Rp1,180)
+2026-04-27 06:55:42 - INFO     - __main__ - Tax updated: 2.0%
+2026-04-27 06:55:45 - INFO     - models - Tax set: 0.0% (amount: Rp0)
+2026-04-27 06:55:45 - INFO     - __main__ - Tax updated: 0.0%
+2026-04-27 06:56:12 - INFO     - database - Stock reduced: product_id=8, qty=2, remaining=47
+2026-04-27 06:56:12 - INFO     - database - Stock reduced: product_id=9, qty=1, remaining=499
+2026-04-27 06:56:12 - INFO     - database - Stock reduced: product_id=11, qty=1, remaining=994
+2026-04-27 06:56:12 - INFO     - transaction - Saving transaction to database...
+2026-04-27 06:56:12 - INFO     - database - Transaction created: ID=26, total=Rp59,000, discount=0% (Rp75), tax=0.0% (Rp0)
+2026-04-27 06:56:12 - INFO     - transaction - Transaction completed: ID=26, total=Rp59,000, items=3, payment=Rp60,000
+2026-04-27 06:56:33 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 502, 'total_revenue': 7530000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 107, 'total_revenue': 2354000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 3, 'total_revenue': 150, 'rank': 3}]
+2026-04-27 06:56:33 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 06:56:33 - INFO     - __main__ - Product 1: Ubi Mentah (qty=502, revenue=7530000)
+2026-04-27 06:56:33 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 06:56:33 - INFO     - __main__ - Product 2: Ubi Bakar (qty=107, revenue=2354000)
+2026-04-27 06:56:33 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=3, revenue=150)
+2026-04-27 06:56:44 - INFO     - __main__ - ✅ Async task manager cleaned up
+2026-04-27 06:56:44 - INFO     - logger_config - User logout: shandi
+2026-04-27 06:56:44 - INFO     - __main__ - User shandi logged out - returning to login
+2026-04-27 06:56:44 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 06:56:44 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 06:56:44 - INFO     - database - Transaction table migration completed
+2026-04-27 06:56:44 - INFO     - database - Database tables initialized successfully
+2026-04-27 06:56:44 - INFO     - __main__ - Database initialized
+2026-04-27 06:56:44 - INFO     - __main__ - Showing login window
+2026-04-27 06:56:51 - INFO     - database - User login successful: gustiana
+2026-04-27 06:56:51 - INFO     - __main__ - User login successful: gustiana (admin)
+2026-04-27 06:56:51 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-27 06:56:51 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 06:56:51 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 06:56:51 - INFO     - database - Transaction table migration completed
+2026-04-27 06:56:51 - INFO     - database - Database tables initialized successfully
+2026-04-27 06:56:52 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-27 06:56:52 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-27 06:56:52 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 06:56:52 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 06:56:52 - INFO     - database - Transaction table migration completed
+2026-04-27 06:56:52 - INFO     - database - Database tables initialized successfully
+2026-04-27 06:56:52 - INFO     - backup_manager - Backup already exists for today: backup_20260427.db
+2026-04-27 06:56:52 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-27 06:56:52 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-27 06:56:52 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-27 06:56:52 - INFO     - __main__ -   Enter → Add item
+2026-04-27 06:56:52 - INFO     - __main__ -   F1 → New transaction
+2026-04-27 06:56:52 - INFO     - __main__ -   F2 → Process payment
+2026-04-27 06:56:52 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-27 06:56:52 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 502, 'total_revenue': 7530000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 107, 'total_revenue': 2354000, 'rank': 2}, {'nama': 'Toros uk 1 Kg', 'total_qty': 3, 'total_revenue': 150, 'rank': 3}]
+2026-04-27 06:56:52 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 06:56:52 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 06:56:52 - INFO     - __main__ - Product 1: Ubi Mentah (qty=502, revenue=7530000)
+2026-04-27 06:56:52 - INFO     - __main__ - Product 2: Ubi Bakar (qty=107, revenue=2354000)
+2026-04-27 06:56:52 - INFO     - __main__ - Product 3: Toros uk 1 Kg (qty=3, revenue=150)
+2026-04-27 06:57:02 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (47)
+2026-04-27 06:57:09 - INFO     - __main__ - Product search: 'b' - Found 2 products
+2026-04-27 06:57:09 - INFO     - __main__ - Product search: 'ba' - Found 1 products
+2026-04-27 06:57:09 - INFO     - __main__ - Product search: 'baka' - Found 1 products
+2026-04-27 06:57:09 - INFO     - __main__ - Product search: 'baka' - Found 1 products
+2026-04-27 06:57:10 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-27 06:57:10 - INFO     - __main__ - Product search: 'ba' - Found 1 products
+2026-04-27 06:57:11 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-27 06:57:11 - INFO     - __main__ - Product search: 'baka' - Found 1 products
+2026-04-27 06:57:11 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (47)
+2026-04-27 06:57:21 - INFO     - __main__ - Product selected: 0004 - Toros uk 2 Kg (994)
+2026-04-27 06:57:22 - INFO     - __main__ - Product selected: 0004 - Toros uk 2 Kg (994)
+2026-04-27 06:57:39 - INFO     - __main__ - Product search: 'b' - Found 2 products
+2026-04-27 06:57:39 - INFO     - __main__ - Product search: 'ba' - Found 1 products
+2026-04-27 06:57:39 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-27 06:57:39 - INFO     - __main__ - Product search: 'baka' - Found 1 products
+2026-04-27 06:57:40 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (47)
+2026-04-27 06:57:46 - INFO     - __main__ - Product search: 'to' - Found 2 products
+2026-04-27 06:57:46 - INFO     - __main__ - Product search: 'to' - Found 2 products
+2026-04-27 06:57:46 - INFO     - __main__ - Product search: 'toro' - Found 2 products
+2026-04-27 06:57:46 - INFO     - __main__ - Product search: 'toro' - Found 2 products
+2026-04-27 06:57:49 - INFO     - __main__ - Product selected: 0004 - Toros uk 2 Kg (994)
+2026-04-27 06:58:06 - INFO     - models - Discount set: 0.0% (amount: Rp0)
+2026-04-27 06:58:06 - INFO     - __main__ - Discount updated: 0.0%
+2026-04-27 06:58:08 - INFO     - models - Discount set: Rp3 (fixed amount)
+2026-04-27 06:58:08 - INFO     - __main__ - Discount updated: Rp3
+2026-04-27 06:58:09 - INFO     - models - Discount set: Rp30 (fixed amount)
+2026-04-27 06:58:09 - INFO     - __main__ - Discount updated: Rp30
+2026-04-27 06:58:09 - INFO     - models - Discount set: Rp300 (fixed amount)
+2026-04-27 06:58:09 - INFO     - __main__ - Discount updated: Rp300
+2026-04-27 06:58:18 - INFO     - database - Stock reduced: product_id=8, qty=8, remaining=39
+2026-04-27 06:58:18 - INFO     - database - Stock reduced: product_id=11, qty=4, remaining=990
+2026-04-27 06:58:18 - INFO     - transaction - Saving transaction to database...
+2026-04-27 06:58:18 - INFO     - database - Transaction created: ID=27, total=Rp176,000, discount=0% (Rp300), tax=0.0% (Rp0)
+2026-04-27 06:58:18 - INFO     - transaction - Transaction completed: ID=27, total=Rp176,000, items=2, payment=Rp180,000
+2026-04-27 06:58:24 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 502, 'total_revenue': 7530000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 115, 'total_revenue': 2530000, 'rank': 2}, {'nama': 'Toros uk 2 Kg', 'total_qty': 6, 'total_revenue': 450, 'rank': 3}]
+2026-04-27 06:58:24 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 06:58:24 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 06:58:24 - INFO     - __main__ - Product 1: Ubi Mentah (qty=502, revenue=7530000)
+2026-04-27 06:58:24 - INFO     - __main__ - Product 2: Ubi Bakar (qty=115, revenue=2530000)
+2026-04-27 06:58:24 - INFO     - __main__ - Product 3: Toros uk 2 Kg (qty=6, revenue=450)
+2026-04-27 06:59:36 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 502, 'total_revenue': 7530000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 115, 'total_revenue': 2530000, 'rank': 2}, {'nama': 'Toros uk 2 Kg', 'total_qty': 6, 'total_revenue': 450, 'rank': 3}]
+2026-04-27 06:59:36 - INFO     - __main__ - Product 1: Ubi Mentah (qty=502, revenue=7530000)
+2026-04-27 06:59:36 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 06:59:36 - INFO     - __main__ - Product 2: Ubi Bakar (qty=115, revenue=2530000)
+2026-04-27 06:59:36 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 06:59:36 - INFO     - __main__ - Product 3: Toros uk 2 Kg (qty=6, revenue=450)
+2026-04-27 07:01:26 - INFO     - logger_config - ======================================================================
+2026-04-27 07:01:26 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-27 07:01:26 - INFO     - logger_config - ======================================================================
+2026-04-27 07:01:26 - INFO     - logger_config - Logging initialized at 2026-04-27 07:01:26
+2026-04-27 07:01:26 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:01:26 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:01:26 - INFO     - database - Transaction table migration completed
+2026-04-27 07:01:26 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:01:55 - INFO     - logger_config - ======================================================================
+2026-04-27 07:01:55 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-27 07:01:55 - INFO     - logger_config - ======================================================================
+2026-04-27 07:01:55 - INFO     - logger_config - Logging initialized at 2026-04-27 07:01:55
+2026-04-27 07:01:55 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:01:55 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:01:55 - INFO     - database - Transaction table migration completed
+2026-04-27 07:01:55 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:03:31 - INFO     - logger_config - ======================================================================
+2026-04-27 07:03:31 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-27 07:03:31 - INFO     - logger_config - ======================================================================
+2026-04-27 07:03:31 - INFO     - logger_config - Logging initialized at 2026-04-27 07:03:31
+2026-04-27 07:03:31 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:03:31 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:03:31 - INFO     - database - Transaction table migration completed
+2026-04-27 07:03:31 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:06:08 - INFO     - logger_config - ======================================================================
+2026-04-27 07:06:08 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-27 07:06:08 - INFO     - logger_config - ======================================================================
+2026-04-27 07:06:08 - INFO     - logger_config - Logging initialized at 2026-04-27 07:06:08
+2026-04-27 07:06:08 - INFO     - __main__ - Application initialization started
+2026-04-27 07:06:08 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:06:08 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:06:08 - INFO     - database - Transaction table migration completed
+2026-04-27 07:06:08 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:06:08 - INFO     - __main__ - Database initialized
+2026-04-27 07:06:08 - INFO     - __main__ - Showing login window
+2026-04-27 07:06:19 - INFO     - database - User login successful: gustiana
+2026-04-27 07:06:19 - INFO     - __main__ - User login successful: gustiana (admin)
+2026-04-27 07:06:19 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-27 07:06:19 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:06:19 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:06:19 - INFO     - database - Transaction table migration completed
+2026-04-27 07:06:19 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:06:20 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-27 07:06:20 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-27 07:06:20 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:06:20 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:06:20 - INFO     - database - Transaction table migration completed
+2026-04-27 07:06:20 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:06:20 - INFO     - backup_manager - Backup already exists for today: backup_20260427.db
+2026-04-27 07:06:20 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-27 07:06:20 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-27 07:06:20 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-27 07:06:20 - INFO     - __main__ -   Enter → Add item
+2026-04-27 07:06:20 - INFO     - __main__ -   F1 → New transaction
+2026-04-27 07:06:20 - INFO     - __main__ -   F2 → Process payment
+2026-04-27 07:06:20 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-27 07:06:20 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 502, 'total_revenue': 7530000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 115, 'total_revenue': 2530000, 'rank': 2}, {'nama': 'Toros uk 2 Kg', 'total_qty': 6, 'total_revenue': 450, 'rank': 3}]
+2026-04-27 07:06:20 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:06:20 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:06:20 - INFO     - __main__ - Product 1: Ubi Mentah (qty=502, revenue=7530000)
+2026-04-27 07:06:20 - INFO     - __main__ - Product 2: Ubi Bakar (qty=115, revenue=2530000)
+2026-04-27 07:06:20 - INFO     - __main__ - Product 3: Toros uk 2 Kg (qty=6, revenue=450)
+2026-04-27 07:06:36 - INFO     - __main__ - Product selected: 0002 - Ubi Mentah (499)
+2026-04-27 07:06:36 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (39)
+2026-04-27 07:06:42 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (39)
+2026-04-27 07:06:43 - INFO     - __main__ - Product selected: 0003 - Toros uk 1 Kg (989)
+2026-04-27 07:06:49 - INFO     - database - Stock reduced: product_id=8, qty=1, remaining=38
+2026-04-27 07:06:49 - INFO     - database - Stock reduced: product_id=10, qty=1, remaining=988
+2026-04-27 07:06:49 - INFO     - transaction - Saving transaction to database...
+2026-04-27 07:06:49 - INFO     - database - Transaction created: ID=28, total=Rp22,050, discount=0.0% (Rp0), tax=0.0% (Rp0)
+2026-04-27 07:06:50 - INFO     - transaction - Transaction completed: ID=28, total=Rp22,050, items=2, payment=Rp30,000
+2026-04-27 07:06:57 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 502, 'total_revenue': 7530000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 116, 'total_revenue': 2552000, 'rank': 2}, {'nama': 'Toros uk 2 Kg', 'total_qty': 6, 'total_revenue': 450, 'rank': 3}]
+2026-04-27 07:06:57 - INFO     - __main__ - Product 1: Ubi Mentah (qty=502, revenue=7530000)
+2026-04-27 07:06:57 - INFO     - __main__ - Product 2: Ubi Bakar (qty=116, revenue=2552000)
+2026-04-27 07:06:57 - INFO     - __main__ - Product 3: Toros uk 2 Kg (qty=6, revenue=450)
+2026-04-27 07:06:57 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:06:57 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:18:56 - INFO     - logger_config - ======================================================================
+2026-04-27 07:18:56 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-27 07:18:56 - INFO     - logger_config - ======================================================================
+2026-04-27 07:18:56 - INFO     - logger_config - Logging initialized at 2026-04-27 07:18:56
+2026-04-27 07:18:56 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:18:56 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:18:56 - INFO     - database - Transaction table migration completed
+2026-04-27 07:18:56 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:18:56 - INFO     - database - User created: username=testuser, role=cashier
+2026-04-27 07:18:56 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:18:56 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:18:56 - INFO     - database - Transaction table migration completed
+2026-04-27 07:18:56 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:18:57 - INFO     - database - User created: username=security_test, role=cashier
+2026-04-27 07:18:57 - INFO     - database - Login attempt recorded: security_test - FAILED (ID: 1)
+2026-04-27 07:18:57 - INFO     - database - Login attempt recorded: security_test - FAILED (ID: 2)
+2026-04-27 07:18:57 - INFO     - database - Login attempt recorded: security_test - SUCCESS (ID: 3)
+2026-04-27 07:18:57 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:18:57 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:18:57 - INFO     - database - Transaction table migration completed
+2026-04-27 07:18:57 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:18:57 - INFO     - database - User created: username=ratelimit_test, role=cashier
+2026-04-27 07:18:57 - INFO     - database - Login attempt recorded: ratelimit_test - FAILED (ID: 1)
+2026-04-27 07:18:57 - INFO     - database - Login attempt recorded: ratelimit_test - FAILED (ID: 2)
+2026-04-27 07:18:57 - INFO     - database - Login attempt recorded: ratelimit_test - FAILED (ID: 3)
+2026-04-27 07:18:57 - INFO     - database - Login attempt recorded: ratelimit_test - FAILED (ID: 4)
+2026-04-27 07:18:57 - INFO     - database - Login attempt recorded: ratelimit_test - FAILED (ID: 5)
+2026-04-27 07:18:57 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:18:57 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:18:57 - INFO     - database - Transaction table migration completed
+2026-04-27 07:18:57 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:18:57 - INFO     - database - User created: username=authtest, role=cashier
+2026-04-27 07:18:57 - INFO     - database - User login successful: authtest
+2026-04-27 07:18:57 - INFO     - database - Login attempt recorded: authtest - SUCCESS (ID: 1)
+2026-04-27 07:18:57 - INFO     - auth_security - Login attempt recorded: authtest, success=True
+2026-04-27 07:18:57 - INFO     - database - Login attempts reset for user: authtest
+2026-04-27 07:18:57 - INFO     - auth_manager - User logged in successfully: authtest (role: cashier) from 192.168.1.100
+2026-04-27 07:18:57 - INFO     - auth_manager - User logged out: authtest
+2026-04-27 07:18:58 - WARNING  - database - Invalid password for user 'authtest'
+2026-04-27 07:18:58 - INFO     - database - Login attempt recorded: authtest - FAILED (ID: 2)
+2026-04-27 07:18:58 - INFO     - auth_security - Login attempt recorded: authtest, success=False
+2026-04-27 07:18:58 - WARNING  - auth_manager - Failed login attempt: authtest from 192.168.1.100 (Total failed: 1)
+2026-04-27 07:29:20 - INFO     - logger_config - ======================================================================
+2026-04-27 07:29:20 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-27 07:29:20 - INFO     - logger_config - ======================================================================
+2026-04-27 07:29:20 - INFO     - logger_config - Logging initialized at 2026-04-27 07:29:20
+2026-04-27 07:29:20 - INFO     - __main__ - Application initialization started
+2026-04-27 07:29:20 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:29:20 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:29:20 - INFO     - database - Transaction table migration completed
+2026-04-27 07:29:20 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:29:20 - INFO     - __main__ - Database initialized
+2026-04-27 07:29:20 - INFO     - __main__ - Showing login window
+2026-04-27 07:29:27 - INFO     - database - User login successful: gustiana
+2026-04-27 07:29:27 - INFO     - __main__ - User login successful: gustiana (admin)
+2026-04-27 07:29:27 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-27 07:29:27 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:29:27 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:29:27 - INFO     - database - Transaction table migration completed
+2026-04-27 07:29:27 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:29:28 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-27 07:29:28 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-27 07:29:28 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:29:28 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:29:28 - INFO     - database - Transaction table migration completed
+2026-04-27 07:29:28 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:29:28 - INFO     - backup_manager - Backup already exists for today: backup_20260427.db
+2026-04-27 07:29:28 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-27 07:29:28 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-27 07:29:28 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-27 07:29:28 - INFO     - __main__ -   Enter → Add item
+2026-04-27 07:29:28 - INFO     - __main__ -   F1 → New transaction
+2026-04-27 07:29:28 - INFO     - __main__ -   F2 → Process payment
+2026-04-27 07:29:28 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-27 07:29:29 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 502, 'total_revenue': 7530000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 116, 'total_revenue': 2552000, 'rank': 2}, {'nama': 'Toros uk 2 Kg', 'total_qty': 6, 'total_revenue': 450, 'rank': 3}]
+2026-04-27 07:29:29 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:29:29 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:29:29 - INFO     - __main__ - Product 1: Ubi Mentah (qty=502, revenue=7530000)
+2026-04-27 07:29:29 - INFO     - __main__ - Product 2: Ubi Bakar (qty=116, revenue=2552000)
+2026-04-27 07:29:29 - INFO     - __main__ - Product 3: Toros uk 2 Kg (qty=6, revenue=450)
+2026-04-27 07:29:47 - INFO     - database - User created: username=caca, role=cashier
+2026-04-27 07:29:51 - INFO     - __main__ - ✅ Async task manager cleaned up
+2026-04-27 07:29:51 - INFO     - logger_config - User logout: gustiana
+2026-04-27 07:29:51 - INFO     - __main__ - User gustiana logged out - returning to login
+2026-04-27 07:29:51 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:29:51 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:29:51 - INFO     - database - Transaction table migration completed
+2026-04-27 07:29:51 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:29:51 - INFO     - __main__ - Database initialized
+2026-04-27 07:29:51 - INFO     - __main__ - Showing login window
+2026-04-27 07:29:55 - INFO     - database - User login successful: caca
+2026-04-27 07:29:55 - INFO     - __main__ - User login successful: caca (cashier)
+2026-04-27 07:29:55 - INFO     - __main__ - Launching main application for user caca
+2026-04-27 07:29:55 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:29:55 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:29:55 - INFO     - database - Transaction table migration completed
+2026-04-27 07:29:55 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:29:56 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-27 07:29:56 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-27 07:29:56 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:29:56 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:29:56 - INFO     - database - Transaction table migration completed
+2026-04-27 07:29:56 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:29:56 - INFO     - backup_manager - Backup already exists for today: backup_20260427.db
+2026-04-27 07:29:56 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-27 07:29:56 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-27 07:29:56 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-27 07:29:56 - INFO     - __main__ -   Enter → Add item
+2026-04-27 07:29:56 - INFO     - __main__ -   F1 → New transaction
+2026-04-27 07:29:56 - INFO     - __main__ -   F2 → Process payment
+2026-04-27 07:29:56 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-27 07:29:56 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 502, 'total_revenue': 7530000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 116, 'total_revenue': 2552000, 'rank': 2}, {'nama': 'Toros uk 2 Kg', 'total_qty': 6, 'total_revenue': 450, 'rank': 3}]
+2026-04-27 07:29:56 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:29:56 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:29:56 - INFO     - __main__ - Product 1: Ubi Mentah (qty=502, revenue=7530000)
+2026-04-27 07:29:56 - INFO     - __main__ - Product 2: Ubi Bakar (qty=116, revenue=2552000)
+2026-04-27 07:29:56 - INFO     - __main__ - Product 3: Toros uk 2 Kg (qty=6, revenue=450)
+2026-04-27 07:29:59 - INFO     - __main__ - ✅ Async task manager cleaned up
+2026-04-27 07:29:59 - INFO     - logger_config - User logout: caca
+2026-04-27 07:29:59 - INFO     - __main__ - User caca logged out - returning to login
+2026-04-27 07:29:59 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:29:59 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:29:59 - INFO     - database - Transaction table migration completed
+2026-04-27 07:29:59 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:29:59 - INFO     - __main__ - Database initialized
+2026-04-27 07:29:59 - INFO     - __main__ - Showing login window
+2026-04-27 07:30:03 - WARNING  - database - Invalid password for user 'caca'
+2026-04-27 07:30:05 - WARNING  - __main__ - Failed login attempt for user: caca
+2026-04-27 07:30:09 - WARNING  - database - Invalid password for user 'caca'
+2026-04-27 07:30:10 - WARNING  - __main__ - Failed login attempt for user: caca
+2026-04-27 07:30:14 - WARNING  - database - Invalid password for user 'caca'
+2026-04-27 07:30:15 - WARNING  - __main__ - Failed login attempt for user: caca
+2026-04-27 07:30:19 - WARNING  - database - Invalid password for user 'caca'
+2026-04-27 07:30:20 - WARNING  - __main__ - Failed login attempt for user: caca
+2026-04-27 07:30:26 - WARNING  - database - Invalid password for user 'caca'
+2026-04-27 07:30:26 - WARNING  - __main__ - Failed login attempt for user: caca
+2026-04-27 07:30:31 - WARNING  - database - Invalid password for user 'caca'
+2026-04-27 07:30:32 - WARNING  - __main__ - Failed login attempt for user: caca
+2026-04-27 07:30:40 - WARNING  - database - Invalid password for user 'caca'
+2026-04-27 07:30:41 - WARNING  - __main__ - Failed login attempt for user: caca
+2026-04-27 07:31:56 - INFO     - database - User login successful: caca
+2026-04-27 07:31:56 - INFO     - __main__ - User login successful: caca (cashier)
+2026-04-27 07:31:56 - INFO     - __main__ - Launching main application for user caca
+2026-04-27 07:31:56 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:31:56 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:31:56 - INFO     - database - Transaction table migration completed
+2026-04-27 07:31:56 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:31:57 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-27 07:31:57 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-27 07:31:57 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:31:57 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:31:57 - INFO     - database - Transaction table migration completed
+2026-04-27 07:31:57 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:31:57 - INFO     - backup_manager - Backup already exists for today: backup_20260427.db
+2026-04-27 07:31:57 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-27 07:31:57 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-27 07:31:57 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-27 07:31:57 - INFO     - __main__ -   Enter → Add item
+2026-04-27 07:31:57 - INFO     - __main__ -   F1 → New transaction
+2026-04-27 07:31:57 - INFO     - __main__ -   F2 → Process payment
+2026-04-27 07:31:57 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-27 07:31:57 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 502, 'total_revenue': 7530000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 116, 'total_revenue': 2552000, 'rank': 2}, {'nama': 'Toros uk 2 Kg', 'total_qty': 6, 'total_revenue': 450, 'rank': 3}]
+2026-04-27 07:31:57 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:31:57 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:31:57 - INFO     - __main__ - Product 1: Ubi Mentah (qty=502, revenue=7530000)
+2026-04-27 07:31:57 - INFO     - __main__ - Product 2: Ubi Bakar (qty=116, revenue=2552000)
+2026-04-27 07:31:57 - INFO     - __main__ - Product 3: Toros uk 2 Kg (qty=6, revenue=450)
+2026-04-27 07:32:05 - INFO     - __main__ - Product search: 'b' - Found 2 products
+2026-04-27 07:32:05 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-27 07:32:05 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-27 07:32:05 - INFO     - __main__ - Product search: 'baka' - Found 1 products
+2026-04-27 07:32:06 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (38)
+2026-04-27 07:32:16 - INFO     - __main__ - Product search: 't' - Found 3 products
+2026-04-27 07:32:16 - INFO     - __main__ - Product search: 'to' - Found 2 products
+2026-04-27 07:32:16 - INFO     - __main__ - Product search: 'toro' - Found 2 products
+2026-04-27 07:32:16 - INFO     - __main__ - Product search: 'toro' - Found 2 products
+2026-04-27 07:32:19 - INFO     - __main__ - Product selected: 0004 - Toros uk 2 Kg (990)
+2026-04-27 07:32:30 - INFO     - logger_config - ======================================================================
+2026-04-27 07:32:30 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-27 07:32:30 - INFO     - logger_config - ======================================================================
+2026-04-27 07:32:30 - INFO     - logger_config - Logging initialized at 2026-04-27 07:32:30
+2026-04-27 07:32:30 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:32:30 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:32:30 - INFO     - database - Transaction table migration completed
+2026-04-27 07:32:30 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:32:30 - INFO     - database - User created: username=testuser, role=cashier
+2026-04-27 07:32:30 - WARNING  - database - Invalid password for user 'testuser'
+2026-04-27 07:32:30 - INFO     - database - Login attempt recorded: testuser - FAILED (ID: 1)
+2026-04-27 07:32:30 - INFO     - auth_security - Login attempt recorded: testuser, success=False
+2026-04-27 07:32:30 - WARNING  - auth_manager - Failed login attempt: testuser from 192.168.1.100 (Total failed: 1)
+2026-04-27 07:32:30 - WARNING  - database - Invalid password for user 'testuser'
+2026-04-27 07:32:30 - INFO     - database - Login attempt recorded: testuser - FAILED (ID: 2)
+2026-04-27 07:32:30 - INFO     - auth_security - Login attempt recorded: testuser, success=False
+2026-04-27 07:32:30 - WARNING  - auth_manager - Failed login attempt: testuser from 192.168.1.100 (Total failed: 1)
+2026-04-27 07:32:31 - WARNING  - database - Invalid password for user 'testuser'
+2026-04-27 07:32:31 - INFO     - database - Login attempt recorded: testuser - FAILED (ID: 3)
+2026-04-27 07:32:31 - INFO     - auth_security - Login attempt recorded: testuser, success=False
+2026-04-27 07:32:31 - WARNING  - auth_manager - Failed login attempt: testuser from 192.168.1.100 (Total failed: 1)
+2026-04-27 07:32:31 - WARNING  - database - Invalid password for user 'testuser'
+2026-04-27 07:32:31 - INFO     - database - Login attempt recorded: testuser - FAILED (ID: 4)
+2026-04-27 07:32:31 - INFO     - auth_security - Login attempt recorded: testuser, success=False
+2026-04-27 07:32:31 - WARNING  - auth_manager - Failed login attempt: testuser from 192.168.1.100 (Total failed: 1)
+2026-04-27 07:32:31 - WARNING  - database - Invalid password for user 'testuser'
+2026-04-27 07:32:31 - INFO     - database - Login attempt recorded: testuser - FAILED (ID: 5)
+2026-04-27 07:32:31 - INFO     - auth_security - Login attempt recorded: testuser, success=False
+2026-04-27 07:32:31 - WARNING  - auth_manager - Failed login attempt: testuser from 192.168.1.100 (Total failed: 1)
+2026-04-27 07:32:31 - WARNING  - database - Invalid password for user 'testuser'
+2026-04-27 07:32:31 - INFO     - database - Login attempt recorded: testuser - FAILED (ID: 6)
+2026-04-27 07:32:31 - INFO     - auth_security - Login attempt recorded: testuser, success=False
+2026-04-27 07:32:31 - WARNING  - auth_manager - Failed login attempt: testuser from 192.168.1.100 (Total failed: 1)
+2026-04-27 07:32:31 - WARNING  - database - Invalid password for user 'testuser'
+2026-04-27 07:32:31 - INFO     - database - Login attempt recorded: testuser - FAILED (ID: 7)
+2026-04-27 07:32:31 - INFO     - auth_security - Login attempt recorded: testuser, success=False
+2026-04-27 07:32:31 - WARNING  - auth_manager - Failed login attempt: testuser from 192.168.1.100 (Total failed: 1)
+2026-04-27 07:32:32 - WARNING  - database - Invalid password for user 'testuser'
+2026-04-27 07:32:32 - INFO     - database - Login attempt recorded: testuser - FAILED (ID: 8)
+2026-04-27 07:32:32 - INFO     - auth_security - Login attempt recorded: testuser, success=False
+2026-04-27 07:32:32 - WARNING  - auth_manager - Failed login attempt: testuser from 192.168.1.100 (Total failed: 1)
+2026-04-27 07:32:32 - INFO     - database - User login successful: testuser
+2026-04-27 07:32:32 - INFO     - database - Login attempt recorded: testuser - SUCCESS (ID: 9)
+2026-04-27 07:32:32 - INFO     - auth_security - Login attempt recorded: testuser, success=True
+2026-04-27 07:32:32 - INFO     - database - Login attempts reset for user: testuser
+2026-04-27 07:32:32 - INFO     - auth_manager - User logged in successfully: testuser (role: cashier) from 192.168.1.100
+2026-04-27 07:32:32 - INFO     - models - Discount set: Rp15 (fixed amount)
+2026-04-27 07:32:32 - INFO     - __main__ - Discount updated: Rp15
+2026-04-27 07:32:32 - INFO     - models - Discount set: Rp15 (fixed amount)
+2026-04-27 07:32:32 - INFO     - __main__ - Discount updated: Rp15
+2026-04-27 07:32:32 - INFO     - models - Discount set: Rp150 (fixed amount)
+2026-04-27 07:32:32 - INFO     - __main__ - Discount updated: Rp150
+2026-04-27 07:32:39 - INFO     - database - Stock reduced: product_id=8, qty=5, remaining=33
+2026-04-27 07:32:39 - INFO     - database - Stock reduced: product_id=11, qty=2, remaining=988
+2026-04-27 07:32:39 - INFO     - transaction - Saving transaction to database...
+2026-04-27 07:32:39 - INFO     - database - Transaction created: ID=29, total=Rp110,000, discount=0% (Rp150), tax=0.0% (Rp0)
+2026-04-27 07:32:39 - INFO     - transaction - Transaction completed: ID=29, total=Rp110,000, items=2, payment=Rp110,000
+2026-04-27 07:32:50 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 502, 'total_revenue': 7530000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 121, 'total_revenue': 2662000, 'rank': 2}, {'nama': 'Toros uk 2 Kg', 'total_qty': 8, 'total_revenue': 600, 'rank': 3}]
+2026-04-27 07:32:50 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:32:50 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:32:50 - INFO     - __main__ - Product 1: Ubi Mentah (qty=502, revenue=7530000)
+2026-04-27 07:32:50 - INFO     - __main__ - Product 2: Ubi Bakar (qty=121, revenue=2662000)
+2026-04-27 07:32:50 - INFO     - __main__ - Product 3: Toros uk 2 Kg (qty=8, revenue=600)
+2026-04-27 07:33:32 - INFO     - logger_config - ======================================================================
+2026-04-27 07:33:32 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-27 07:33:32 - INFO     - logger_config - ======================================================================
+2026-04-27 07:33:32 - INFO     - logger_config - Logging initialized at 2026-04-27 07:33:32
+2026-04-27 07:33:32 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:33:32 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:33:32 - INFO     - database - Transaction table migration completed
+2026-04-27 07:33:32 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:33:32 - INFO     - database - User created: username=testuser, role=cashier
+2026-04-27 07:33:32 - WARNING  - database - Invalid password for user 'testuser'
+2026-04-27 07:33:32 - INFO     - database - Login attempt recorded: testuser - FAILED (ID: 1)
+2026-04-27 07:33:32 - INFO     - auth_security - Login attempt recorded: testuser, success=False
+2026-04-27 07:33:32 - WARNING  - auth_manager - Failed login attempt: testuser from 192.168.1.100 (Total failed: 1)
+2026-04-27 07:33:32 - WARNING  - database - Invalid password for user 'testuser'
+2026-04-27 07:33:32 - INFO     - database - Login attempt recorded: testuser - FAILED (ID: 2)
+2026-04-27 07:33:32 - INFO     - auth_security - Login attempt recorded: testuser, success=False
+2026-04-27 07:33:32 - WARNING  - auth_manager - Failed login attempt: testuser from 192.168.1.100 (Total failed: 2)
+2026-04-27 07:33:32 - WARNING  - database - Invalid password for user 'testuser'
+2026-04-27 07:33:32 - INFO     - database - Login attempt recorded: testuser - FAILED (ID: 3)
+2026-04-27 07:33:32 - INFO     - auth_security - Login attempt recorded: testuser, success=False
+2026-04-27 07:33:32 - WARNING  - auth_manager - Failed login attempt: testuser from 192.168.1.100 (Total failed: 3)
+2026-04-27 07:33:33 - WARNING  - database - Invalid password for user 'testuser'
+2026-04-27 07:33:33 - INFO     - database - Login attempt recorded: testuser - FAILED (ID: 4)
+2026-04-27 07:33:33 - INFO     - auth_security - Login attempt recorded: testuser, success=False
+2026-04-27 07:33:33 - WARNING  - auth_manager - Failed login attempt: testuser from 192.168.1.100 (Total failed: 4)
+2026-04-27 07:33:33 - WARNING  - database - Invalid password for user 'testuser'
+2026-04-27 07:33:33 - INFO     - database - Login attempt recorded: testuser - FAILED (ID: 5)
+2026-04-27 07:33:33 - INFO     - auth_security - Login attempt recorded: testuser, success=False
+2026-04-27 07:33:33 - WARNING  - auth_manager - Failed login attempt: testuser from 192.168.1.100 (Total failed: 5)
+2026-04-27 07:33:33 - WARNING  - auth_manager - Login blocked (account locked): testuser from 192.168.1.100
+2026-04-27 07:33:33 - INFO     - database - Login attempt recorded: testuser - FAILED (ID: 6)
+2026-04-27 07:33:33 - INFO     - auth_security - Login attempt recorded: testuser, success=False
+2026-04-27 07:33:33 - WARNING  - auth_manager - Login blocked (account locked): testuser from 192.168.1.100
+2026-04-27 07:33:33 - INFO     - database - Login attempt recorded: testuser - FAILED (ID: 7)
+2026-04-27 07:33:33 - INFO     - auth_security - Login attempt recorded: testuser, success=False
+2026-04-27 07:33:33 - WARNING  - auth_manager - Login blocked (account locked): testuser from 192.168.1.100
+2026-04-27 07:33:33 - INFO     - database - Login attempt recorded: testuser - FAILED (ID: 8)
+2026-04-27 07:33:33 - INFO     - auth_security - Login attempt recorded: testuser, success=False
+2026-04-27 07:33:33 - WARNING  - auth_manager - Login blocked (account locked): testuser from 192.168.1.100
+2026-04-27 07:33:33 - INFO     - database - Login attempt recorded: testuser - FAILED (ID: 9)
+2026-04-27 07:33:33 - INFO     - auth_security - Login attempt recorded: testuser, success=False
+2026-04-27 07:33:42 - INFO     - __main__ - Product search: 'b' - Found 2 products
+2026-04-27 07:33:42 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-27 07:33:42 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-27 07:33:42 - INFO     - __main__ - Product search: 'baka' - Found 1 products
+2026-04-27 07:33:43 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (33)
+2026-04-27 07:33:52 - INFO     - __main__ - Product search: 't' - Found 3 products
+2026-04-27 07:33:52 - INFO     - __main__ - Product search: 'to' - Found 2 products
+2026-04-27 07:33:52 - INFO     - __main__ - Product search: 'toro' - Found 2 products
+2026-04-27 07:33:52 - INFO     - __main__ - Product search: 'toro' - Found 2 products
+2026-04-27 07:33:54 - INFO     - __main__ - Product selected: 0004 - Toros uk 2 Kg (988)
+2026-04-27 07:34:06 - INFO     - __main__ - Product search: 'b' - Found 2 products
+2026-04-27 07:34:06 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-27 07:34:06 - INFO     - __main__ - Product search: 'bak' - Found 1 products
+2026-04-27 07:34:06 - INFO     - __main__ - Product search: 'baka' - Found 1 products
+2026-04-27 07:34:07 - INFO     - __main__ - Product selected: 0001 - Ubi Bakar (33)
+2026-04-27 07:34:13 - INFO     - __main__ - Product search: 't' - Found 3 products
+2026-04-27 07:34:13 - INFO     - __main__ - Product search: 'to' - Found 2 products
+2026-04-27 07:34:13 - INFO     - __main__ - Product search: 'toro' - Found 2 products
+2026-04-27 07:34:13 - INFO     - __main__ - Product search: 'toro' - Found 2 products
+2026-04-27 07:34:16 - INFO     - __main__ - Product selected: 0003 - Toros uk 1 Kg (988)
+2026-04-27 07:34:20 - INFO     - __main__ - Product search: 't' - Found 3 products
+2026-04-27 07:34:20 - INFO     - __main__ - Product search: 'to' - Found 2 products
+2026-04-27 07:34:20 - INFO     - __main__ - Product search: 'toro' - Found 2 products
+2026-04-27 07:34:20 - INFO     - __main__ - Product search: 'toro' - Found 2 products
+2026-04-27 07:34:22 - INFO     - __main__ - Product selected: 0004 - Toros uk 2 Kg (988)
+2026-04-27 07:34:29 - INFO     - models - Discount set: Rp12 (fixed amount)
+2026-04-27 07:34:29 - INFO     - __main__ - Discount updated: Rp12
+2026-04-27 07:34:29 - INFO     - models - Discount set: Rp12 (fixed amount)
+2026-04-27 07:34:29 - INFO     - __main__ - Discount updated: Rp12
+2026-04-27 07:34:29 - INFO     - models - Discount set: Rp125 (fixed amount)
+2026-04-27 07:34:29 - INFO     - __main__ - Discount updated: Rp125
+2026-04-27 07:34:30 - INFO     - models - Tax set: 0.0% (amount: Rp0)
+2026-04-27 07:34:30 - INFO     - __main__ - Tax updated: 0.0%
+2026-04-27 07:34:45 - INFO     - database - Stock reduced: product_id=8, qty=3, remaining=30
+2026-04-27 07:34:45 - INFO     - database - Stock reduced: product_id=10, qty=1, remaining=987
+2026-04-27 07:34:45 - INFO     - database - Stock reduced: product_id=11, qty=1, remaining=987
+2026-04-27 07:34:45 - INFO     - transaction - Saving transaction to database...
+2026-04-27 07:34:45 - INFO     - database - Transaction created: ID=30, total=Rp66,000, discount=0% (Rp125), tax=0.0% (Rp0)
+2026-04-27 07:34:45 - INFO     - transaction - Transaction completed: ID=30, total=Rp66,000, items=3, payment=Rp70,000
+2026-04-27 07:34:55 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 502, 'total_revenue': 7530000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 124, 'total_revenue': 2728000, 'rank': 2}, {'nama': 'Toros uk 2 Kg', 'total_qty': 9, 'total_revenue': 675, 'rank': 3}]
+2026-04-27 07:34:55 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:34:55 - INFO     - __main__ - Product 1: Ubi Mentah (qty=502, revenue=7530000)
+2026-04-27 07:34:55 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:34:55 - INFO     - __main__ - Product 2: Ubi Bakar (qty=124, revenue=2728000)
+2026-04-27 07:34:55 - INFO     - __main__ - Product 3: Toros uk 2 Kg (qty=9, revenue=675)
+2026-04-27 07:36:07 - INFO     - __main__ - ✅ Async task manager cleaned up
+2026-04-27 07:36:07 - INFO     - logger_config - User logout: caca
+2026-04-27 07:36:07 - INFO     - __main__ - User caca logged out - returning to login
+2026-04-27 07:36:07 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:36:07 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:36:07 - INFO     - database - Transaction table migration completed
+2026-04-27 07:36:07 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:36:07 - INFO     - __main__ - Database initialized
+2026-04-27 07:36:07 - INFO     - __main__ - Showing login window
+2026-04-27 07:36:09 - WARNING  - __main__ - User cancelled login, exiting application
+2026-04-27 07:36:12 - INFO     - logger_config - ======================================================================
+2026-04-27 07:36:12 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-27 07:36:12 - INFO     - logger_config - ======================================================================
+2026-04-27 07:36:12 - INFO     - logger_config - Logging initialized at 2026-04-27 07:36:12
+2026-04-27 07:36:13 - INFO     - __main__ - Application initialization started
+2026-04-27 07:36:13 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:36:13 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:36:13 - INFO     - database - Transaction table migration completed
+2026-04-27 07:36:13 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:36:13 - INFO     - __main__ - Database initialized
+2026-04-27 07:36:13 - INFO     - __main__ - Showing login window
+2026-04-27 07:36:20 - WARNING  - database - Invalid password for user 'caca'
+2026-04-27 07:36:20 - INFO     - database - Login attempt recorded: caca - FAILED (ID: 1)
+2026-04-27 07:36:20 - INFO     - auth_security - Login attempt recorded: caca, success=False
+2026-04-27 07:36:20 - WARNING  - auth_manager - Failed login attempt: caca from None (Total failed: 1)
+2026-04-27 07:36:22 - WARNING  - __main__ - Failed login: ❌ Username atau password salah. Sisa 4 percobaan.
+2026-04-27 07:36:27 - WARNING  - database - Invalid password for user 'caca'
+2026-04-27 07:36:27 - INFO     - database - Login attempt recorded: caca - FAILED (ID: 2)
+2026-04-27 07:36:27 - INFO     - auth_security - Login attempt recorded: caca, success=False
+2026-04-27 07:36:27 - WARNING  - auth_manager - Failed login attempt: caca from None (Total failed: 2)
+2026-04-27 07:36:28 - WARNING  - __main__ - Failed login: ❌ Username atau password salah. Sisa 3 percobaan.
+2026-04-27 07:36:31 - WARNING  - database - Invalid password for user 'caca'
+2026-04-27 07:36:31 - INFO     - database - Login attempt recorded: caca - FAILED (ID: 3)
+2026-04-27 07:36:31 - INFO     - auth_security - Login attempt recorded: caca, success=False
+2026-04-27 07:36:31 - WARNING  - auth_manager - Failed login attempt: caca from None (Total failed: 3)
+2026-04-27 07:36:32 - WARNING  - __main__ - Failed login: ❌ Username atau password salah. Sisa 2 percobaan.
+2026-04-27 07:36:36 - WARNING  - database - Invalid password for user 'caca'
+2026-04-27 07:36:36 - INFO     - database - Login attempt recorded: caca - FAILED (ID: 4)
+2026-04-27 07:36:36 - INFO     - auth_security - Login attempt recorded: caca, success=False
+2026-04-27 07:36:36 - WARNING  - auth_manager - Failed login attempt: caca from None (Total failed: 4)
+2026-04-27 07:36:37 - WARNING  - __main__ - Failed login: ❌ Username atau password salah. Sisa 1 percobaan.
+2026-04-27 07:36:41 - WARNING  - database - Invalid password for user 'caca'
+2026-04-27 07:36:41 - INFO     - database - Login attempt recorded: caca - FAILED (ID: 5)
+2026-04-27 07:36:41 - INFO     - auth_security - Login attempt recorded: caca, success=False
+2026-04-27 07:36:41 - WARNING  - auth_manager - Failed login attempt: caca from None (Total failed: 5)
+2026-04-27 07:36:45 - WARNING  - __main__ - Failed login: ❌ Username atau password salah. Akun akan terkunci.
+2026-04-27 07:36:51 - WARNING  - auth_manager - Login blocked (account locked): caca from None
+2026-04-27 07:36:51 - INFO     - database - Login attempt recorded: caca - FAILED (ID: 6)
+2026-04-27 07:36:51 - INFO     - auth_security - Login attempt recorded: caca, success=False
+2026-04-27 07:36:57 - WARNING  - __main__ - Failed login: ❌ Akun terkunci karena terlalu banyak login gagal. Coba lagi dalam 0 menit.
+2026-04-27 07:37:01 - WARNING  - auth_manager - Login blocked (account locked): caca from None
+2026-04-27 07:37:01 - INFO     - database - Login attempt recorded: caca - FAILED (ID: 7)
+2026-04-27 07:37:01 - INFO     - auth_security - Login attempt recorded: caca, success=False
+2026-04-27 07:37:05 - WARNING  - __main__ - Failed login: ❌ Akun terkunci karena terlalu banyak login gagal. Coba lagi dalam 0 menit.
+2026-04-27 07:37:09 - WARNING  - auth_manager - Login blocked (account locked): caca from None
+2026-04-27 07:37:09 - INFO     - database - Login attempt recorded: caca - FAILED (ID: 8)
+2026-04-27 07:37:09 - INFO     - auth_security - Login attempt recorded: caca, success=False
+2026-04-27 07:37:10 - WARNING  - __main__ - Failed login: ❌ Akun terkunci karena terlalu banyak login gagal. Coba lagi dalam 0 menit.
+2026-04-27 07:37:13 - WARNING  - auth_manager - Login blocked (account locked): caca from None
+2026-04-27 07:37:13 - INFO     - database - Login attempt recorded: caca - FAILED (ID: 9)
+2026-04-27 07:37:13 - INFO     - auth_security - Login attempt recorded: caca, success=False
+2026-04-27 07:37:39 - INFO     - database - User login successful: shandi
+2026-04-27 07:37:39 - INFO     - database - Login attempt recorded: shandi - SUCCESS (ID: 10)
+2026-04-27 07:37:39 - INFO     - auth_security - Login attempt recorded: shandi, success=True
+2026-04-27 07:37:39 - INFO     - database - Login attempts reset for user: shandi
+2026-04-27 07:37:39 - INFO     - auth_manager - User logged in successfully: shandi (role: cashier) from None
+2026-04-27 07:37:39 - INFO     - __main__ - User login successful: shandi (role: cashier)
+2026-04-27 07:39:59 - INFO     - logger_config - ======================================================================
+2026-04-27 07:39:59 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-27 07:39:59 - INFO     - logger_config - ======================================================================
+2026-04-27 07:39:59 - INFO     - logger_config - Logging initialized at 2026-04-27 07:39:59
+2026-04-27 07:40:00 - INFO     - __main__ - Application initialization started
+2026-04-27 07:40:00 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:40:00 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:40:00 - INFO     - database - Transaction table migration completed
+2026-04-27 07:40:00 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:40:00 - INFO     - __main__ - Database initialized
+2026-04-27 07:40:00 - INFO     - __main__ - Showing login window
+2026-04-27 07:40:04 - INFO     - database - User login successful: shandi
+2026-04-27 07:40:04 - INFO     - database - Login attempt recorded: shandi - SUCCESS (ID: 11)
+2026-04-27 07:40:04 - INFO     - auth_security - Login attempt recorded: shandi, success=True
+2026-04-27 07:40:04 - INFO     - database - Login attempts reset for user: shandi
+2026-04-27 07:40:04 - INFO     - auth_manager - User logged in successfully: shandi (role: cashier) from None
+2026-04-27 07:40:04 - INFO     - __main__ - User login successful: shandi (role: cashier)
+2026-04-27 07:40:04 - INFO     - __main__ - Launching main application for user shandi
+2026-04-27 07:40:05 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:40:05 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:40:05 - INFO     - database - Transaction table migration completed
+2026-04-27 07:40:05 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:40:06 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-27 07:40:06 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-27 07:40:06 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:40:06 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:40:06 - INFO     - database - Transaction table migration completed
+2026-04-27 07:40:06 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:40:06 - INFO     - backup_manager - Backup already exists for today: backup_20260427.db
+2026-04-27 07:40:06 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-27 07:40:06 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-27 07:40:06 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-27 07:40:06 - INFO     - __main__ -   Enter → Add item
+2026-04-27 07:40:06 - INFO     - __main__ -   F1 → New transaction
+2026-04-27 07:40:06 - INFO     - __main__ -   F2 → Process payment
+2026-04-27 07:40:06 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-27 07:40:06 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 502, 'total_revenue': 7530000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 124, 'total_revenue': 2728000, 'rank': 2}, {'nama': 'Toros uk 2 Kg', 'total_qty': 9, 'total_revenue': 675, 'rank': 3}]
+2026-04-27 07:40:06 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:40:06 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:40:06 - INFO     - __main__ - Product 1: Ubi Mentah (qty=502, revenue=7530000)
+2026-04-27 07:40:06 - INFO     - __main__ - Product 2: Ubi Bakar (qty=124, revenue=2728000)
+2026-04-27 07:40:06 - INFO     - __main__ - Product 3: Toros uk 2 Kg (qty=9, revenue=675)
+2026-04-27 07:40:12 - INFO     - __main__ - ✅ Async task manager cleaned up
+2026-04-27 07:40:12 - INFO     - logger_config - User logout: shandi
+2026-04-27 07:40:12 - INFO     - __main__ - User shandi logged out - returning to login
+2026-04-27 07:40:12 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:40:12 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:40:12 - INFO     - database - Transaction table migration completed
+2026-04-27 07:40:12 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:40:12 - INFO     - __main__ - Database initialized
+2026-04-27 07:40:12 - INFO     - __main__ - Showing login window
+2026-04-27 07:40:16 - INFO     - database - User login successful: caca
+2026-04-27 07:40:16 - INFO     - database - Login attempt recorded: caca - SUCCESS (ID: 12)
+2026-04-27 07:40:16 - INFO     - auth_security - Login attempt recorded: caca, success=True
+2026-04-27 07:40:16 - INFO     - database - Login attempts reset for user: caca
+2026-04-27 07:40:16 - INFO     - auth_manager - User logged in successfully: caca (role: cashier) from None
+2026-04-27 07:40:16 - INFO     - __main__ - User login successful: caca (role: cashier)
+2026-04-27 07:40:16 - INFO     - __main__ - Launching main application for user caca
+2026-04-27 07:40:16 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:40:16 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:40:16 - INFO     - database - Transaction table migration completed
+2026-04-27 07:40:16 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:40:17 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-27 07:40:17 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-27 07:40:17 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:40:17 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:40:17 - INFO     - database - Transaction table migration completed
+2026-04-27 07:40:17 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:40:17 - INFO     - backup_manager - Backup already exists for today: backup_20260427.db
+2026-04-27 07:40:17 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-27 07:40:17 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-27 07:40:17 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-27 07:40:17 - INFO     - __main__ -   Enter → Add item
+2026-04-27 07:40:17 - INFO     - __main__ -   F1 → New transaction
+2026-04-27 07:40:17 - INFO     - __main__ -   F2 → Process payment
+2026-04-27 07:40:17 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-27 07:40:17 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 502, 'total_revenue': 7530000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 124, 'total_revenue': 2728000, 'rank': 2}, {'nama': 'Toros uk 2 Kg', 'total_qty': 9, 'total_revenue': 675, 'rank': 3}]
+2026-04-27 07:40:17 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:40:17 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:40:17 - INFO     - __main__ - Product 1: Ubi Mentah (qty=502, revenue=7530000)
+2026-04-27 07:40:17 - INFO     - __main__ - Product 2: Ubi Bakar (qty=124, revenue=2728000)
+2026-04-27 07:40:17 - INFO     - __main__ - Product 3: Toros uk 2 Kg (qty=9, revenue=675)
+2026-04-27 07:40:34 - INFO     - __main__ - ✅ Async task manager cleaned up
+2026-04-27 07:40:34 - INFO     - logger_config - User logout: caca
+2026-04-27 07:40:34 - INFO     - __main__ - User caca logged out - returning to login
+2026-04-27 07:40:34 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:40:34 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:40:34 - INFO     - database - Transaction table migration completed
+2026-04-27 07:40:34 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:40:34 - INFO     - __main__ - Database initialized
+2026-04-27 07:40:34 - INFO     - __main__ - Showing login window
+2026-04-27 07:40:38 - WARNING  - database - Invalid password for user 'caca'
+2026-04-27 07:40:38 - INFO     - database - Login attempt recorded: caca - FAILED (ID: 13)
+2026-04-27 07:40:38 - INFO     - auth_security - Login attempt recorded: caca, success=False
+2026-04-27 07:40:38 - WARNING  - auth_manager - Failed login attempt: caca from None (Total failed: 10)
+2026-04-27 07:40:42 - WARNING  - __main__ - Failed login: ❌ Username atau password salah. Akun akan terkunci.
+2026-04-27 07:40:46 - WARNING  - database - Invalid password for user 'caca'
+2026-04-27 07:40:46 - INFO     - database - Login attempt recorded: caca - FAILED (ID: 14)
+2026-04-27 07:40:46 - INFO     - auth_security - Login attempt recorded: caca, success=False
+2026-04-27 07:40:46 - WARNING  - auth_manager - Failed login attempt: caca from None (Total failed: 11)
+2026-04-27 07:40:48 - WARNING  - __main__ - Failed login: ❌ Username atau password salah. Akun akan terkunci.
+2026-04-27 07:40:51 - INFO     - database - User login successful: caca
+2026-04-27 07:40:51 - INFO     - database - Login attempt recorded: caca - SUCCESS (ID: 15)
+2026-04-27 07:40:51 - INFO     - auth_security - Login attempt recorded: caca, success=True
+2026-04-27 07:40:51 - INFO     - database - Login attempts reset for user: caca
+2026-04-27 07:40:51 - INFO     - auth_manager - User logged in successfully: caca (role: cashier) from None
+2026-04-27 07:40:51 - INFO     - __main__ - User login successful: caca (role: cashier)
+2026-04-27 07:40:51 - INFO     - __main__ - Launching main application for user caca
+2026-04-27 07:40:51 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:40:51 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:40:51 - INFO     - database - Transaction table migration completed
+2026-04-27 07:40:51 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:40:52 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-27 07:40:52 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-27 07:40:52 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:40:52 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:40:52 - INFO     - database - Transaction table migration completed
+2026-04-27 07:40:52 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:40:52 - INFO     - backup_manager - Backup already exists for today: backup_20260427.db
+2026-04-27 07:40:52 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-27 07:40:52 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-27 07:40:52 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-27 07:40:52 - INFO     - __main__ -   Enter → Add item
+2026-04-27 07:40:52 - INFO     - __main__ -   F1 → New transaction
+2026-04-27 07:40:52 - INFO     - __main__ -   F2 → Process payment
+2026-04-27 07:40:52 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-27 07:40:52 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 502, 'total_revenue': 7530000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 124, 'total_revenue': 2728000, 'rank': 2}, {'nama': 'Toros uk 2 Kg', 'total_qty': 9, 'total_revenue': 675, 'rank': 3}]
+2026-04-27 07:40:52 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:40:52 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:40:52 - INFO     - __main__ - Product 1: Ubi Mentah (qty=502, revenue=7530000)
+2026-04-27 07:40:52 - INFO     - __main__ - Product 2: Ubi Bakar (qty=124, revenue=2728000)
+2026-04-27 07:40:52 - INFO     - __main__ - Product 3: Toros uk 2 Kg (qty=9, revenue=675)
+2026-04-27 07:40:54 - INFO     - __main__ - ✅ Async task manager cleaned up
+2026-04-27 07:40:54 - INFO     - logger_config - User logout: caca
+2026-04-27 07:40:54 - INFO     - __main__ - User caca logged out - returning to login
+2026-04-27 07:40:54 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:40:54 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:40:54 - INFO     - database - Transaction table migration completed
+2026-04-27 07:40:54 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:40:54 - INFO     - __main__ - Database initialized
+2026-04-27 07:40:54 - INFO     - __main__ - Showing login window
+2026-04-27 07:40:59 - WARNING  - database - Invalid password for user 'caca'
+2026-04-27 07:40:59 - INFO     - database - Login attempt recorded: caca - FAILED (ID: 16)
+2026-04-27 07:40:59 - INFO     - auth_security - Login attempt recorded: caca, success=False
+2026-04-27 07:40:59 - WARNING  - auth_manager - Failed login attempt: caca from None (Total failed: 12)
+2026-04-27 07:40:59 - WARNING  - __main__ - Failed login: ❌ Username atau password salah. Akun akan terkunci.
+2026-04-27 07:41:05 - WARNING  - database - Invalid password for user 'caca'
+2026-04-27 07:41:05 - INFO     - database - Login attempt recorded: caca - FAILED (ID: 17)
+2026-04-27 07:41:05 - INFO     - auth_security - Login attempt recorded: caca, success=False
+2026-04-27 07:41:05 - WARNING  - auth_manager - Failed login attempt: caca from None (Total failed: 13)
+2026-04-27 07:41:06 - WARNING  - __main__ - Failed login: ❌ Username atau password salah. Akun akan terkunci.
+2026-04-27 07:41:10 - WARNING  - database - Invalid password for user 'caca'
+2026-04-27 07:41:10 - INFO     - database - Login attempt recorded: caca - FAILED (ID: 18)
+2026-04-27 07:41:10 - INFO     - auth_security - Login attempt recorded: caca, success=False
+2026-04-27 07:41:10 - WARNING  - auth_manager - Failed login attempt: caca from None (Total failed: 14)
+2026-04-27 07:41:11 - WARNING  - __main__ - Failed login: ❌ Username atau password salah. Akun akan terkunci.
+2026-04-27 07:41:14 - WARNING  - auth_manager - Login blocked (account locked): caca from None
+2026-04-27 07:41:14 - INFO     - database - Login attempt recorded: caca - FAILED (ID: 19)
+2026-04-27 07:41:14 - INFO     - auth_security - Login attempt recorded: caca, success=False
+2026-04-27 07:41:15 - WARNING  - __main__ - Failed login: ❌ Akun terkunci karena terlalu banyak login gagal. Coba lagi dalam 0 menit.
+2026-04-27 07:41:18 - WARNING  - auth_manager - Login blocked (account locked): caca from None
+2026-04-27 07:41:18 - INFO     - database - Login attempt recorded: caca - FAILED (ID: 20)
+2026-04-27 07:41:18 - INFO     - auth_security - Login attempt recorded: caca, success=False
+2026-04-27 07:41:20 - WARNING  - __main__ - Failed login: ❌ Akun terkunci karena terlalu banyak login gagal. Coba lagi dalam 0 menit.
+2026-04-27 07:41:23 - WARNING  - auth_manager - Login blocked (account locked): caca from None
+2026-04-27 07:41:23 - INFO     - database - Login attempt recorded: caca - FAILED (ID: 21)
+2026-04-27 07:41:23 - INFO     - auth_security - Login attempt recorded: caca, success=False
+2026-04-27 07:41:24 - WARNING  - __main__ - Failed login: ❌ Akun terkunci karena terlalu banyak login gagal. Coba lagi dalam 0 menit.
+2026-04-27 07:41:29 - INFO     - database - User login successful: shandi
+2026-04-27 07:41:29 - INFO     - database - Login attempt recorded: shandi - SUCCESS (ID: 22)
+2026-04-27 07:41:29 - INFO     - auth_security - Login attempt recorded: shandi, success=True
+2026-04-27 07:41:29 - INFO     - database - Login attempts reset for user: shandi
+2026-04-27 07:41:29 - INFO     - auth_manager - User logged in successfully: shandi (role: cashier) from None
+2026-04-27 07:41:29 - INFO     - __main__ - User login successful: shandi (role: cashier)
+2026-04-27 07:41:29 - INFO     - __main__ - Launching main application for user shandi
+2026-04-27 07:41:30 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:41:30 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:41:30 - INFO     - database - Transaction table migration completed
+2026-04-27 07:41:30 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:41:30 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-27 07:41:30 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-27 07:41:30 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:41:30 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:41:30 - INFO     - database - Transaction table migration completed
+2026-04-27 07:41:30 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:41:30 - INFO     - backup_manager - Backup already exists for today: backup_20260427.db
+2026-04-27 07:41:30 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-27 07:41:30 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-27 07:41:30 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-27 07:41:30 - INFO     - __main__ -   Enter → Add item
+2026-04-27 07:41:30 - INFO     - __main__ -   F1 → New transaction
+2026-04-27 07:41:30 - INFO     - __main__ -   F2 → Process payment
+2026-04-27 07:41:30 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-27 07:41:31 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 502, 'total_revenue': 7530000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 124, 'total_revenue': 2728000, 'rank': 2}, {'nama': 'Toros uk 2 Kg', 'total_qty': 9, 'total_revenue': 675, 'rank': 3}]
+2026-04-27 07:41:31 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:41:31 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:41:31 - INFO     - __main__ - Product 1: Ubi Mentah (qty=502, revenue=7530000)
+2026-04-27 07:41:31 - INFO     - __main__ - Product 2: Ubi Bakar (qty=124, revenue=2728000)
+2026-04-27 07:41:31 - INFO     - __main__ - Product 3: Toros uk 2 Kg (qty=9, revenue=675)
+2026-04-27 07:42:47 - INFO     - logger_config - ======================================================================
+2026-04-27 07:42:47 - INFO     - logger_config - SISTEM POS - Application Restarted
+2026-04-27 07:42:47 - INFO     - logger_config - ======================================================================
+2026-04-27 07:42:47 - INFO     - logger_config - Logging initialized at 2026-04-27 07:42:47
+2026-04-27 07:42:48 - INFO     - __main__ - Application initialization started
+2026-04-27 07:42:48 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:42:48 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:42:48 - INFO     - database - Transaction table migration completed
+2026-04-27 07:42:48 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:42:48 - INFO     - __main__ - Database initialized
+2026-04-27 07:42:48 - INFO     - __main__ - Showing login window
+2026-04-27 07:42:59 - INFO     - database - User login successful: gustiana
+2026-04-27 07:42:59 - INFO     - database - Login attempt recorded: gustiana - SUCCESS (ID: 23)
+2026-04-27 07:42:59 - INFO     - auth_security - Login attempt recorded: gustiana, success=True
+2026-04-27 07:42:59 - INFO     - database - Login attempts reset for user: gustiana
+2026-04-27 07:42:59 - INFO     - auth_manager - User logged in successfully: gustiana (role: admin) from None
+2026-04-27 07:42:59 - INFO     - __main__ - User login successful: gustiana (role: admin)
+2026-04-27 07:42:59 - INFO     - __main__ - Launching main application for user gustiana
+2026-04-27 07:42:59 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:42:59 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:42:59 - INFO     - database - Transaction table migration completed
+2026-04-27 07:42:59 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:43:00 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-27 07:43:00 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-27 07:43:00 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:43:00 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:43:00 - INFO     - database - Transaction table migration completed
+2026-04-27 07:43:00 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:43:00 - INFO     - backup_manager - Backup already exists for today: backup_20260427.db
+2026-04-27 07:43:00 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-27 07:43:00 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-27 07:43:00 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-27 07:43:00 - INFO     - __main__ -   Enter → Add item
+2026-04-27 07:43:00 - INFO     - __main__ -   F1 → New transaction
+2026-04-27 07:43:00 - INFO     - __main__ -   F2 → Process payment
+2026-04-27 07:43:00 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-27 07:43:00 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 502, 'total_revenue': 7530000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 124, 'total_revenue': 2728000, 'rank': 2}, {'nama': 'Toros uk 2 Kg', 'total_qty': 9, 'total_revenue': 675, 'rank': 3}]
+2026-04-27 07:43:00 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:43:00 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:43:00 - INFO     - __main__ - Product 1: Ubi Mentah (qty=502, revenue=7530000)
+2026-04-27 07:43:00 - INFO     - __main__ - Product 2: Ubi Bakar (qty=124, revenue=2728000)
+2026-04-27 07:43:00 - INFO     - __main__ - Product 3: Toros uk 2 Kg (qty=9, revenue=675)
+2026-04-27 07:43:26 - INFO     - database - Product updated: 0001
+2026-04-27 07:43:27 - INFO     - logger_config - Product updated: 0001 = Ubi Bakar
+2026-04-27 07:49:15 - INFO     - __main__ - ✅ Async task manager cleaned up
+2026-04-27 07:49:15 - INFO     - logger_config - User logout: gustiana
+2026-04-27 07:49:15 - INFO     - __main__ - User gustiana logged out - returning to login
+2026-04-27 07:49:15 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:49:15 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:49:15 - INFO     - database - Transaction table migration completed
+2026-04-27 07:49:15 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:49:15 - INFO     - __main__ - Database initialized
+2026-04-27 07:49:15 - INFO     - __main__ - Showing login window
+2026-04-27 07:49:28 - INFO     - database - User login successful: caca
+2026-04-27 07:49:28 - INFO     - database - Login attempt recorded: caca - SUCCESS (ID: 24)
+2026-04-27 07:49:28 - INFO     - auth_security - Login attempt recorded: caca, success=True
+2026-04-27 07:49:28 - INFO     - database - Login attempts reset for user: caca
+2026-04-27 07:49:28 - INFO     - auth_manager - User logged in successfully: caca (role: cashier) from None
+2026-04-27 07:49:28 - INFO     - __main__ - User login successful: caca (role: cashier)
+2026-04-27 07:49:28 - INFO     - __main__ - Launching main application for user caca
+2026-04-27 07:49:28 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:49:28 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:49:28 - INFO     - database - Transaction table migration completed
+2026-04-27 07:49:28 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:49:29 - INFO     - telegram_bot - [OK] All command handlers registered
+2026-04-27 07:49:29 - INFO     - telegram_bot - [OK] Telegram Bot initialized successfully
+2026-04-27 07:49:29 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:49:29 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:49:29 - INFO     - database - Transaction table migration completed
+2026-04-27 07:49:29 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:49:29 - INFO     - backup_manager - Backup already exists for today: backup_20260427.db
+2026-04-27 07:49:29 - INFO     - stok_opname - Stok opname tables initialized
+2026-04-27 07:49:29 - INFO     - __main__ - ℹ️ Phase 4-5 modules not available (optional)
+2026-04-27 07:49:29 - INFO     - __main__ - Keyboard shortcuts registered:
+2026-04-27 07:49:29 - INFO     - __main__ -   Enter → Add item
+2026-04-27 07:49:29 - INFO     - __main__ -   F1 → New transaction
+2026-04-27 07:49:29 - INFO     - __main__ -   F2 → Process payment
+2026-04-27 07:49:29 - INFO     - __main__ -   Escape → Cancel transaction
+2026-04-27 07:49:29 - INFO     - __main__ - Top products data: [{'nama': 'Ubi Mentah', 'total_qty': 502, 'total_revenue': 7530000, 'rank': 1}, {'nama': 'Ubi Bakar', 'total_qty': 124, 'total_revenue': 2728000, 'rank': 2}, {'nama': 'Toros uk 2 Kg', 'total_qty': 9, 'total_revenue': 675, 'rank': 3}]
+2026-04-27 07:49:29 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:49:29 - INFO     - matplotlib.category - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-04-27 07:49:29 - INFO     - __main__ - Product 1: Ubi Mentah (qty=502, revenue=7530000)
+2026-04-27 07:49:29 - INFO     - __main__ - Product 2: Ubi Bakar (qty=124, revenue=2728000)
+2026-04-27 07:49:29 - INFO     - __main__ - Product 3: Toros uk 2 Kg (qty=9, revenue=675)
+2026-04-27 07:49:36 - INFO     - __main__ - ✅ Async task manager cleaned up
+2026-04-27 07:49:36 - INFO     - logger_config - User logout: caca
+2026-04-27 07:49:36 - INFO     - __main__ - User caca logged out - returning to login
+2026-04-27 07:49:36 - INFO     - backup_manager - Backup folder ready: backup
+2026-04-27 07:49:36 - INFO     - backup_manager - BackupManager initialized: folder=backup, max_backups=7
+2026-04-27 07:49:36 - INFO     - database - Transaction table migration completed
+2026-04-27 07:49:36 - INFO     - database - Database tables initialized successfully
+2026-04-27 07:49:36 - INFO     - __main__ - Database initialized
+2026-04-27 07:49:36 - INFO     - __main__ - Showing login window
+2026-04-27 07:49:39 - WARNING  - __main__ - User cancelled login, exiting application

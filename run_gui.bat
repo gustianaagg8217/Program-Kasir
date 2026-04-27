@@ -6,7 +6,7 @@ REM ============================================================================
 echo.
 echo ======================================================================
 echo   🛒 SISTEM POS - GUI VERSION
-echo   TOKO UBI BAROKAH IBU AWANG
+echo   Copyright (c) 2026. All rights reserved. By Aventa Intelligent Power
 echo ======================================================================
 echo.
 
