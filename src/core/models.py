@@ -61,6 +61,62 @@ class Inventory:
 
 
 # ============================================================================
+# PAYMENT MODELS - Enterprise Multi-Payment Support
+# ============================================================================
+
+@dataclass
+class Payment:
+    """
+    Represents a single payment method in a transaction.
+    
+    Supports: Cash, Debit/Credit Card, E-Wallet (OVO, GoPay, DANA), QR Code (QRIS)
+    
+    Attributes:
+        id (int): Payment ID
+        transaction_id (int): Parent transaction ID
+        method (str): Payment method (cash, debit, credit, ovo, gopay, dana, qris)
+        amount (int): Payment amount in IDR
+        reference_id (str): Reference ID for tracking (card number masked, transaction ID, etc)
+        status (str): Payment status (pending, success, failed)
+        timestamp (datetime): Payment timestamp
+        verified_by (str): Who verified this payment (for card/QR)
+    """
+    id: int = None
+    transaction_id: int = None
+    method: str = "cash"
+    amount: int = 0
+    reference_id: str = ""
+    status: str = "pending"
+    timestamp: datetime = field(default_factory=datetime.now)
+    verified_by: str = ""
+    
+    def is_valid(self) -> bool:
+        """Check if payment data is valid."""
+        return (
+            self.method in {"cash", "debit", "credit", "ovo", "gopay", "dana", "qris"} and
+            self.amount > 0 and
+            self.status in {"pending", "success", "failed"}
+        )
+    
+    def __str__(self) -> str:
+        return f"{self.method.upper()}: Rp {self.amount:,} ({self.status})"
+
+
+@dataclass
+class PaymentMethod:
+    """Configuration for available payment methods."""
+    code: str  # cash, debit, credit, ovo, gopay, dana, qris
+    name: str
+    enabled: bool = True
+    requires_verification: bool = False
+    fee_percent: float = 0.0
+    is_qr_code: bool = False
+    
+    def __str__(self) -> str:
+        return f"{self.name} ({self.code})"
+
+
+# ============================================================================
 # TRANSACTION / SALES MODELS
 # ============================================================================
 
@@ -115,39 +171,107 @@ class TransactionItem:
 @dataclass
 class Transaction:
     """
-    Domain model untuk Transaction / Sale.
+    Domain model untuk Transaction / Sale - Enhanced with Multi-Payment & Online Support.
     
     Attributes:
         id (int): Transaction ID
         tanggal (datetime): Transaction date/time
         items (List[TransactionItem]): Items dalam transaksi
-        payment_method (str): Payment method (cash, debit, credit, etc)
+        
+        # Multi-Payment Support
+        payments (List[Payment]): List of payment methods used
+        
+        # Totals
         total_sebelum_pajak (int): Total before tax
         total_pajak (int): Total tax
-        total (int): Final total
+        total (int): Final total (before payments)
+        
+        # Legacy single payment (for backward compatibility)
+        payment_method (str): Primary payment method (cash, debit, credit, etc)
         uang_diterima (int): Amount received
         kembalian (int): Change
+        
+        # Transaction Details
         catatan (str): Notes
         cashier_id (int): Cashier ID
-        status (str): Transaction status (pending, completed, cancelled)
+        
+        # Online / Channel Support
+        channel (str): "offline" (POS) or "online" (e-commerce)
+        order_id (str): External order ID if online
+        customer_name (str): Customer name (for online orders)
+        customer_phone (str): Customer phone (for delivery)
+        customer_email (str): Customer email
+        shipping_address (str): Delivery address (for online)
+        
+        # Status Management
+        status (str): Transaction status (pending, paid, completed, failed, cancelled)
+        
+        # Metadata
+        created_at (datetime): When transaction was created
+        completed_at (datetime): When transaction was completed
+        reference_number (str): Receipt/reference number
     """
-    id: int = None  # None untuk transaksi baru
+    id: int = None
     tanggal: datetime = field(default_factory=datetime.now)
     items: List[TransactionItem] = field(default_factory=list)
-    payment_method: str = "cash"
+    
+    # Multi-Payment
+    payments: List[Payment] = field(default_factory=list)
+    
+    # Totals
     total_sebelum_pajak: int = 0
     total_pajak: int = 0
     total: int = 0
+    
+    # Legacy single payment (for backward compatibility)
+    payment_method: str = "cash"
     uang_diterima: int = 0
     kembalian: int = 0
+    
+    # Transaction details
     catatan: str = ""
     cashier_id: int = None
-    status: str = "pending"  # pending, completed, cancelled
+    
+    # Online/Channel
+    channel: str = "offline"  # offline, online
+    order_id: str = ""
+    customer_name: str = ""
+    customer_phone: str = ""
+    customer_email: str = ""
+    shipping_address: str = ""
+    
+    # Status
+    status: str = "pending"  # pending, paid, completed, failed, cancelled
+    
+    # Metadata
+    created_at: datetime = field(default_factory=datetime.now)
+    completed_at: datetime = field(default=None)
+    reference_number: str = ""
     
     def add_item(self, item: TransactionItem) -> None:
         """Add item to transaction."""
         self.items.append(item)
         self._recalculate()
+    
+    def add_payment(self, payment: Payment) -> None:
+        """Add payment method to transaction."""
+        self.payments.append(payment)
+    
+    def get_total_paid(self) -> int:
+        """Get total amount paid across all payment methods."""
+        return sum(p.amount for p in self.payments if p.status == "success")
+    
+    def get_remaining_payment(self) -> int:
+        """Get remaining amount that still needs payment."""
+        return max(0, self.total - self.get_total_paid())
+    
+    def is_fully_paid(self) -> bool:
+        """Check if transaction is fully paid."""
+        return self.get_total_paid() >= self.total
+    
+    def is_online_order(self) -> bool:
+        """Check if this is an online order."""
+        return self.channel == "online"
     
     def _recalculate(self) -> None:
         """Recalculate totals."""
@@ -229,7 +353,7 @@ class UserSession:
 
 
 # ============================================================================
-# REPORT / ANALYTICS MODELS
+# ANALYTICS & REPORTING MODELS
 # ============================================================================
 
 @dataclass
@@ -254,6 +378,79 @@ class ProductSalesReport:
     total_revenue: int
     total_transactions: int
     avg_qty_per_transaction: float
+
+
+@dataclass
+class SalesTrendData:
+    """Sales trend analytics for period comparison."""
+    period: str  # "daily", "weekly", "monthly"
+    start_date: datetime
+    end_date: datetime
+    total_revenue: int
+    total_transactions: int
+    avg_transaction_value: int
+    growth_percent: float  # % change from previous period
+    peak_hour: int = None
+    peak_day: str = None
+    payment_methods: dict = field(default_factory=dict)  # {method: amount}
+    top_products: List[dict] = field(default_factory=list)
+
+
+@dataclass
+class InventorySnapshot:
+    """Inventory state at a point in time."""
+    timestamp: datetime
+    product_id: int
+    qty_before: int
+    qty_after: int
+    movement_type: str  # sale, restock, adjustment
+    reference_id: str  # transaction_id or reason
+
+
+@dataclass
+class ActivityLog:
+    """Activity logging for security and audit trail."""
+    id: int = None
+    user_id: int = None
+    username: str = ""
+    action: str = ""  # login, logout, create_transaction, delete_product, etc
+    resource_type: str = ""  # transaction, product, user, etc
+    resource_id: str = ""  # ID of affected resource
+    details: str = ""  # JSON-serialized details
+    status: str = "success"  # success, failure
+    timestamp: datetime = field(default_factory=datetime.now)
+    ip_address: str = ""
+    user_agent: str = ""
+    
+    def __str__(self) -> str:
+        return f"[{self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}] {self.username} - {self.action} ({self.status})"
+
+
+# ============================================================================
+# ONLINE ORDER MODELS
+# ============================================================================
+
+@dataclass
+class OnlineOrder:
+    """Online order (from e-commerce platform)."""
+    id: int = None
+    external_order_id: str = ""  # Order ID from online platform
+    platform: str = ""  # shopify, woocommerce, tokopedia, shopee, etc
+    customer_name: str = ""
+    customer_phone: str = ""
+    customer_email: str = ""
+    shipping_address: str = ""
+    items: List[TransactionItem] = field(default_factory=list)
+    total: int = 0
+    status: str = "pending"  # pending, confirmed, packed, shipped, delivered, cancelled
+    order_date: datetime = field(default_factory=datetime.now)
+    delivery_date: datetime = None
+    notes: str = ""
+    tracking_number: str = ""
+    
+    def link_to_transaction(self, transaction_id: int) -> None:
+        """Link this online order to a POS transaction."""
+        self.transaction_id = transaction_id
 
 
 # ============================================================================

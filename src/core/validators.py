@@ -415,3 +415,151 @@ class UserValidator:
             )
         
         return role
+
+
+class PaymentValidator:
+    """Validation rules untuk Payment (Multi-Payment Support)."""
+    
+    VALID_PAYMENT_METHODS = ["cash", "debit", "credit", "ovo", "gopay", "dana", "qris"]
+    VALID_PAYMENT_STATUS = ["pending", "success", "failed"]
+    MIN_PAYMENT_AMOUNT = 1000  # Rp 1000 minimum
+    MAX_PAYMENT_AMOUNT = 999_999_999
+    
+    @staticmethod
+    def validate_payment_method(method: str) -> str:
+        """
+        Validate payment method.
+        
+        Returns:
+            str: Valid payment method
+            
+        Raises:
+            PaymentError
+        """
+        if not isinstance(method, str):
+            raise PaymentError("Metode pembayaran harus text")
+        
+        method = method.strip().lower()
+        
+        if method not in PaymentValidator.VALID_PAYMENT_METHODS:
+            raise PaymentError(
+                f"Metode pembayaran tidak valid. Pilih dari: {', '.join(PaymentValidator.VALID_PAYMENT_METHODS)}"
+            )
+        
+        return method
+    
+    @staticmethod
+    def validate_payment_amount(amount: int) -> int:
+        """
+        Validate payment amount.
+        
+        Rules:
+        - Positive integer
+        - Min 1000, Max 999,999,999
+        
+        Returns:
+            int: Valid amount
+            
+        Raises:
+            PaymentError
+        """
+        try:
+            amount = int(amount)
+        except (ValueError, TypeError):
+            raise PaymentError("Jumlah pembayaran harus angka positif")
+        
+        if amount < PaymentValidator.MIN_PAYMENT_AMOUNT:
+            raise PaymentError(
+                f"Jumlah pembayaran minimal Rp {PaymentValidator.MIN_PAYMENT_AMOUNT:,}"
+            )
+        
+        if amount > PaymentValidator.MAX_PAYMENT_AMOUNT:
+            raise PaymentError("Jumlah pembayaran terlalu besar")
+        
+        return amount
+    
+    @staticmethod
+    def validate_payment_status(status: str) -> str:
+        """Validate payment status."""
+        if not isinstance(status, str):
+            raise PaymentError("Status pembayaran harus text")
+        
+        status = status.strip().lower()
+        
+        if status not in PaymentValidator.VALID_PAYMENT_STATUS:
+            raise PaymentError(
+                f"Status pembayaran tidak valid. Pilih dari: {', '.join(PaymentValidator.VALID_PAYMENT_STATUS)}"
+            )
+        
+        return status
+    
+    @staticmethod
+    def validate_split_payment(payments: list, total_amount: int) -> bool:
+        """
+        Validate split payment (multiple payment methods).
+        
+        Rules:
+        - Total payment must equal transaction total (or slightly less due to rounding)
+        - Each payment must be valid
+        
+        Args:
+            payments: List of Payment objects
+            total_amount: Total transaction amount
+            
+        Returns:
+            bool: True if valid
+            
+        Raises:
+            PaymentError
+        """
+        if not payments:
+            raise PaymentError("Tidak ada metode pembayaran")
+        
+        total_paid = sum(p.amount for p in payments)
+        
+        # Allow small rounding difference (max 100 rupiah)
+        if abs(total_paid - total_amount) > 100:
+            raise PaymentError(
+                f"Total pembayaran ({total_paid}) tidak sesuai dengan total transaksi ({total_amount})"
+            )
+        
+        return True
+
+
+class InventoryValidator:
+    """Validation rules untuk Inventory/Stock operations."""
+    
+    @staticmethod
+    def validate_stock_quantity(qty: int) -> int:
+        """Validate stock quantity."""
+        try:
+            qty = int(qty)
+        except (ValueError, TypeError):
+            raise ValidationError("Jumlah stok harus angka", "qty")
+        
+        if qty < 0:
+            raise ValidationError("Jumlah stok tidak boleh negatif", "qty")
+        
+        if qty > 999_999:
+            raise ValidationError("Jumlah stok terlalu besar", "qty")
+        
+        return qty
+    
+    @staticmethod
+    def validate_operation_type(operation: str) -> str:
+        """Validate inventory operation type."""
+        valid_operations = ["sale", "restock", "adjustment", "return"]
+        
+        if not isinstance(operation, str):
+            raise ValidationError("Tipe operasi harus text", "operation")
+        
+        operation = operation.strip().lower()
+        
+        if operation not in valid_operations:
+            raise ValidationError(
+                f"Tipe operasi tidak valid. Pilih dari: {', '.join(valid_operations)}",
+                "operation"
+            )
+        
+        return operation
+
