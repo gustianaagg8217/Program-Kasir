@@ -15,6 +15,15 @@ from models import (
     ValidationError, format_rp
 )
 from logger_config import get_logger, log_transaction_completed
+from promotion_service import PromotionService
+
+# Import accounting service
+try:
+    from accounting_service import AccountingService
+    ACCOUNTING_AVAILABLE = True
+except ImportError:
+    ACCOUNTING_AVAILABLE = False
+    AccountingService = None
 
 logger = get_logger(__name__)
 
@@ -136,6 +145,41 @@ class TransactionService:
             harga_satuan=product.harga
         )
         
+        # Apply promotion jika ada
+        try:
+            promo_service = PromotionService(self.db)
+            active_promos = promo_service.get_applicable_promotions()
+            
+            # Check promotion menggunakan satuan produk yang sebenarnya (kg, pcs, dll)
+            product_satuan = (product.satuan or 'pcs').lower()
+            discount_info = promo_service.calculate_discount_for_quantity(qty, product_satuan, active_promos)
+            
+            if discount_info['applicable']:
+                # Apply discount to item
+                item.promotion_id = discount_info['promotion_id']
+                item.promotion_name = discount_info['promotion_name']
+                item.discount_percent = discount_info['discount_percent']
+                item.discount_nominal = discount_info['discount_nominal']
+                item.original_subtotal = item.subtotal
+                
+                # Calculate new subtotal with discount (dengan mempertimbangkan multiplier untuk kelipatan)
+                multiplier = discount_info.get('multiplier', 1)
+                
+                if discount_info['discount_percent']:
+                    discount_amount = int(item.subtotal * discount_info['discount_percent'] / 100)
+                else:
+                    discount_amount = discount_info['discount_nominal'] * multiplier
+                
+                item.subtotal = max(0, item.subtotal - discount_amount)
+                
+                print(f"🎯 Promosi Berlaku: {discount_info['promotion_name']}")
+                if multiplier > 1:
+                    print(f"   Kelipatan: {multiplier}x")
+                print(f"   Diskon: {format_rp(discount_amount)}")
+        except Exception as e:
+            logger.warning(f"Error applying promotion: {e}")
+            # Tetap lanjutkan transaksi jika promo error
+        
         # Add ke transaksi
         try:
             self.current_transaction.add_item(item)
@@ -217,12 +261,13 @@ class TransactionService:
             print(f"❌ Item #{index} tidak ditemukan (item 1-{len(self.current_transaction.items)})")
             return False
     
-    def set_payment(self, bayar: int) -> bool:
+    def set_payment(self, bayar: int, is_termin: bool = False) -> bool:
         """
         Set pembayaran dan hitung kembalian.
         
         Args:
             bayar (int): Jumlah uang pembayaran
+            is_termin (bool): Jika True, bayar bisa kurang dari total (untuk DP)
             
         Returns:
             bool: True jika pembayaran valid
@@ -236,11 +281,18 @@ class TransactionService:
             return False
         
         try:
-            self.current_transaction.set_bayar(bayar)
+            self.current_transaction.set_bayar(bayar, is_termin=is_termin)
             print(f"✅ Pembayaran diterima")
             print(f"   Total        : {format_rp(self.current_transaction.total)}")
-            print(f"   Pembayaran   : {format_rp(self.current_transaction.bayar)}")
-            print(f"   Kembalian    : {format_rp(self.current_transaction.kembalian)}")
+            
+            # Tentukan label berdasarkan tipe pembayaran
+            if is_termin:
+                print(f"   DP (Down Payment): {format_rp(self.current_transaction.bayar)}")
+                sisa_hutang = self.current_transaction.total - self.current_transaction.bayar
+                print(f"   Sisa Hutang  : {format_rp(sisa_hutang)}")
+            else:
+                print(f"   Pembayaran   : {format_rp(self.current_transaction.bayar)}")
+                print(f"   Kembalian    : {format_rp(self.current_transaction.kembalian)}")
             return True
         except ValidationError as e:
             print(f"❌ Error pembayaran: {e}")
@@ -282,30 +334,38 @@ class TransactionService:
                     print("❌ Gagal update stok, transaksi dibatalkan")
                     return None
             
-            # 2. Simpan transaction header dengan discount dan tax
+            # 2. Simpan transaction header dengan discount dan tax (terakumulasi)
             logger.info("Saving transaction to database...")
+            # Untuk backward compatibility dengan database, gunakan discount_percent dari manual_discount_percent
+            # dan discount_amount adalah total akumulasi
             trans_id = self.db.add_transaction(
                 total=self.current_transaction.total,
                 bayar=self.current_transaction.bayar,
                 kembalian=self.current_transaction.kembalian,
-                discount_percent=self.current_transaction.discount_percent,
-                discount_amount=self.current_transaction.discount_amount,
+                discount_percent=self.current_transaction.manual_discount_percent,
+                discount_amount=self.current_transaction.discount_amount,  # Total diskon terakumulasi
                 tax_percent=self.current_transaction.tax_percent,
-                tax_amount=self.current_transaction.tax_amount
+                tax_amount=self.current_transaction.tax_amount,
+                promotion_id=getattr(self.current_transaction, 'promotion_id', None),
+                promotion_name=getattr(self.current_transaction, 'promotion_name', None)
             )
             
             if trans_id is None:
                 logger.error("Failed to save transaction to database")
                 return None
             
-            # 3. Simpan transaction items
+            # 3. Simpan transaction items dengan informasi promo
             for item in self.current_transaction.items:
                 success = self.db.add_transaction_item(
                     transaction_id=trans_id,
                     product_id=item.product_id,
                     qty=item.qty,
                     harga_satuan=item.harga_satuan,
-                    subtotal=item.subtotal
+                    subtotal=item.subtotal,
+                    promotion_id=getattr(item, 'promotion_id', None),
+                    promotion_name=getattr(item, 'promotion_name', None),
+                    discount_percent=getattr(item, 'discount_percent', 0),
+                    discount_nominal=getattr(item, 'discount_nominal', 0)
                 )
                 if not success:
                     print(f"❌ Gagal menyimpan item, transaksi ID {trans_id}")
@@ -440,17 +500,34 @@ class ReceiptManager:
         lines.append("ITEM:")
         lines.append("-" * 50)
         
-        # Items detail
+        # Items detail dengan promo breakdown
+        total_promo_diskon = 0
         for item in transaction.items:
             lines.append(f"  {item.display()}")
+            
+            # Track total promo discount dari items
+            if item.promotion_name:
+                if item.discount_percent:
+                    item_discount = int(item.original_subtotal * item.discount_percent / 100) if item.original_subtotal else 0
+                else:
+                    item_discount = item.discount_nominal or 0
+                total_promo_diskon += item_discount
         
         # Total section
         lines.append("-" * 50)
         lines.append(f"SUBTOTAL       : {format_rp(transaction.subtotal):<20}")
         
-        # Diskon
+        # Item-level promo diskon
+        if total_promo_diskon > 0:
+            lines.append(f"DISKON PROMOSI : -{format_rp(total_promo_diskon):<18}")
+        
+        # Diskon dari transaction-level (hasil apply_transaction_promotions)
         if transaction.discount_amount > 0:
-            diskon_text = f"DISKON ({transaction.discount_percent}%)"
+            # Format: "DISKON (5%)" atau "DISKON" jika nominal tanpa persentase
+            if transaction.discount_percent > 0:
+                diskon_text = f"DISKON ({transaction.discount_percent}%)"
+            else:
+                diskon_text = "DISKON"
             lines.append(f"{diskon_text:<15}: -{format_rp(transaction.discount_amount):<18}")
         
         # Pajak
@@ -560,8 +637,16 @@ class TransactionHandler:
             db (DatabaseManager): Database instance
             receipt_dir (str): Directory untuk receipts
         """
+        self.db = db
         self.transaction_service = TransactionService(db)
         self.receipt_manager = ReceiptManager(receipt_dir)
+        
+        # Initialize accounting service jika available
+        if ACCOUNTING_AVAILABLE:
+            self.accounting_service = AccountingService(db)
+        else:
+            self.accounting_service = None
+            logger.warning("Accounting service not available - pembukuan feature disabled")
     
     def start_transaction(self) -> Transaction:
         """
@@ -593,10 +678,125 @@ class TransactionHandler:
         """Remove item dari transaksi."""
         return self.transaction_service.remove_item(index)
     
+    def apply_transaction_promotions(self) -> dict:
+        """
+        Check dan apply promosi berdasarkan total transaksi.
+        
+        Fitur ini mengecek promosi yang berlaku berdasarkan total pembelian (harga),
+        bukan berdasarkan qty/satuan individual item. Contoh: "Beli >= Rp 200.000 dapat diskon 5%"
+        
+        Method ini harus dipanggil sebelum checkout (sebelum complete_transaction).
+        Diskon akan diterapkan otomatis ke transaction.discount_amount.
+        
+        Returns:
+            dict: {
+                'applied': bool,
+                'promotion_id': int or None,
+                'promotion_name': str,
+                'discount_percent': int or None,
+                'discount_amount': int,
+                'total_before': int,
+                'total_after': int
+            }
+        """
+        trans = self.transaction_service.get_current_transaction()
+        if trans is None:
+            return {
+                'applied': False,
+                'promotion_id': None,
+                'promotion_name': 'N/A',
+                'discount_percent': None,
+                'discount_amount': 0,
+                'total_before': 0,
+                'total_after': 0
+            }
+        
+        try:
+            # Get subtotal sebelum discount (reset discount dulu untuk hitung akurat)
+            original_discount = trans.discount_amount
+            trans.discount_amount = 0
+            trans.calculate_total()
+            subtotal = trans.subtotal
+            
+            # Check promosi berdasarkan total
+            promo_service = PromotionService(self.db)
+            active_promos = promo_service.get_applicable_promotions()
+            discount_info = promo_service.calculate_discount_for_total(subtotal, active_promos)
+            
+            result = {
+                'applied': False,
+                'promotion_id': None,
+                'promotion_name': '',
+                'discount_percent': None,
+                'discount_amount': 0,
+                'total_before': subtotal,
+                'total_after': subtotal
+            }
+            
+            if discount_info['applicable']:
+                # Calculate discount amount dengan mempertimbangkan multiplier (untuk kelipatan)
+                multiplier = discount_info.get('multiplier', 1)
+                
+                if discount_info['discount_percent']:
+                    discount_amount = int(subtotal * discount_info['discount_percent'] / 100)
+                    discount_percent = discount_info['discount_percent']
+                else:
+                    discount_amount = discount_info['discount_nominal'] * multiplier
+                    discount_percent = 0
+                
+                # Apply to transaction
+                trans.set_promo_discount(discount_amount)  # Ini akan set promo_discount dan call calculate_total()
+                trans.discount_percent = discount_percent  # Set persentase untuk display di receipt
+                trans.discount_type = 'fixed'  # Fixed amount, not percentage
+                trans.promotion_id = discount_info['promotion_id']
+                trans.promotion_name = discount_info['promotion_name']
+                
+                result = {
+                    'applied': True,
+                    'promotion_id': discount_info['promotion_id'],
+                    'promotion_name': discount_info['promotion_name'],
+                    'discount_percent': discount_info['discount_percent'],
+                    'discount_amount': discount_amount,
+                    'multiplier': multiplier,
+                    'total_before': subtotal,
+                    'total_after': trans.total
+                }
+                
+                logger.info(f"🎯 Transaction-wide promotion applied: {discount_info['promotion_name']}")
+                logger.info(f"   Subtotal: Rp{subtotal:,}")
+                logger.info(f"   Nilai Diskon (per unit): Rp{discount_info['discount_nominal']:,}") if discount_info['discount_nominal'] else None
+                if multiplier > 1:
+                    logger.info(f"   Kelipatan: {multiplier}x (Total Rp{discount_amount:,} = Rp{discount_info['discount_nominal']:,} x {multiplier})")
+                else:
+                    logger.info(f"   Diskon: Rp{discount_amount:,}")
+                logger.info(f"   Total: Rp{trans.total:,}")
+            else:
+                # Restore original discount jika tidak ada promosi baru
+                trans.discount_amount = original_discount
+                trans.calculate_total()
+                result['total_before'] = trans.subtotal
+                result['total_after'] = trans.total
+                result['multiplier'] = 1
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error applying transaction promotions: {e}", exc_info=True)
+            return {
+                'applied': False,
+                'promotion_id': None,
+                'promotion_name': f'Error: {str(e)}',
+                'discount_percent': None,
+                'discount_amount': 0,
+                'total_before': trans.subtotal if trans else 0,
+                'total_after': trans.total if trans else 0
+            }
+    
     def complete_transaction(self, bayar: int, 
                             store_name: str = "TOKO POS",
                             store_address: str = None,
-                            print_receipt: bool = False) -> Optional[int]:
+                            print_receipt: bool = False,
+                            is_termin: bool = False) -> Optional[int]:
         """
         Selesaikan transaksi (set bayar, save ke DB).
         Receipt printing adalah optional dan bisa dilakukan terpisah dengan print_receipt().
@@ -606,14 +806,15 @@ class TransactionHandler:
             store_name (str): Nama toko
             store_address (str): Alamat toko
             print_receipt (bool): Jika True, langsung display dan save receipt
+            is_termin (bool): Jika True, ini adalah termin payment (bayar bisa kurang dari total)
             
         Returns:
             int: Transaction ID jika berhasil
             None: Jika gagal
         """
         try:
-            # Set payment
-            if not self.transaction_service.set_payment(bayar):
+            # Set payment dengan is_termin flag
+            if not self.transaction_service.set_payment(bayar, is_termin=is_termin):
                 logger.error("Failed to set payment for transaction")
                 return None
             
@@ -629,7 +830,32 @@ class TransactionHandler:
             items_count = transaction.get_item_count() if transaction else 0
             
             # Log transaction completion
-            logger.info(f"Transaction completed: ID={trans_id}, total=Rp{total:,}, items={items_count}, payment=Rp{bayar:,}")
+            payment_type = "Termin" if is_termin else "Lunas"
+            logger.info(f"Transaction completed ({payment_type}): ID={trans_id}, total=Rp{total:,}, items={items_count}, payment=Rp{bayar:,}")
+            
+            # Record income ke pembukuan (accounting)
+            if ACCOUNTING_AVAILABLE and self.accounting_service:
+                try:
+                    if not is_termin:
+                        # Only record income for lunas (not termin) transactions
+                        self.accounting_service.record_income(
+                            transaction_id=trans_id,
+                            amount=total,
+                            description="Penjualan"
+                        )
+                        logger.info(f"✅ Income recorded: trans_id={trans_id}, amount={total}, type=Penjualan")
+                    elif is_termin and bayar > 0:
+                        # For termin, record the payment made (not full total)
+                        self.accounting_service.record_income(
+                            transaction_id=trans_id,
+                            amount=bayar,
+                            description="Pembayaran Termin"
+                        )
+                        logger.info(f"✅ Termin payment recorded: trans_id={trans_id}, amount={bayar}, type=Pembayaran Termin")
+                except Exception as e:
+                    logger.error(f"❌ Error recording income: {e}", exc_info=True)
+            else:
+                logger.warning(f"⚠️ Accounting service not available (ACCOUNTING_AVAILABLE={ACCOUNTING_AVAILABLE}, service={self.accounting_service})")
             
             # Display receipt jika print_receipt=True
             if print_receipt:
@@ -692,10 +918,10 @@ class TransactionHandler:
     
     def get_items(self) -> Optional[list]:
         """
-        Ambil list items dari transaksi aktif.
+        Ambil list items dari transaksi aktif dengan informasi promotional discount.
         
         Returns:
-            list: List of items (dict format)
+            list: List of items (dict format dengan promotional discount info)
             None: Jika tidak ada transaksi
         """
         trans = self.transaction_service.get_current_transaction()
@@ -704,13 +930,33 @@ class TransactionHandler:
         
         items = []
         for item in trans.items:
+            # Hitung discount amount untuk item ini dengan safe null checking
+            discount_amount = 0
+            discount_text = ""
+            
+            item_discount_percent = item.discount_percent or 0
+            item_discount_nominal = item.discount_nominal or 0
+            item_promotion_name = item.promotion_name or ""
+            item_original_subtotal = item.original_subtotal or item.subtotal
+            
+            if item_discount_percent > 0:
+                discount_amount = int(item.harga_satuan * item.qty * item_discount_percent / 100)
+                discount_text = f"{item_discount_percent}%"
+            elif item_discount_nominal > 0:
+                discount_amount = item_discount_nominal * item.qty
+                discount_text = f"Rp {item_discount_nominal:,}/unit"
+            
             # product_id adalah ID database, product_name sudah tersimpan
             items.append({
                 'kode': str(item.product_id),  # Convert ID ke string untuk compatibility
                 'nama': item.product_name,  # Gunakan product_name yang sudah tersimpan
                 'qty': item.qty,
                 'harga_satuan': item.harga_satuan,
-                'subtotal': item.subtotal
+                'subtotal': item.subtotal,
+                'promotion_name': item_promotion_name,  # Nama promo jika ada
+                'discount_amount': discount_amount,  # Jumlah diskon untuk item ini
+                'discount_text': discount_text,  # Format diskon untuk display
+                'original_subtotal': item_original_subtotal,  # Harga sebelum diskon
             })
         return items
 

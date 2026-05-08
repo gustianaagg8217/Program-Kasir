@@ -226,6 +226,18 @@ class DatabaseManager:
                     cursor.execute("ALTER TABLE transactions ADD COLUMN tax_percent REAL DEFAULT 0")
                 if 'tax_amount' not in columns:
                     cursor.execute("ALTER TABLE transactions ADD COLUMN tax_amount INTEGER DEFAULT 0")
+                if 'payment_type' not in columns:
+                    cursor.execute("ALTER TABLE transactions ADD COLUMN payment_type TEXT DEFAULT 'lunas'")
+                if 'payment_status' not in columns:
+                    cursor.execute("ALTER TABLE transactions ADD COLUMN payment_status TEXT DEFAULT 'completed'")
+                if 'due_date' not in columns:
+                    cursor.execute("ALTER TABLE transactions ADD COLUMN due_date DATE DEFAULT NULL")
+                if 'customer_name' not in columns:
+                    cursor.execute("ALTER TABLE transactions ADD COLUMN customer_name TEXT DEFAULT NULL")
+                if 'promotion_id' not in columns:
+                    cursor.execute("ALTER TABLE transactions ADD COLUMN promotion_id INTEGER DEFAULT NULL")
+                if 'promotion_name' not in columns:
+                    cursor.execute("ALTER TABLE transactions ADD COLUMN promotion_name TEXT DEFAULT NULL")
                 conn.commit()
                 logger.info("Transaction table migration completed")
             except Exception as e:
@@ -247,6 +259,27 @@ class DatabaseManager:
                     FOREIGN KEY (product_id) REFERENCES products(id)
                 )
             """)
+            
+            # ================================================================
+            # MIGRATION: Add promotion columns to transaction_items
+            # ================================================================
+            try:
+                cursor.execute("PRAGMA table_info(transaction_items)")
+                columns = [col[1] for col in cursor.fetchall()]
+                
+                if 'promotion_id' not in columns:
+                    cursor.execute("ALTER TABLE transaction_items ADD COLUMN promotion_id INTEGER DEFAULT NULL")
+                if 'promotion_name' not in columns:
+                    cursor.execute("ALTER TABLE transaction_items ADD COLUMN promotion_name TEXT DEFAULT NULL")
+                if 'discount_percent' not in columns:
+                    cursor.execute("ALTER TABLE transaction_items ADD COLUMN discount_percent REAL DEFAULT 0")
+                if 'discount_nominal' not in columns:
+                    cursor.execute("ALTER TABLE transaction_items ADD COLUMN discount_nominal INTEGER DEFAULT 0")
+                
+                conn.commit()
+                logger.info("Transaction items table migration completed (promotion columns added)")
+            except Exception as e:
+                logger.warning(f"Transaction items migration warning: {e}")
             
             # ================================================================
             # TABEL 4: USERS - User login dengan role-based access
@@ -308,6 +341,204 @@ class DatabaseManager:
                     FOREIGN KEY (user_id) REFERENCES users(id)
                 )
             """)
+            
+            # ================================================================
+            # TABEL 6: INVOICES - Header invoice dari transaction
+            # ================================================================
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS invoices (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    invoice_number TEXT UNIQUE NOT NULL,
+                    total INTEGER NOT NULL,
+                    bayar INTEGER NOT NULL,
+                    kembalian INTEGER NOT NULL,
+                    discount_percent REAL DEFAULT 0,
+                    discount_amount INTEGER DEFAULT 0,
+                    tax_percent REAL DEFAULT 0,
+                    tax_amount INTEGER DEFAULT 0,
+                    payment_type TEXT DEFAULT 'lunas',
+                    payment_status TEXT DEFAULT 'completed',
+                    due_date DATE DEFAULT NULL,
+                    customer_name TEXT DEFAULT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # ================================================================
+            # MIGRATION: Add termin columns ke invoices jika belum ada
+            # ================================================================
+            try:
+                cursor.execute("PRAGMA table_info(invoices)")
+                columns = [col[1] for col in cursor.fetchall()]
+                
+                if 'payment_type' not in columns:
+                    cursor.execute("ALTER TABLE invoices ADD COLUMN payment_type TEXT DEFAULT 'lunas'")
+                if 'payment_status' not in columns:
+                    cursor.execute("ALTER TABLE invoices ADD COLUMN payment_status TEXT DEFAULT 'completed'")
+                if 'due_date' not in columns:
+                    cursor.execute("ALTER TABLE invoices ADD COLUMN due_date DATE DEFAULT NULL")
+                if 'customer_name' not in columns:
+                    cursor.execute("ALTER TABLE invoices ADD COLUMN customer_name TEXT DEFAULT NULL")
+                if 'customer_phone' not in columns:
+                    cursor.execute("ALTER TABLE invoices ADD COLUMN customer_phone TEXT DEFAULT NULL")
+                if 'customer_email' not in columns:
+                    cursor.execute("ALTER TABLE invoices ADD COLUMN customer_email TEXT DEFAULT NULL")
+                if 'customer_address' not in columns:
+                    cursor.execute("ALTER TABLE invoices ADD COLUMN customer_address TEXT DEFAULT NULL")
+                logger.info("Invoice table migration completed")
+            except Exception as e:
+                logger.warning(f"Invoice migration warning: {e}")
+            
+            # ================================================================
+            # TABEL 7: INVOICE_ITEMS - Detail item dalam invoice
+            # ================================================================
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS invoice_items (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    invoice_id INTEGER NOT NULL,
+                    nama TEXT NOT NULL,
+                    qty INTEGER NOT NULL,
+                    harga_satuan INTEGER NOT NULL,
+                    subtotal INTEGER NOT NULL,
+                    FOREIGN KEY (invoice_id) REFERENCES invoices(id)
+                )
+            """)
+            
+            # ================================================================
+            # TABEL 8: TERMIN_PAYMENTS - Cicilan pembayaran untuk invoice termin
+            # ================================================================
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS termin_payments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    invoice_id INTEGER NOT NULL,
+                    transaction_id INTEGER,
+                    payment_amount INTEGER NOT NULL,
+                    payment_date DATE NOT NULL,
+                    due_date DATE NOT NULL,
+                    status TEXT DEFAULT 'pending',
+                    notes TEXT DEFAULT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (invoice_id) REFERENCES invoices(id),
+                    FOREIGN KEY (transaction_id) REFERENCES transactions(id)
+                )
+            """)
+            
+            # Create indices untuk faster queries
+            try:
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_termin_invoice_id 
+                    ON termin_payments(invoice_id)
+                """)
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_termin_status 
+                    ON termin_payments(status)
+                """)
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_termin_due_date 
+                    ON termin_payments(due_date)
+                """)
+                logger.info("Termin payments table created successfully")
+            except Exception as e:
+                logger.warning(f"Termin table index creation warning: {e}")
+            
+            # Create indices untuk fast queries
+            try:
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_invoices_number 
+                    ON invoices(invoice_number)
+                """)
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_invoices_date 
+                    ON invoices(created_at)
+                """)
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_invoice_items_invoice_id 
+                    ON invoice_items(invoice_id)
+                """)
+                logger.info("Invoice table indices created successfully")
+            except Exception as e:
+                logger.warning(f"Invoice index creation warning: {e}")
+            
+            # ================================================================
+            # TABEL 9: CASHFLOW - Income dan Expense untuk Pembukuan
+            # ================================================================
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS cashflow (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    type TEXT NOT NULL CHECK(type IN ('income', 'expense')),
+                    amount INTEGER NOT NULL,
+                    description TEXT NOT NULL,
+                    related_transaction_id INTEGER DEFAULT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (related_transaction_id) REFERENCES transactions(id)
+                )
+            """)
+            
+            # Create indices untuk cashflow
+            try:
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_cashflow_type 
+                    ON cashflow(type)
+                """)
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_cashflow_date 
+                    ON cashflow(created_at)
+                """)
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_cashflow_transaction 
+                    ON cashflow(related_transaction_id)
+                """)
+                logger.info("Cashflow table indices created successfully")
+            except Exception as e:
+                logger.warning(f"Cashflow index creation warning: {e}")
+            
+            # ================================================================
+            # TABEL 10: PROMOSI - Manajemen promosi dan diskon
+            # ================================================================
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS promotions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nama_promosi TEXT NOT NULL,
+                    deskripsi TEXT DEFAULT NULL,
+                    tipe_diskon TEXT NOT NULL CHECK(tipe_diskon IN ('persentase', 'nominal')),
+                    nilai_diskon INTEGER NOT NULL,
+                    min_qty REAL NOT NULL,
+                    satuan TEXT DEFAULT 'kg',
+                    berlaku_kelipatan BOOLEAN DEFAULT 0,
+                    tanggal_mulai DATE NOT NULL,
+                    tanggal_selesai DATE NOT NULL,
+                    status TEXT DEFAULT 'aktif' CHECK(status IN ('aktif', 'nonaktif')),
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Create indices untuk promosi
+            try:
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_promotion_status 
+                    ON promotions(status)
+                """)
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_promotion_dates 
+                    ON promotions(tanggal_mulai, tanggal_selesai)
+                """)
+                logger.info("Promotions table created successfully")
+            except Exception as e:
+                logger.warning(f"Promotions table index creation warning: {e}")
+            
+            # ================================================================
+            # MIGRATION: Add berlaku_kelipatan column to promotions
+            # ================================================================
+            try:
+                cursor.execute("PRAGMA table_info(promotions)")
+                columns = [col[1] for col in cursor.fetchall()]
+                
+                if 'berlaku_kelipatan' not in columns:
+                    cursor.execute("ALTER TABLE promotions ADD COLUMN berlaku_kelipatan BOOLEAN DEFAULT 0")
+                    logger.info("Added berlaku_kelipatan column to promotions table")
+            except Exception as e:
+                logger.warning(f"Migration warning for promotions table: {e}")
             
             conn.commit()
             logger.info("Database tables initialized successfully")
@@ -669,9 +900,10 @@ class DatabaseManager:
     
     def add_transaction(self, total: int, bayar: int, kembalian: int, 
                        discount_percent: float = 0, discount_amount: int = 0,
-                       tax_percent: float = 0, tax_amount: int = 0) -> int or None:
+                       tax_percent: float = 0, tax_amount: int = 0,
+                       promotion_id: int = None, promotion_name: str = None) -> int or None:
         """
-        Tambah transaksi baru dengan discount dan tax support.
+        Tambah transaksi baru dengan discount, tax, dan promotion info support.
         
         Args:
             total (int): Total belanja (setelah discount/tax)
@@ -681,6 +913,8 @@ class DatabaseManager:
             discount_amount (int): Diskon dalam rupiah (default: 0)
             tax_percent (float): Pajak dalam persen (default: 0)
             tax_amount (int): Pajak dalam rupiah (default: 0)
+            promotion_id (int, optional): ID promosi yang diterapkan
+            promotion_name (str, optional): Nama promosi yang diterapkan
             
         Returns:
             int: ID transaksi jika berhasil
@@ -695,21 +929,23 @@ class DatabaseManager:
                 cursor = conn.cursor()
                 cursor.execute("""
                     INSERT INTO transactions 
-                    (tanggal, total, bayar, kembalian, discount_percent, discount_amount, tax_percent, tax_amount)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """, (tanggal_sekarang, total, bayar, kembalian, discount_percent, discount_amount, tax_percent, tax_amount))
+                    (tanggal, total, bayar, kembalian, discount_percent, discount_amount, tax_percent, tax_amount, promotion_id, promotion_name)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (tanggal_sekarang, total, bayar, kembalian, discount_percent, discount_amount, tax_percent, tax_amount, promotion_id, promotion_name))
                 transaction_id = cursor.lastrowid
                 conn.commit()
-                logger.info(f"Transaction created: ID={transaction_id}, total=Rp{total:,}, discount={discount_percent}% (Rp{discount_amount:,}), tax={tax_percent}% (Rp{tax_amount:,})")
+                logger.info(f"Transaction created: ID={transaction_id}, total=Rp{total:,}, discount={discount_percent}% (Rp{discount_amount:,}), promo={promotion_name}, tax={tax_percent}% (Rp{tax_amount:,})")
                 return transaction_id
         except Exception as e:
             logger.error(f"Error creating transaction: {e}", exc_info=True)
             return None
     
     def add_transaction_item(self, transaction_id: int, product_id: int, 
-                            qty: int, harga_satuan: int, subtotal: int) -> bool:
+                            qty: int, harga_satuan: int, subtotal: int,
+                            promotion_id: int = None, promotion_name: str = None,
+                            discount_percent: float = 0, discount_nominal: int = 0) -> bool:
         """
-        Tambah item ke transaksi.
+        Tambah item ke transaksi dengan informasi promo.
         
         Args:
             transaction_id (int): ID transaksi
@@ -717,6 +953,10 @@ class DatabaseManager:
             qty (int): Jumlah
             harga_satuan (int): Harga per unit
             subtotal (int): Subtotal (qty * harga_satuan)
+            promotion_id (int, optional): ID promosi yang diterapkan
+            promotion_name (str, optional): Nama promosi
+            discount_percent (float, optional): Diskon persentase
+            discount_nominal (int, optional): Diskon nominal
             
         Returns:
             bool: True jika berhasil
@@ -726,11 +966,13 @@ class DatabaseManager:
                 cursor = conn.cursor()
                 cursor.execute("""
                     INSERT INTO transaction_items 
-                    (transaction_id, product_id, qty, harga_satuan, subtotal)
-                    VALUES (?, ?, ?, ?, ?)
-                """, (transaction_id, product_id, qty, harga_satuan, subtotal))
+                    (transaction_id, product_id, qty, harga_satuan, subtotal, 
+                     promotion_id, promotion_name, discount_percent, discount_nominal)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (transaction_id, product_id, qty, harga_satuan, subtotal,
+                      promotion_id, promotion_name, discount_percent, discount_nominal))
                 conn.commit()
-                logger.debug(f"Transaction item added: trans_id={transaction_id}, product_id={product_id}, qty={qty}")
+                logger.debug(f"Transaction item added: trans_id={transaction_id}, product_id={product_id}, qty={qty}, promo={promotion_name}")
                 return True
         except Exception as e:
             logger.error(f"Error adding transaction item: {e}", exc_info=True)
@@ -1422,6 +1664,873 @@ class DatabaseManager:
         except Exception as e:
             logger.error(f"Error getting security summary: {e}", exc_info=True)
             return {}
+    
+    # ========================================================================
+    # INVOICE OPERATIONS - Invoice management
+    # ========================================================================
+    
+    def create_invoice(self, invoice_number: str, total: int, bayar: int, 
+                      kembalian: int, discount_percent: float = 0, 
+                      discount_amount: int = 0, tax_percent: float = 0, 
+                      tax_amount: int = 0, payment_type: str = 'lunas') -> int or None:
+        """
+        Create invoice header in database.
+        
+        Args:
+            invoice_number (str): Unique invoice number
+            total (int): Total amount
+            bayar (int): Amount paid
+            kembalian (int): Change
+            discount_percent (float): Discount percentage
+            discount_amount (int): Discount amount
+            tax_percent (float): Tax percentage
+            tax_amount (int): Tax amount
+            payment_type (str): Type of payment ('lunas' or 'termin')
+            
+        Returns:
+            int: Invoice ID jika berhasil, None jika gagal
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO invoices 
+                    (invoice_number, total, bayar, kembalian, discount_percent, 
+                     discount_amount, tax_percent, tax_amount, payment_type, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                """, (invoice_number, total, bayar, kembalian, discount_percent, 
+                      discount_amount, tax_percent, tax_amount, payment_type))
+                conn.commit()
+                invoice_id = cursor.lastrowid
+                logger.info(f"Invoice created: {invoice_number} (ID: {invoice_id}, Type: {payment_type})")
+                return invoice_id
+        except sqlite3.IntegrityError:
+            logger.warning(f"Invoice number '{invoice_number}' already exists")
+            return None
+        except Exception as e:
+            logger.error(f"Error creating invoice: {e}", exc_info=True)
+            return None
+    
+    def add_invoice_item(self, invoice_id: int, nama: str, qty: int, 
+                        harga_satuan: int, subtotal: int) -> bool:
+        """
+        Add item to invoice.
+        
+        Args:
+            invoice_id (int): Invoice ID
+            nama (str): Product name
+            qty (int): Quantity
+            harga_satuan (int): Price per unit
+            subtotal (int): Subtotal (qty * harga_satuan)
+            
+        Returns:
+            bool: True jika berhasil, False jika gagal
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO invoice_items 
+                    (invoice_id, nama, qty, harga_satuan, subtotal)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (invoice_id, nama, qty, harga_satuan, subtotal))
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Error adding invoice item: {e}", exc_info=True)
+            return False
+    
+    def get_all_invoices(self, limit: int = 50, offset: int = 0) -> list:
+        """
+        Get semua invoices (most recent first).
+        
+        Args:
+            limit (int): Max invoices to retrieve
+            offset (int): Offset untuk pagination
+            
+        Returns:
+            list: List of invoice data
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT * FROM invoices 
+                    ORDER BY created_at DESC 
+                    LIMIT ? OFFSET ?
+                """, (limit, offset))
+                invoices = [dict(row) for row in cursor.fetchall()]
+                return invoices
+        except Exception as e:
+            logger.error(f"Error getting all invoices: {e}")
+            return []
+    
+    def get_invoice_detail(self, invoice_id: int) -> dict or None:
+        """
+        Get invoice detail dengan items.
+        
+        Args:
+            invoice_id (int): Invoice ID
+            
+        Returns:
+            dict: Invoice detail {invoice, items}, atau None jika tidak ditemukan
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Get invoice header
+                cursor.execute("SELECT * FROM invoices WHERE id = ?", (invoice_id,))
+                invoice_row = cursor.fetchone()
+                
+                if not invoice_row:
+                    logger.warning(f"Invoice {invoice_id} not found")
+                    return None
+                
+                invoice_data = dict(invoice_row)
+                
+                # Get invoice items
+                cursor.execute("SELECT * FROM invoice_items WHERE invoice_id = ?", (invoice_id,))
+                items = [dict(row) for row in cursor.fetchall()]
+                
+                return {
+                    'invoice': invoice_data,
+                    'items': items
+                }
+        except Exception as e:
+            logger.error(f"Error getting invoice detail {invoice_id}: {e}")
+            return None
+    
+    def get_invoice_by_number(self, invoice_number: str) -> dict or None:
+        """
+        Get invoice by invoice number.
+        
+        Args:
+            invoice_number (str): Invoice number
+            
+        Returns:
+            dict: Invoice detail, atau None
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Get invoice header
+                cursor.execute("SELECT * FROM invoices WHERE invoice_number = ?", (invoice_number,))
+                invoice_row = cursor.fetchone()
+                
+                if not invoice_row:
+                    logger.warning(f"Invoice {invoice_number} not found")
+                    return None
+                
+                invoice_data = dict(invoice_row)
+                invoice_id = invoice_data['id']
+                
+                # Get invoice items
+                cursor.execute("SELECT * FROM invoice_items WHERE invoice_id = ?", (invoice_id,))
+                items = [dict(row) for row in cursor.fetchall()]
+                
+                return {
+                    'invoice': invoice_data,
+                    'items': items
+                }
+        except Exception as e:
+            logger.error(f"Error getting invoice by number {invoice_number}: {e}")
+            return None
+    
+    def get_invoices_by_date(self, date_str: str) -> list:
+        """
+        Get invoices yang dibuat pada tanggal tertentu.
+        
+        Args:
+            date_str (str): Format YYYY-MM-DD
+            
+        Returns:
+            list: List of invoices
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                query = """
+                    SELECT * FROM invoices 
+                    WHERE DATE(created_at) = ?
+                    ORDER BY created_at DESC
+                """
+                
+                cursor.execute(query, (date_str,))
+                invoices = [dict(row) for row in cursor.fetchall()]
+                
+                return invoices
+        except Exception as e:
+            logger.error(f"Error getting invoices by date {date_str}: {e}")
+            return []
+    
+    def get_invoices_count(self) -> int:
+        """
+        Get total count of invoices.
+        
+        Returns:
+            int: Total invoices count
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT COUNT(*) as count FROM invoices")
+                result = cursor.fetchone()
+                return result['count'] if result else 0
+        except Exception as e:
+            logger.error(f"Error getting invoices count: {e}")
+            return 0
+    
+    # ========================================================================
+    # TERMIN PAYMENT OPERATIONS - Cicilan pembayaran untuk invoice termin
+    # ========================================================================
+    
+    def add_termin_payment(self, invoice_id: int, payment_amount: int, 
+                          payment_date: str, due_date: str, 
+                          transaction_id: int = None, notes: str = None) -> int or None:
+        """
+        Tambah pembayaran termin untuk invoice.
+        
+        Args:
+            invoice_id (int): ID invoice
+            payment_amount (int): Jumlah pembayaran dalam Rp
+            payment_date (str): Tanggal pembayaran (YYYY-MM-DD)
+            due_date (str): Tanggal jatuh tempo (YYYY-MM-DD)
+            transaction_id (int, optional): ID transaksi pembayaran
+            notes (str, optional): Catatan pembayaran
+            
+        Returns:
+            int: ID termin payment yang dibuat, None jika gagal
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO termin_payments 
+                    (invoice_id, transaction_id, payment_amount, payment_date, due_date, status, notes)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, (invoice_id, transaction_id, payment_amount, payment_date, due_date, 'pending', notes))
+                conn.commit()
+                termin_id = cursor.lastrowid
+                logger.info(f"Termin payment added: invoice_id={invoice_id}, amount={payment_amount}, termin_id={termin_id}")
+                return termin_id
+        except Exception as e:
+            logger.error(f"Error adding termin payment: {e}", exc_info=True)
+            return None
+    
+    def get_termin_payments_by_invoice(self, invoice_id: int) -> list:
+        """
+        Ambil semua cicilan pembayaran untuk invoice tertentu.
+        
+        Args:
+            invoice_id (int): ID invoice
+            
+        Returns:
+            list: List of termin payments
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT * FROM termin_payments
+                    WHERE invoice_id = ?
+                    ORDER BY due_date
+                """, (invoice_id,))
+                results = cursor.fetchall()
+                return [dict(row) for row in results]
+        except Exception as e:
+            logger.error(f"Error getting termin payments for invoice {invoice_id}: {e}")
+            return []
+    
+    def update_termin_payment_status(self, termin_id: int, status: str, notes: str = None) -> bool:
+        """
+        Update status pembayaran termin (pending/completed/overdue).
+        
+        Args:
+            termin_id (int): ID termin payment
+            status (str): Status baru (pending/completed/overdue)
+            notes (str, optional): Catatan update
+            
+        Returns:
+            bool: True jika berhasil
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    UPDATE termin_payments
+                    SET status = ?, notes = ?
+                    WHERE id = ?
+                """, (status, notes, termin_id))
+                conn.commit()
+                logger.info(f"Termin payment status updated: termin_id={termin_id}, status={status}")
+                return True
+        except Exception as e:
+            logger.error(f"Error updating termin payment status: {e}", exc_info=True)
+            return False
+    
+    def get_unpaid_termin_invoices(self) -> list:
+        """
+        Ambil semua invoice termin yang belum lunas dengan info DP.
+        
+        Returns:
+            list: List of unpaid termin invoices dengan sisa cicilan (total - DP)
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT 
+                        i.id,
+                        i.invoice_number,
+                        i.total,
+                        i.customer_name,
+                        i.due_date,
+                        COALESCE(i.bayar, 0) as dp_amount,
+                        COALESCE(SUM(tp.payment_amount), 0) as cicilan_terbayar,
+                        (i.total - COALESCE(i.bayar, 0)) as total_cicilan,
+                        ((i.total - COALESCE(i.bayar, 0)) - COALESCE(SUM(tp.payment_amount), 0)) as sisa_pembayaran
+                    FROM invoices i
+                    LEFT JOIN termin_payments tp ON i.id = tp.invoice_id 
+                        AND tp.status = 'completed'
+                    WHERE i.payment_type = 'termin' 
+                        AND i.payment_status != 'completed'
+                    GROUP BY i.id
+                    HAVING sisa_pembayaran > 0
+                    ORDER BY i.due_date
+                """)
+                results = cursor.fetchall()
+                return [dict(row) for row in results]
+        except Exception as e:
+            logger.error(f"Error getting unpaid termin invoices: {e}")
+            return []
+    
+    def calculate_total_paid_termin(self, invoice_id: int) -> int:
+        """
+        Hitung total yang sudah dibayar untuk invoice termin (hanya completed payments).
+        
+        Args:
+            invoice_id (int): ID invoice
+            
+        Returns:
+            int: Total yang sudah dibayar (completed payments only)
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT COALESCE(SUM(payment_amount), 0) as total_paid
+                    FROM termin_payments
+                    WHERE invoice_id = ? AND status = 'completed'
+                """, (invoice_id,))
+                result = cursor.fetchone()
+                return result['total_paid'] if result else 0
+        except Exception as e:
+            logger.error(f"Error calculating total paid for invoice {invoice_id}: {e}")
+            return 0
+    
+    def get_overdue_termin_payments(self) -> list:
+        """
+        Ambil pembayaran termin yang jatuh tempo/overdue.
+        
+        Returns:
+            list: List of overdue termin payments
+        """
+        try:
+            from datetime import datetime, date
+            today = date.today().isoformat()
+            
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT 
+                        tp.*,
+                        i.invoice_number,
+                        i.customer_name
+                    FROM termin_payments tp
+                    JOIN invoices i ON tp.invoice_id = i.id
+                    WHERE tp.status IN ('pending')
+                        AND tp.due_date < ?
+                    ORDER BY tp.due_date
+                """, (today,))
+                results = cursor.fetchall()
+                return [dict(row) for row in results]
+        except Exception as e:
+            logger.error(f"Error getting overdue termin payments: {e}")
+            return []
+    
+    def get_upcoming_termin_payments(self, days_ahead: int = 7) -> list:
+        """
+        Ambil pembayaran termin yang akan jatuh tempo dalam N hari ke depan.
+        
+        Args:
+            days_ahead (int): Jumlah hari ke depan untuk pengecekan (default: 7)
+        
+        Returns:
+            list: List of upcoming termin payments
+        """
+        try:
+            from datetime import datetime, date, timedelta
+            today = date.today().isoformat()
+            upcoming_date = (date.today() + timedelta(days=days_ahead)).isoformat()
+            
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT 
+                        tp.*,
+                        i.invoice_number,
+                        i.customer_name
+                    FROM termin_payments tp
+                    JOIN invoices i ON tp.invoice_id = i.id
+                    WHERE tp.status IN ('pending')
+                        AND tp.due_date >= ?
+                        AND tp.due_date <= ?
+                    ORDER BY tp.due_date
+                """, (today, upcoming_date))
+                results = cursor.fetchall()
+                return [dict(row) for row in results]
+        except Exception as e:
+            logger.error(f"Error getting upcoming termin payments: {e}")
+            return []
+    
+    def get_all_pending_termin_payments(self) -> list:
+        """
+        Ambil SEMUA pembayaran termin yang masih pending (overdue + upcoming).
+        Untuk konsistensi display di laporan dan detail page.
+        
+        Returns:
+            list: List of all pending termin payments
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT 
+                        tp.*,
+                        i.invoice_number,
+                        i.customer_name,
+                        i.total as invoice_total,
+                        i.bayar as dp_amount
+                    FROM termin_payments tp
+                    JOIN invoices i ON tp.invoice_id = i.id
+                    WHERE tp.status IN ('pending')
+                    ORDER BY tp.due_date
+                """)
+                results = cursor.fetchall()
+                return [dict(row) for row in results]
+        except Exception as e:
+            logger.error(f"Error getting all pending termin payments: {e}")
+            return []
+    
+    # ========================================================================
+    # CASHFLOW OPERATIONS - Income dan Expense untuk Pembukuan
+    # ========================================================================
+    
+    def add_cashflow(self, cf_type: str, amount: int, description: str,
+                    related_transaction_id: int = None) -> int:
+        """
+        Tambah entry cashflow (income atau expense).
+        
+        Args:
+            cf_type (str): 'income' atau 'expense'
+            amount (int): Jumlah dalam Rupiah
+            description (str): Deskripsi
+            related_transaction_id (int): ID transaksi terkait (optional)
+            
+        Returns:
+            int: Cashflow ID jika berhasil
+            None: Jika gagal
+        """
+        if cf_type not in ['income', 'expense']:
+            logger.error(f"Invalid cashflow type: {cf_type}")
+            return None
+        
+        if amount <= 0:
+            logger.error(f"Invalid amount: {amount}")
+            return None
+        
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO cashflow (type, amount, description, related_transaction_id)
+                    VALUES (?, ?, ?, ?)
+                """, (cf_type, amount, description, related_transaction_id))
+                cf_id = cursor.lastrowid
+                conn.commit()
+                logger.info(f"Cashflow added: type={cf_type}, amount={amount}, id={cf_id}")
+                return cf_id
+        except Exception as e:
+            logger.error(f"Error adding cashflow: {e}", exc_info=True)
+            return None
+    
+    def get_total_cashflow(self, cf_type: str, start_date = None, end_date = None) -> int:
+        """
+        Get total income atau expense untuk range tanggal.
+        
+        Args:
+            cf_type (str): 'income' atau 'expense'
+            start_date: Start date (format: date object atau YYYY-MM-DD string)
+            end_date: End date (format: date object atau YYYY-MM-DD string)
+            
+        Returns:
+            int: Total amount dalam Rupiah
+        """
+        from datetime import date
+        
+        # Default date range: current month
+        if start_date is None:
+            today = date.today()
+            start_date = date(today.year, today.month, 1)
+        
+        if end_date is None:
+            end_date = date.today()
+        
+        # Convert to string if date object
+        if hasattr(start_date, 'isoformat'):
+            start_date = start_date.isoformat()
+        if hasattr(end_date, 'isoformat'):
+            end_date = end_date.isoformat()
+        
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT COALESCE(SUM(amount), 0) as total
+                    FROM cashflow
+                    WHERE type = ?
+                        AND DATE(created_at) >= ?
+                        AND DATE(created_at) <= ?
+                """, (cf_type, start_date, end_date))
+                
+                result = cursor.fetchone()
+                return result['total'] if result else 0
+        except Exception as e:
+            logger.error(f"Error getting total cashflow: {e}", exc_info=True)
+            return 0
+    
+    def get_cashflow_history(self, limit: int = 100, start_date = None, end_date = None) -> list:
+        """
+        Get history of cashflow entries.
+        
+        Args:
+            limit (int): Maximum entries to retrieve
+            start_date: Start date filter (optional)
+            end_date: End date filter (optional)
+            
+        Returns:
+            list: List of cashflow entries as dict
+        """
+        from datetime import date
+        
+        # Default date range: last 1 year
+        if end_date is None:
+            end_date = date.today()
+        
+        if start_date is None:
+            from datetime import timedelta
+            start_date = end_date - timedelta(days=365)
+        
+        # Convert to string if date object
+        if hasattr(start_date, 'isoformat'):
+            start_date = start_date.isoformat()
+        if hasattr(end_date, 'isoformat'):
+            end_date = end_date.isoformat()
+        
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT id, type, amount, description, related_transaction_id, created_at
+                    FROM cashflow
+                    WHERE DATE(created_at) >= ?
+                        AND DATE(created_at) <= ?
+                    ORDER BY created_at DESC
+                    LIMIT ?
+                """, (start_date, end_date, limit))
+                
+                results = cursor.fetchall()
+                return [dict(row) for row in results]
+        except Exception as e:
+            logger.error(f"Error getting cashflow history: {e}", exc_info=True)
+            return []
+    
+    def delete_cashflow(self, cashflow_id: int) -> bool:
+        """
+        Delete cashflow entry (untuk undo/koreksi).
+        
+        Args:
+            cashflow_id (int): ID cashflow yang akan dihapus
+            
+        Returns:
+            bool: True jika berhasil
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM cashflow WHERE id = ?", (cashflow_id,))
+                conn.commit()
+                if cursor.rowcount > 0:
+                    logger.info(f"Cashflow entry {cashflow_id} deleted")
+                    return True
+                return False
+        except Exception as e:
+            logger.error(f"Error deleting cashflow: {e}", exc_info=True)
+            return False
+    
+    def get_daily_cashflow_stats(self, num_days: int = 7) -> list:
+        """
+        Get daily cashflow stats untuk last n days.
+        
+        Args:
+            num_days (int): Number of days to retrieve
+            
+        Returns:
+            list: List of daily stats with format:
+                [
+                    {
+                        'date': YYYY-MM-DD,
+                        'total_income': int,
+                        'total_expense': int,
+                        'profit': int
+                    },
+                    ...
+                ]
+        """
+        from datetime import date, timedelta
+        
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT 
+                        DATE(created_at) as date,
+                        COALESCE(SUM(CASE WHEN type='income' THEN amount ELSE 0 END), 0) as total_income,
+                        COALESCE(SUM(CASE WHEN type='expense' THEN amount ELSE 0 END), 0) as total_expense
+                    FROM cashflow
+                    WHERE DATE(created_at) >= DATE('now', '-' || ? || ' days')
+                    GROUP BY DATE(created_at)
+                    ORDER BY date DESC
+                """, (num_days,))
+                
+                results = cursor.fetchall()
+                daily_stats = []
+                for row in results:
+                    data = dict(row)
+                    data['profit'] = data['total_income'] - data['total_expense']
+                    daily_stats.append(data)
+                
+                return daily_stats
+        except Exception as e:
+            logger.error(f"Error getting daily cashflow stats: {e}", exc_info=True)
+            return []
+    
+    def get_cashflow_stats_for_range(self, start_date, end_date) -> list:
+        """
+        Get daily cashflow stats untuk range tanggal tertentu.
+        
+        Args:
+            start_date: Start date (date object atau string YYYY-MM-DD)
+            end_date: End date (date object atau string YYYY-MM-DD)
+            
+        Returns:
+            list: List of daily stats
+        """
+        # Convert to string if date object
+        if hasattr(start_date, 'isoformat'):
+            start_date = start_date.isoformat()
+        if hasattr(end_date, 'isoformat'):
+            end_date = end_date.isoformat()
+        
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT 
+                        DATE(created_at) as date,
+                        COALESCE(SUM(CASE WHEN type='income' THEN amount ELSE 0 END), 0) as total_income,
+                        COALESCE(SUM(CASE WHEN type='expense' THEN amount ELSE 0 END), 0) as total_expense
+                    FROM cashflow
+                    WHERE DATE(created_at) >= ?
+                        AND DATE(created_at) <= ?
+                    GROUP BY DATE(created_at)
+                    ORDER BY date DESC
+                """, (start_date, end_date))
+                
+                results = cursor.fetchall()
+                daily_stats = []
+                for row in results:
+                    data = dict(row)
+                    data['profit'] = data['total_income'] - data['total_expense']
+                    daily_stats.append(data)
+                
+                return daily_stats
+        except Exception as e:
+            logger.error(f"Error getting cashflow stats for range: {e}", exc_info=True)
+            return []
+    
+    # ========================================================================
+    # PROMOTION OPERATIONS - Manajemen promosi dan diskon
+    # ========================================================================
+    
+    def add_promotion(self, nama_promosi: str, tipe_diskon: str, nilai_diskon: int, 
+                     min_qty: float, satuan: str, tanggal_mulai: str, tanggal_selesai: str, 
+                     deskripsi: str = None, berlaku_kelipatan: bool = False) -> tuple:
+        """
+        Tambah promosi baru.
+        
+        Args:
+            nama_promosi: Nama promosi
+            tipe_diskon: 'persentase' atau 'nominal'
+            nilai_diskon: Nilai diskon (% atau Rp)
+            min_qty: Minimum quantity untuk trigger promosi
+            satuan: Satuan (kg, pcs, dll)
+            tanggal_mulai: Tanggal mulai (YYYY-MM-DD)
+            tanggal_selesai: Tanggal selesai (YYYY-MM-DD)
+            deskripsi: Deskripsi promosi (optional)
+            berlaku_kelipatan: Apakah diskon berlaku per kelipatan min_qty (default False)
+            
+        Returns:
+            tuple: (success, message, promotion_id)
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO promotions 
+                    (nama_promosi, tipe_diskon, nilai_diskon, min_qty, satuan, 
+                     tanggal_mulai, tanggal_selesai, deskripsi, berlaku_kelipatan, status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'aktif')
+                """, (nama_promosi, tipe_diskon, nilai_diskon, min_qty, satuan, 
+                      tanggal_mulai, tanggal_selesai, deskripsi, berlaku_kelipatan))
+                
+                promotion_id = cursor.lastrowid
+                logger.info(f"Promotion added: {nama_promosi} (ID: {promotion_id})")
+                return True, "Promosi berhasil ditambahkan", promotion_id
+        except Exception as e:
+            logger.error(f"Error adding promotion: {e}", exc_info=True)
+            return False, f"Error: {str(e)}", None
+    
+    def get_all_promotions(self, status: str = None) -> list:
+        """
+        Get semua promosi.
+        
+        Args:
+            status: Filter by status ('aktif', 'nonaktif', atau None untuk semua)
+            
+        Returns:
+            list: List of promotions
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                if status:
+                    cursor.execute("SELECT * FROM promotions WHERE status = ? ORDER BY id DESC", (status,))
+                else:
+                    cursor.execute("SELECT * FROM promotions ORDER BY id DESC")
+                
+                return [dict(row) for row in cursor.fetchall()]
+        except Exception as e:
+            logger.error(f"Error getting promotions: {e}", exc_info=True)
+            return []
+    
+    def get_active_promotions(self, current_date: str = None) -> list:
+        """
+        Get promosi yang aktif berdasarkan tanggal.
+        
+        Args:
+            current_date: Current date (YYYY-MM-DD), default ke hari ini
+            
+        Returns:
+            list: List of active promotions
+        """
+        if not current_date:
+            current_date = datetime.now().strftime('%Y-%m-%d')
+        
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT * FROM promotions 
+                    WHERE status = 'aktif'
+                      AND tanggal_mulai <= ?
+                      AND tanggal_selesai >= ?
+                    ORDER BY id ASC
+                """, (current_date, current_date))
+                
+                return [dict(row) for row in cursor.fetchall()]
+        except Exception as e:
+            logger.error(f"Error getting active promotions: {e}", exc_info=True)
+            return []
+    
+    def update_promotion(self, promotion_id: int, **kwargs) -> tuple:
+        """
+        Update promosi.
+        
+        Args:
+            promotion_id: ID promosi
+            **kwargs: Field yang akan diupdate (nama_promosi, nilai_diskon, berlaku_kelipatan, dll)
+            
+        Returns:
+            tuple: (success, message)
+        """
+        allowed_fields = ['nama_promosi', 'tipe_diskon', 'nilai_diskon', 'min_qty', 
+                         'satuan', 'tanggal_mulai', 'tanggal_selesai', 'deskripsi', 'status', 'berlaku_kelipatan']
+        
+        update_fields = {k: v for k, v in kwargs.items() if k in allowed_fields}
+        
+        if not update_fields:
+            return False, "Tidak ada field untuk diupdate"
+        
+        update_fields['updated_at'] = datetime.now().isoformat()
+        
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                set_clause = ", ".join([f"{k} = ?" for k in update_fields.keys()])
+                values = list(update_fields.values()) + [promotion_id]
+                
+                cursor.execute(f"UPDATE promotions SET {set_clause} WHERE id = ?", values)
+                logger.info(f"Promotion updated: ID {promotion_id}")
+                return True, "Promosi berhasil diupdate"
+        except Exception as e:
+            logger.error(f"Error updating promotion: {e}", exc_info=True)
+            return False, f"Error: {str(e)}"
+    
+    def delete_promotion(self, promotion_id: int) -> tuple:
+        """
+        Delete promosi.
+        
+        Args:
+            promotion_id: ID promosi
+            
+        Returns:
+            tuple: (success, message)
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM promotions WHERE id = ?", (promotion_id,))
+                logger.info(f"Promotion deleted: ID {promotion_id}")
+                return True, "Promosi berhasil dihapus"
+        except Exception as e:
+            logger.error(f"Error deleting promotion: {e}", exc_info=True)
+            return False, f"Error: {str(e)}"
+    
+    def get_promotion_by_id(self, promotion_id: int) -> dict:
+        """Get promosi berdasarkan ID."""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM promotions WHERE id = ?", (promotion_id,))
+                row = cursor.fetchone()
+                return dict(row) if row else None
+        except Exception as e:
+            logger.error(f"Error getting promotion: {e}", exc_info=True)
+            return None
 
 
 # ============================================================================

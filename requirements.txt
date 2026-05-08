@@ -19,6 +19,9 @@ bcrypt>=4.0  # Secure password hashing with bcrypt
 python-telegram-bot>=20.0  # Telegram bot API wrapper
 requests>=2.28  # HTTP library untuk Telegram
 
+# Invoice & PDF Generation
+reportlab>=3.6  # PDF generation library untuk invoice
+
 # Untuk Enhancement di Masa Depan:
 # pandas==2.x  # Untuk analisis data lebih advanced
 # openpyxl==3.x  # Untuk export ke Excel

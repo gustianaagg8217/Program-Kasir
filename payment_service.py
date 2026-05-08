@@ -406,6 +406,299 @@ class PaymentService:
 
 
 # ============================================================================
+# TERMIN PAYMENT SERVICE - Handle pembayaran termin/cicilan
+# ============================================================================
+
+class TerminPaymentService:
+    """
+    Service untuk mengelola pembayaran termin/cicilan invoice.
+    
+    Responsibilities:
+    - Create termin payment untuk invoice
+    - Track pembayaran termin
+    - Manage due dates dan payment reminders
+    - Generate termin payment reports
+    """
+    
+    def __init__(self, db_manager):
+        """
+        Initialize TerminPaymentService
+        
+        Args:
+            db_manager: DatabaseManager instance
+        """
+        self.db = db_manager
+        logger.info("✅ TerminPaymentService initialized")
+    
+    def create_termin_invoice(self, transaction_id: int, customer_name: str,
+                             payment_schedule: List[Dict], customer_phone: str = None,
+                             customer_email: str = None, customer_address: str = None) -> Tuple[bool, str, Optional[int]]:
+        """
+        Convert transaksi menjadi invoice termin dengan jadwal pembayaran.
+        
+        Args:
+            transaction_id (int): ID transaction
+            customer_name (str): Nama customer
+            payment_schedule (List[Dict]): List of {amount, due_date}
+                Contoh: [
+                    {'amount': 500000, 'due_date': '2026-05-05'},
+                    {'amount': 500000, 'due_date': '2026-06-05'}
+                ]
+            customer_phone (str, optional): Nomor telepon customer
+            customer_email (str, optional): Email customer
+            customer_address (str, optional): Alamat customer
+        
+        Returns:
+            (success, message, invoice_id)
+        """
+        try:
+            # Validate schedule
+            if not payment_schedule:
+                return False, "Jadwal pembayaran tidak boleh kosong", None
+            
+            # Ambil data transaksi
+            trans_detail = self.db.get_transaction(transaction_id)
+            if not trans_detail:
+                return False, f"Transaksi {transaction_id} tidak ditemukan", None
+            
+            trans = trans_detail.get('transaction', {})
+            total = trans.get('total', 0)
+            payment_received = trans.get('bayar', 0)  # DP yang sudah dibayar
+            
+            # Validate schedule total
+            schedule_total = sum(item.get('amount', 0) for item in payment_schedule)
+            
+            # Untuk termin, schedule_total seharusnya = total - payment_received (DP)
+            # Tapi jika payment_received belum tersimpan, kita lakukan validasi lenient
+            expected_schedule_total = total - payment_received
+            
+            # Validasi lenient: schedule_total harus positif dan <= total
+            if schedule_total <= 0:
+                return False, f"Total jadwal harus positif (diterima: {schedule_total})", None
+            
+            if schedule_total > total:
+                return False, f"Total jadwal ({schedule_total}) tidak boleh lebih dari total transaksi ({total})", None
+            
+            # Log jika ada perbedaan antara expected dan actual schedule
+            if schedule_total != total and schedule_total != expected_schedule_total:
+                logger.warning(f"⚠️ Schedule validation: expected={expected_schedule_total}, actual={schedule_total}, total={total}, dp={payment_received}")
+            
+            # Update transaksi dengan termin info
+            with self.db.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    UPDATE transactions
+                    SET payment_type = ?, payment_status = ?, customer_name = ?
+                    WHERE id = ?
+                """, ('termin', 'pending', customer_name, transaction_id))
+                conn.commit()
+            
+            # Create invoice dari transaction
+            from invoice.invoice_service import InvoiceService
+            invoice_service = InvoiceService(self.db)
+            invoice_id = invoice_service.create_invoice_from_transaction(transaction_id)
+            
+            if not invoice_id:
+                return False, "Gagal membuat invoice", None
+            
+            # Update invoice dengan termin info
+            with self.db.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    UPDATE invoices
+                    SET payment_type = ?, payment_status = ?, customer_name = ?,
+                        customer_phone = ?, customer_email = ?, customer_address = ?
+                    WHERE id = ?
+                """, ('termin', 'pending', customer_name, customer_phone, customer_email, customer_address, invoice_id))
+                conn.commit()
+            
+            # Create pembayaran termin untuk setiap jadwal
+            for idx, schedule_item in enumerate(payment_schedule):
+                amount = schedule_item.get('amount', 0)
+                due_date = schedule_item.get('due_date', '')
+                notes = schedule_item.get('notes', f'Cicilan ke-{idx+1}')
+                
+                self.db.add_termin_payment(
+                    invoice_id=invoice_id,
+                    payment_amount=amount,
+                    payment_date=datetime.now().strftime('%Y-%m-%d'),
+                    due_date=due_date,
+                    transaction_id=transaction_id,
+                    notes=notes
+                )
+            
+            logger.info(f"Termin invoice created: invoice_id={invoice_id}, customer={customer_name}")
+            return True, f"Invoice termin berhasil dibuat (ID: {invoice_id})", invoice_id
+            
+        except Exception as e:
+            logger.error(f"Error creating termin invoice: {e}", exc_info=True)
+            return False, f"Error: {str(e)}", None
+    
+    def record_termin_payment(self, invoice_id: int, payment_amount: int, 
+                             notes: str = None) -> Tuple[bool, str]:
+        """
+        Catat pembayaran termin dari customer dengan fleksibilitas.
+        
+        Mendukung:
+        - Pembayaran sesuai cicilan (Rp 49,333)
+        - Pembayaran lebih dari cicilan (Rp 150,000)
+        - Pelunasan langsung sisa hutang
+        
+        Args:
+            invoice_id (int): ID invoice
+            payment_amount (int): Jumlah pembayaran
+            notes (str, optional): Catatan pembayaran
+        
+        Returns:
+            (success, message)
+        """
+        try:
+            # Ambil invoice
+            with self.db.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM invoices WHERE id = ?", (invoice_id,))
+                row = cursor.fetchone()
+                invoice = dict(row) if row else None
+            
+            if not invoice:
+                return False, f"Invoice {invoice_id} tidak ditemukan"
+            
+            # Hitung total yang sudah dibayar sebelumnya (termasuk DP)
+            dp_amount = invoice.get('bayar', 0)  # DP yang sudah dibayar
+            completed_payments = self.db.calculate_total_paid_termin(invoice_id)  # Completed cicilan
+            total_paid_before = dp_amount + completed_payments
+            total_hutang = invoice['total']
+            sisa_hutang = total_hutang - total_paid_before
+            
+            # Validasi pembayaran
+            if payment_amount <= 0:
+                return False, "Jumlah pembayaran harus lebih dari 0"
+            
+            if payment_amount > sisa_hutang:
+                return False, f"Pembayaran melebihi sisa hutang. Sisa hutang: Rp {sisa_hutang:,.0f}"
+            
+            # Ambil termin payments pending
+            termin_payments = self.db.get_termin_payments_by_invoice(invoice_id)
+            pending_payments = [p for p in termin_payments if p['status'] == 'pending']
+            
+            if not pending_payments:
+                return False, "Tidak ada pembayaran termin yang pending"
+            
+            # Process pembayaran secara iteratif untuk handle pembayaran > 1 cicilan
+            remaining_payment = payment_amount
+            cicilan_terbayar = 0
+            
+            for idx, pending in enumerate(pending_payments):
+                if remaining_payment <= 0:
+                    break
+                
+                cicilan_amount = pending['payment_amount']
+                
+                # Mark cicilan ini sebagai completed jika pembayaran >= cicilan amount
+                if remaining_payment >= cicilan_amount:
+                    # Bayar cicilan penuh
+                    success = self.db.update_termin_payment_status(
+                        pending['id'],
+                        'completed',
+                        notes or 'Pembayaran termin diterima'
+                    )
+                    
+                    if not success:
+                        return False, f"Gagal mencatat pembayaran cicilan ke-{idx+1}"
+                    
+                    remaining_payment -= cicilan_amount
+                    cicilan_terbayar += 1
+                else:
+                    # Pembayaran cicilan parsial - jangan mark sebagai completed
+                    # Update catatan saja untuk logging
+                    logger.info(f"Partial payment for cicilan {idx+1}: {remaining_payment} dari {cicilan_amount}")
+                    break
+            
+            # Check total pembayaran sekarang
+            total_paid = total_paid_before + payment_amount
+            
+            if total_paid >= total_hutang:
+                # Update invoice status jadi completed
+                with self.db.get_connection() as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        UPDATE invoices
+                        SET payment_status = ?
+                        WHERE id = ?
+                    """, ('completed', invoice_id))
+                    conn.commit()
+                
+                logger.info(f"Termin invoice fully paid: invoice_id={invoice_id}")
+                msg = f"✅ Pembayaran termin tercatat. Cicilan SELESAI untuk invoice {invoice['invoice_number']}"
+                if cicilan_terbayar > 0:
+                    msg += f" ({cicilan_terbayar} cicilan terbayar)"
+                return True, msg
+            else:
+                remaining = total_hutang - total_paid
+                logger.info(f"Termin payment recorded: invoice_id={invoice_id}, remaining={remaining}")
+                msg = f"✅ Pembayaran termin tercatat (Rp {payment_amount:,.0f})"
+                if cicilan_terbayar > 0:
+                    msg += f" - {cicilan_terbayar} cicilan terbayar"
+                msg += f"\n📌 Sisa Hutang: Rp {remaining:,.0f}"
+                return True, msg
+        
+        except Exception as e:
+            logger.error(f"Error recording termin payment: {e}", exc_info=True)
+            return False, f"Error: {str(e)}"
+    
+    def get_termin_summary(self, invoice_id: int) -> Dict:
+        """
+        Ambil summary pembayaran termin untuk invoice.
+        
+        Args:
+            invoice_id (int): ID invoice
+        
+        Returns:
+            Dict: Summary dengan total, paid, remaining, dll
+        """
+        try:
+            # Ambil invoice
+            with self.db.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM invoices WHERE id = ?", (invoice_id,))
+                row = cursor.fetchone()
+                invoice = dict(row) if row else None
+            
+            if not invoice:
+                return {}
+            
+            # Ambil termin payments
+            termin_payments = self.db.get_termin_payments_by_invoice(invoice_id)
+            
+            # Calculate (including DP/bayar yang sudah dibayar)
+            total = invoice['total']
+            dp_amount = invoice.get('bayar', 0)  # DP yang sudah dibayar upfront
+            completed_payments = self.db.calculate_total_paid_termin(invoice_id)  # Completed cicilan
+            total_paid = dp_amount + completed_payments  # Total yang sudah dibayar (DP + cicilan)
+            remaining = total - total_paid
+            
+            completed = sum(1 for p in termin_payments if p['status'] == 'completed')
+            pending = sum(1 for p in termin_payments if p['status'] == 'pending')
+            
+            return {
+                'invoice_id': invoice_id,
+                'invoice_number': invoice['invoice_number'],
+                'customer_name': invoice.get('customer_name', ''),
+                'total': total,
+                'total_paid': total_paid,
+                'remaining': remaining,
+                'percentage_paid': (total_paid / total * 100) if total > 0 else 0,
+                'total_cicilan': len(termin_payments),
+                'cicilan_completed': completed,
+                'cicilan_pending': pending,
+                'payments': termin_payments
+            }
+        except Exception as e:
+            logger.error(f"Error getting termin summary: {e}")
+            return {}
+
+
+# ============================================================================
 # PAYMENT REPOSITORY - Database operations (to be implemented in database.py)
 # ============================================================================
 

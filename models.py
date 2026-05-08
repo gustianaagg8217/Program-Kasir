@@ -5,7 +5,7 @@
 # Gunakan untuk validasi, formatting, dan business rules
 # ============================================================================
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional
 from datetime import datetime
 from database import DatabaseManager
@@ -296,6 +296,11 @@ class TransactionItem:
         qty (int): Jumlah
         harga_satuan (int): Harga per unit dalam Rupiah
         subtotal (int): Total (qty * harga_satuan)
+        promotion_id (int): ID promosi yang diapply (optional)
+        promotion_name (str): Nama promosi (optional)
+        discount_percent (int): Diskon persentase (optional)
+        discount_nominal (int): Diskon nominal (optional)
+        original_subtotal (int): Subtotal sebelum diskon (optional)
         
     Methods:
         from_dict(): Buat dari dict
@@ -309,6 +314,11 @@ class TransactionItem:
     qty: int
     harga_satuan: int
     subtotal: int = None
+    promotion_id: int = None
+    promotion_name: str = None
+    discount_percent: int = 0  # Default 0 instead of None
+    discount_nominal: int = 0  # Default 0 instead of None
+    original_subtotal: int = None
     
     def __post_init__(self):
         """Validasi dan hitung subtotal."""
@@ -325,7 +335,7 @@ class TransactionItem:
         Buat TransactionItem dari dictionary.
         
         Args:
-            data (dict): Dictionary berisi product_id, product_name, qty, harga_satuan
+            data (dict): Dictionary berisi product_id, product_name, qty, harga_satuan, dll
             
         Returns:
             TransactionItem: Object instance
@@ -335,7 +345,12 @@ class TransactionItem:
             product_name=data.get('product_name', data.get('nama')),
             qty=data.get('qty'),
             harga_satuan=data.get('harga_satuan', data.get('harga')),
-            subtotal=data.get('subtotal')
+            subtotal=data.get('subtotal'),
+            promotion_id=data.get('promotion_id'),
+            promotion_name=data.get('promotion_name'),
+            discount_percent=data.get('discount_percent'),
+            discount_nominal=data.get('discount_nominal'),
+            original_subtotal=data.get('original_subtotal')
         )
     
     def to_dict(self) -> dict:
@@ -345,7 +360,12 @@ class TransactionItem:
             'product_name': self.product_name,
             'qty': self.qty,
             'harga_satuan': self.harga_satuan,
-            'subtotal': self.subtotal
+            'subtotal': self.subtotal,
+            'promotion_id': self.promotion_id,
+            'promotion_name': self.promotion_name,
+            'discount_percent': self.discount_percent,
+            'discount_nominal': self.discount_nominal,
+            'original_subtotal': self.original_subtotal
         }
     
     def get_subtotal(self) -> int:
@@ -360,18 +380,45 @@ class TransactionItem:
     def display(self) -> str:
         """
         Format display TransactionItem untuk receipt/laporan.
+        Menampilkan harga sebelum diskon jika ada promosi berlaku.
         
         Returns:
             str: Formatted item
             
         Contoh output:
             Mie Goreng           2x Rp 15.000 = Rp 30.000
+            💰 Promo: Diskon 10% (-Rp 3.000) → Rp 27.000
         """
-        return (
+        # Hitung harga asli sebelum diskon
+        original_subtotal = self.get_subtotal()
+        
+        # Display item dengan harga satuan
+        result = (
             f"{self.product_name:<20} "
             f"{self.qty:>3}x {format_rp(self.harga_satuan):<15} = "
-            f"{format_rp(self.subtotal)}"
+            f"{format_rp(original_subtotal)}"
         )
+        
+        # Add promotion info if applicable - dengan breakdown diskon
+        if self.promotion_name:
+            # Hitung besaran diskon
+            discount_amount = 0
+            discount_text = ""
+            
+            if self.discount_percent:
+                discount_amount = int(original_subtotal * self.discount_percent / 100)
+                discount_text = f"{self.discount_percent}%"
+            elif self.discount_nominal:
+                discount_amount = self.discount_nominal
+                discount_text = f"Rp {self.discount_nominal:,}"
+            
+            # Harga setelah diskon
+            final_subtotal = original_subtotal - discount_amount
+            
+            # Tambahkan info diskon ke display
+            result += f"\n  💰 Promo: {self.promotion_name} ({discount_text}) -Rp {discount_amount:,} → {format_rp(final_subtotal)}"
+        
+        return result
     
     def __repr__(self) -> str:
         """String representation."""
@@ -391,11 +438,19 @@ class Transaction:
         id (int): ID transaksi (auto-generated)
         items (List[TransactionItem]): Daftar item yang dibeli
         subtotal (int): Subtotal belanja (sum of subtotal items) sebelum discount/tax
-        discount_percent (float): Diskon dalam persen (0-100)
-        discount_amount (int): Diskon dalam rupiah (auto-calculated)
+        
+        DISKON TERAKUMULASI (BARU):
+        - manual_discount_percent (float): Diskon manual dalam persen (0-100)
+        - manual_discount_fixed (int): Diskon manual dalam rupiah (tetap)
+        - promo_discount (int): Diskon dari promo/harga khusus (rupiah)
+        - discount_amount (int): Total diskon terakumulasi (auto-calculated)
+        
+        BREAKDOWN:
+        - discount_breakdown (dict): Detail breakdown diskon untuk display
+        
         tax_percent (float): Pajak (PPN) dalam persen (0-100)
         tax_amount (int): Pajak dalam rupiah (auto-calculated)
-        total (int): Total belanja (subtotal - discount + tax)
+        total (int): Total belanja (subtotal - total_discount + tax)
         bayar (int): Jumlah uang pembeli
         kembalian (int): Kembalian = bayar - total
         tanggal (datetime): Waktu transaksi
@@ -403,25 +458,41 @@ class Transaction:
     Methods:
         add_item(): Tambah item ke transaksi
         remove_item(): Hapus item dari transaksi
-        calculate_total(): Hitung total belanja dengan discount/tax
-        set_discount(): Set diskon
+        calculate_total(): Hitung total belanja dengan discount/tax terakumulasi
+        set_manual_discount_percent(): Set diskon manual persen
+        set_manual_discount_fixed(): Set diskon manual rupiah
+        set_promo_discount(): Set diskon promo
         set_tax(): Set pajak
         calculate_kembalian(): Hitung kembalian
         is_valid(): Cek apakah transaksi valid
+        get_discount_breakdown(): Ambil breakdown diskon untuk display
     """
     
     id: Optional[int] = None
     items: List[TransactionItem] = None
     subtotal: int = 0  # Sebelum discount/tax
-    discount_percent: float = 0.0  # Dalam persen
-    discount_amount: int = 0  # Dalam rupiah
-    discount_type: str = "percent"  # "percent" atau "fixed" (fixed = rupiah)
+    
+    # DISKON TERAKUMULASI - Berbagai sumber diskon
+    manual_discount_percent: float = 0.0  # Diskon manual persen (0-100)
+    manual_discount_fixed: int = 0  # Diskon manual fixed (rupiah)
+    promo_discount: int = 0  # Diskon dari promo (rupiah)
+    discount_amount: int = 0  # Total diskon terakumulasi (auto-calculated)
+    discount_breakdown: dict = field(default_factory=lambda: {
+        'manual_percent_amount': 0,
+        'manual_fixed_amount': 0,
+        'promo_amount': 0,
+        'total': 0
+    })  # Breakdown detail diskon
+    
     tax_percent: float = 0.0  # Dalam persen
     tax_amount: int = 0  # Dalam rupiah
     total: int = 0  # Setelah discount/tax
     bayar: int = 0
     kembalian: int = 0
     tanggal: datetime = None
+    is_termin: bool = False  # Jika True, ini adalah termin payment (DP)
+    promotion_id: Optional[int] = None  # ID promosi yang diterapkan
+    promotion_name: Optional[str] = None  # Nama promosi yang diterapkan
     
     def __post_init__(self):
         """Inisialisasi default values."""
@@ -434,13 +505,30 @@ class Transaction:
         """
         Tambah item ke transaksi.
         
+        Jika produk sudah ada, qty akan ditambah.
+        Jika produk belum ada, akan ditambah sebagai item baru.
+        
         Args:
             item (TransactionItem): Item yang ditambahkan
         """
         if not isinstance(item, TransactionItem):
             raise TypeError("Item harus TransactionItem object")
         
-        self.items.append(item)
+        # Cek apakah produk sudah ada di transaksi
+        existing_item = None
+        for existing in self.items:
+            if existing.product_id == item.product_id:
+                existing_item = existing
+                break
+        
+        if existing_item:
+            # Produk sudah ada, tambah qty-nya saja
+            existing_item.qty += item.qty
+            existing_item.subtotal = existing_item.get_subtotal()
+        else:
+            # Produk belum ada, tambah sebagai item baru
+            self.items.append(item)
+        
         self.calculate_total()
     
     def remove_item(self, index: int):
@@ -481,47 +569,94 @@ class Transaction:
     
     def calculate_total(self) -> int:
         """
-        Hitung total belanja dari semua item dengan discount dan tax.
+        Hitung total belanja dari semua item dengan discount dan tax (terakumulasi).
         
-        Formula:
-        1. Hitung subtotal dari semua item
-        2. Hitung diskon: 
-           - Jika discount_type == "percent": discount_amount = subtotal * (discount_percent / 100)
-           - Jika discount_type == "fixed": gunakan discount_amount langsung
-        3. Hitung pajak: tax_amount = (subtotal - discount_amount) * (tax_percent / 100)
-        4. Total = subtotal - discount_amount + tax_amount
+        Formula Diskon TERAKUMULASI:
+        1. Hitung subtotal dari semua item (SUDAH termasuk per-item promo discount)
+        2. Hitung per-item promotional discounts (akumulasi dari semua item)
+        3. Hitung diskon dari berbagai sumber:
+           - Diskon per-item promo: (sum dari item.discount_nominal * qty untuk semua items)
+           - Diskon manual %: (subtotal * manual_discount_percent / 100)
+           - Diskon manual Rp: manual_discount_fixed (fixed amount)
+           - Diskon promo transaksi: promo_discount (dari promosi)
+           - Total diskon = diskon per-item + diskon % + diskon Rp + diskon promo transaksi
+        4. Pastikan total diskon tidak melebihi subtotal original
+        5. Hitung pajak: tax_amount = (subtotal - total_discount) * (tax_percent / 100)
+        6. Total = subtotal - total_discount + tax_amount
         
         Returns:
             int: Total dalam Rupiah
         """
-        # Step 1: Subtotal (sebelum discount/tax)
+        # Step 1: Hitung subtotal dengan original prices dan per-item promotional discounts
+        # Calculate original subtotal (before per-item promos) and per-item promo discount
+        original_subtotal = 0
+        discount_from_items_promo = 0
+        
+        for item in self.items:
+            # Original price per item
+            item_original = item.harga_satuan * item.qty
+            original_subtotal += item_original
+            
+            # Per-item promotional discount (discount_percent and discount_nominal now default to 0)
+            item_discount_percent = item.discount_percent or 0
+            item_discount_nominal = item.discount_nominal or 0
+            
+            if item_discount_percent > 0:
+                item_promo_discount = int(item_original * item_discount_percent / 100)
+            elif item_discount_nominal > 0:
+                item_promo_discount = item_discount_nominal * item.qty
+            else:
+                item_promo_discount = 0
+            
+            discount_from_items_promo += item_promo_discount
+        
+        # Current subtotal (already includes per-item promo deductions)
         self.subtotal = sum(item.subtotal for item in self.items)
         
-        # Step 2: Hitung discount
-        if self.discount_type == "percent" and self.discount_percent > 0:
-            self.discount_amount = int(self.subtotal * (self.discount_percent / 100))
-        elif self.discount_type == "fixed":
-            # discount_amount sudah di-set oleh set_discount_amount()
-            # Pastikan tidak melebihi subtotal
-            if self.discount_amount > self.subtotal:
-                self.discount_amount = self.subtotal
-        else:
-            self.discount_amount = 0
+        # Step 2: Hitung breakdown diskon dari berbagai sumber
+        # 2a. Diskon dari per-item promotions (terakumulasi)
+        discount_from_item_promos = discount_from_items_promo
+        
+        # 2b. Diskon manual percentage (applied on subtotal after item promos)
+        discount_from_percent = 0
+        if self.manual_discount_percent > 0:
+            discount_from_percent = int(self.subtotal * (self.manual_discount_percent / 100))
+        
+        # 2c. Diskon manual fixed
+        discount_from_fixed = self.manual_discount_fixed if self.manual_discount_fixed > 0 else 0
+        
+        # 2d. Diskon promo transaksi
+        discount_from_transaction_promo = self.promo_discount if self.promo_discount > 0 else 0
+        
+        # 2e. Total diskon terakumulasi
+        self.discount_amount = discount_from_item_promos + discount_from_percent + discount_from_fixed + discount_from_transaction_promo
+        
+        # Pastikan total diskon tidak melebihi subtotal original
+        if self.discount_amount > original_subtotal:
+            self.discount_amount = original_subtotal
+        
+        # Update breakdown untuk display
+        self.discount_breakdown = {
+            'manual_percent_amount': discount_from_percent,
+            'manual_fixed_amount': discount_from_fixed,
+            'promo_amount': discount_from_item_promos + discount_from_transaction_promo,  # Gabung item promos dan transaction promos
+            'total': self.discount_amount
+        }
         
         # Step 3: Hitung pajak dari (subtotal - discount)
-        base_for_tax = self.subtotal - self.discount_amount
+        base_for_tax = self.subtotal - discount_from_percent - discount_from_fixed
         if self.tax_percent > 0:
             self.tax_amount = int(base_for_tax * (self.tax_percent / 100))
         else:
             self.tax_amount = 0
         
         # Step 4: Total akhir
-        self.total = self.subtotal - self.discount_amount + self.tax_amount
+        self.total = self.subtotal - discount_from_percent - discount_from_fixed - discount_from_transaction_promo + self.tax_amount
         return self.total
     
-    def set_discount(self, discount_percent: float) -> bool:
+    def set_manual_discount_percent(self, discount_percent: float) -> bool:
         """
-        Set diskon dalam persen.
+        Set diskon manual dalam persen (TETAP DAPAT DIKOMBINASIKAN dengan diskon lain).
         
         Args:
             discount_percent (float): Diskon dalam persen (0-100)
@@ -533,18 +668,17 @@ class Transaction:
             ValidationError: Jika diskon invalid
         """
         if discount_percent < 0 or discount_percent > 100:
-            logger.warning(f"Invalid discount: {discount_percent}%")
-            raise ValidationError("Diskon harus antara 0-100%")
+            logger.warning(f"Invalid discount percent: {discount_percent}%")
+            raise ValidationError("Diskon persen harus antara 0-100%")
         
-        self.discount_percent = discount_percent
-        self.discount_type = "percent"
+        self.manual_discount_percent = discount_percent
         self.calculate_total()
-        logger.info(f"Discount set: {discount_percent}% (amount: Rp{self.discount_amount:,})")
+        logger.info(f"Manual discount percent set: {discount_percent}% (amount: Rp{self.discount_breakdown['manual_percent_amount']:,})")
         return True
     
-    def set_discount_amount(self, discount_amount: int) -> bool:
+    def set_manual_discount_fixed(self, discount_amount: int) -> bool:
         """
-        Set diskon dalam rupiah (fixed amount).
+        Set diskon manual dalam rupiah TETAP (DAPAT DIKOMBINASIKAN dengan diskon lain).
         
         Args:
             discount_amount (int): Diskon dalam rupiah
@@ -557,16 +691,78 @@ class Transaction:
         """
         discount_amount = validate_harga(discount_amount)
         
-        if discount_amount < 0 or discount_amount > self.subtotal:
+        if discount_amount < 0:
             logger.warning(f"Invalid discount amount: Rp{discount_amount:,}")
-            raise ValidationError(f"Diskon harus antara 0-{format_rp(self.subtotal)}")
+            raise ValidationError("Diskon tidak boleh negatif!")
         
-        self.discount_amount = discount_amount
-        self.discount_type = "fixed"
-        self.discount_percent = 0  # Reset percentage
+        self.manual_discount_fixed = discount_amount
         self.calculate_total()
-        logger.info(f"Discount set: Rp{discount_amount:,} (fixed amount)")
+        logger.info(f"Manual discount fixed set: Rp{discount_amount:,}")
         return True
+    
+    def set_promo_discount(self, promo_discount: int) -> bool:
+        """
+        Set diskon dari promo (DAPAT DIKOMBINASIKAN dengan diskon manual).
+        
+        Args:
+            promo_discount (int): Diskon promo dalam rupiah
+            
+        Returns:
+            bool: True jika berhasil
+            
+        Raises:
+            ValidationError: Jika diskon invalid
+        """
+        promo_discount = validate_harga(promo_discount)
+        
+        if promo_discount < 0:
+            logger.warning(f"Invalid promo discount: Rp{promo_discount:,}")
+            raise ValidationError("Diskon promo tidak boleh negatif!")
+        
+        self.promo_discount = promo_discount
+        self.calculate_total()
+        logger.info(f"Promo discount set: Rp{promo_discount:,}")
+        return True
+    
+    def get_discount_breakdown(self) -> dict:
+        """
+        Ambil breakdown diskon untuk display di GUI.
+        
+        Returns:
+            dict: {
+                'manual_percent_amount': int (diskon dari %),
+                'manual_fixed_amount': int (diskon dari fixed),
+                'promo_amount': int (diskon dari promo),
+                'total': int (total diskon)
+            }
+        """
+        return self.discount_breakdown.copy()
+    
+    def set_discount(self, discount_percent: float) -> bool:
+        """
+        DEPRECATED: Gunakan set_manual_discount_percent() sebagai gantinya.
+        Tetap ada untuk backward compatibility.
+        
+        Args:
+            discount_percent (float): Diskon dalam persen (0-100)
+            
+        Returns:
+            bool: True jika berhasil
+        """
+        return self.set_manual_discount_percent(discount_percent)
+    
+    def set_discount_amount(self, discount_amount: int) -> bool:
+        """
+        DEPRECATED: Gunakan set_manual_discount_fixed() sebagai gantinya.
+        Tetap ada untuk backward compatibility.
+        
+        Args:
+            discount_amount (int): Diskon dalam rupiah
+            
+        Returns:
+            bool: True jika berhasil
+        """
+        return self.set_manual_discount_fixed(discount_amount)
     
     def set_tax(self, tax_percent: float) -> bool:
         """
@@ -590,22 +786,34 @@ class Transaction:
         logger.info(f"Tax set: {tax_percent}% (amount: Rp{self.tax_amount:,})")
         return True
     
-    def set_bayar(self, bayar: int):
+    def set_bayar(self, bayar: int, is_termin: bool = False):
         """
         Set jumlah pembayaran dan hitung kembalian.
         
         Args:
             bayar (int): Jumlah uang pembayaran
+            is_termin (bool): Jika True, bayar bisa kurang dari total (untuk DP)
             
         Raises:
-            ValidationError: Jika bayar kurang dari total
+            ValidationError: Jika bayar kurang dari total (hanya untuk non-termin)
         """
         bayar = validate_harga(bayar)
         
-        if bayar < self.total:
+        # Set is_termin flag untuk digunakan di is_valid()
+        self.is_termin = is_termin
+        
+        # Untuk termin payment, bayar bisa kurang dari total (DP)
+        # Untuk lunas payment, bayar harus >= total
+        if not is_termin and bayar < self.total:
             raise ValidationError(
                 f"Pembayaran ({format_rp(bayar)}) kurang dari total "
                 f"({format_rp(self.total)})"
+            )
+        
+        # Untuk termin, bayar harus > 0
+        if is_termin and bayar <= 0:
+            raise ValidationError(
+                f"DP harus lebih dari 0 untuk pembayaran termin!"
             )
         
         self.bayar = bayar
@@ -628,8 +836,8 @@ class Transaction:
         Kondisi valid:
         - Ada minimal 1 item
         - Total > 0
-        - Pembayaran >= total
-        - Kembalian >= 0
+        - Untuk lunas: Pembayaran >= total dan Kembalian >= 0
+        - Untuk termin: Pembayaran > 0 (bisa < total untuk DP)
         
         Returns:
             bool: True jika valid
@@ -638,10 +846,18 @@ class Transaction:
             return False
         if self.total <= 0:
             return False
-        if self.bayar < self.total:
-            return False
-        if self.kembalian < 0:
-            return False
+        
+        # Untuk termin payment: pembayaran bisa < total (untuk DP)
+        if self.is_termin:
+            if self.bayar <= 0:
+                return False
+        else:
+            # Untuk lunas payment: pembayaran harus >= total
+            if self.bayar < self.total:
+                return False
+            if self.kembalian < 0:
+                return False
+        
         return True
     
     @staticmethod
